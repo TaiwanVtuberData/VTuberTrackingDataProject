@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrackListValidation", "TrackListValidation\TrackListValidation.csproj", "{085D24B0-0939-41F2-8CB1-2409DDF59882}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FetchStatistics", "FetchData\FetchStatistics.csproj", "{7EB2DA10-7F4D-447C-AAA0-116590B2CFB8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FetchStatistics", "FetchStatistics\FetchStatistics.csproj", "{7EB2DA10-7F4D-447C-AAA0-116590B2CFB8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FetchYouTubeStatistics", "FetchYouTubeStatistics\FetchYouTubeStatistics.csproj", "{C742856D-480C-4FEB-ADF9-CD094EAB36EC}"
 EndProject
