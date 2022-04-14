@@ -1,4 +1,4 @@
-﻿using Common;
+﻿using Common.Types;
 using LanguageExt;
 
 string tracklistPath = args.Length >= 1 ? args[0] : "./DATA/TW_VTUBER_TRACK_LIST.csv";

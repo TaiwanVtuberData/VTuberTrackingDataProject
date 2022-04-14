@@ -2,7 +2,7 @@
 using Microsoft.VisualBasic.FileIO;
 using System.Globalization;
 
-namespace Common;
+namespace Common.Types;
 public class TrackList
 {
     private Dictionary<string, VTuberData> internalDictionary = new();
@@ -32,7 +32,7 @@ public class TrackList
         { "Importance Level", 11 },
     };
 
-    public TrackList(string csvFilePath, int requiredLevel)
+    public TrackList(string csvFilePath, int requiredLevel, bool throwOnValidationFail)
     {
         Validation<ValidationError, TrackList> loadResult = Load(csvFilePath, requiredLevel);
 
@@ -44,6 +44,9 @@ public class TrackList
             error =>
             {
                 this.internalDictionary.Clear();
+
+                if (throwOnValidationFail)
+                    throw new Exception($"Failed to load TrackList: {csvFilePath}");
             }
             );
     }
@@ -304,12 +307,7 @@ public class TrackList
 
     private static Validation<ValidationError, List<string>> ValidateAliasNames(string rawNames)
     {
-        List<string> result = rawNames.Split(',').ToList();
-
-        if (result.Count == 1)
-        {
-            return new List<string>();
-        }
+        List<string> result = rawNames.Split(',').ToList().Where( p => p !="").ToList();
 
         if (result.Where(p => p.Length == 0).Any())
         {
@@ -488,6 +486,12 @@ public class TrackList
         }
 
         throw new KeyNotFoundException($"Could not find Twitch Channel ID: {id}");
+    }
+    public string GetId(string name)
+    {
+        string displayName = GetDisplayName(name);
+
+        return internalDictionary[displayName].Id;
     }
 
     public string GetYouTubeChannelIdByName(string name)

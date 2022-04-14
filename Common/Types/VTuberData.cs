@@ -1,4 +1,4 @@
-﻿namespace Common;
+﻿namespace Common.Types;
 public readonly record struct VTuberData(
     string Id,
     string DisplayName,

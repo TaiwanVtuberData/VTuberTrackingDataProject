@@ -1,6 +1,6 @@
 ﻿using LanguageExt;
 
-namespace Common;
+namespace Common.Types;
 
 public class ValidationError : NewType<ValidationError, string>
 {
