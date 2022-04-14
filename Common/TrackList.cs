@@ -18,17 +18,18 @@ public class TrackList
 
     public static readonly Dictionary<string, int> csvHeaderIndexs = new()
     {
-        { "Display Name", 0 },
-        { "Alias Names", 1 },
-        { "YouTube Channel ID", 2 },
-        { "Twitch Channel ID", 3 },
-        { "Twitch Channel Name", 4 },
-        { "Debut Date", 5 },
-        { "Graduation Date", 6 },
-        { "Active", 7 },
-        { "Group Name", 8 },
-        { "Nationality", 9 },
-        { "Importance Level", 10 },
+        { "ID", 0 },
+        { "Display Name", 1 },
+        { "Alias Names", 2 },
+        { "YouTube Channel ID", 3 },
+        { "Twitch Channel ID", 4 },
+        { "Twitch Channel Name", 5 },
+        { "Debut Date", 6 },
+        { "Graduation Date", 7 },
+        { "Active", 8 },
+        { "Group Name", 9 },
+        { "Nationality", 10 },
+        { "Importance Level", 11 },
     };
 
     public TrackList(string csvFilePath, int requiredLevel)
@@ -120,23 +121,40 @@ public class TrackList
 
     private static Validation<ValidationError, IEnumerable<VTuberData>> CheckFieldsDuplicate(IEnumerable<VTuberData> lstVtuberData)
     {
-
-        CheckNamesDuplicate(lstVtuberData);
-        CheckYouTubeIdDuplicate(lstVtuberData);
-        CheckTwitchIdDuplicate(lstVtuberData);
-        CheckTwitchNameDuplicate(lstVtuberData);
-
-        return (CheckNamesDuplicate(lstVtuberData),
+        return (
+            CheckIdDuplicate(lstVtuberData),
+            CheckNamesDuplicate(lstVtuberData),
             CheckYouTubeIdDuplicate(lstVtuberData),
             CheckTwitchIdDuplicate(lstVtuberData),
-            CheckTwitchNameDuplicate(lstVtuberData))
-            .Apply(
-            (dummy1,
-            dummy2,
-            dummy3,
-            dummy4)
+            CheckTwitchNameDuplicate(lstVtuberData)
+            ).Apply(
+            (
+                dummy1,
+                dummy2,
+                dummy3,
+                dummy4,
+                dummy5
+                )
             => lstVtuberData
             );
+    }
+
+    private static Validation<ValidationError, OptionNone> CheckIdDuplicate(IEnumerable<VTuberData> lstVtuberData)
+    {
+        List<string> duplicateId = lstVtuberData
+            .GroupBy(p => p.Id)
+            .Where(p => p.Count() > 1)
+            .Select(p => p.Key)
+            .ToList();
+
+        if (duplicateId.Any())
+        {
+            return new ValidationError($"Duplicate IDs: {string.Join(", ", duplicateId)}");
+        }
+        else
+        {
+            return new OptionNone();
+        }
     }
 
     private static Validation<ValidationError, OptionNone> CheckNamesDuplicate(IEnumerable<VTuberData> lstVtuberData)
@@ -218,7 +236,9 @@ public class TrackList
 
     private static Validation<ValidationError, VTuberData> Validate(string[] entryBlock)
     {
-        return (ValidateDisplayName(entryBlock[csvHeaderIndexs["Display Name"]]),
+        return (
+            ValidateId(entryBlock[csvHeaderIndexs["ID"]]),
+            ValidateDisplayName(entryBlock[csvHeaderIndexs["Display Name"]]),
             ValidateAliasNames(entryBlock[csvHeaderIndexs["Alias Names"]]),
             ValidateYouTubeChannelId(entryBlock[csvHeaderIndexs["YouTube Channel ID"]]),
             ValidateTwitchInformation(entryBlock[csvHeaderIndexs["Twitch Channel ID"]], entryBlock[csvHeaderIndexs["Twitch Channel Name"]]),
@@ -229,30 +249,45 @@ public class TrackList
             ValidateNationality(entryBlock[csvHeaderIndexs["Nationality"]]),
             ValidateImportance(entryBlock[csvHeaderIndexs["Importance Level"]]))
             .Apply(
-            (displayName,
-            aliasNames,
-            YouTubeChannelId,
-            twitchInformation,
-            debutDate,
-            graduateDate,
-            isActive,
-            groupName,
-            nationality,
-            importanceLevel)
-            => new VTuberData(
-                 displayName,
-                 aliasNames,
-                 YouTubeChannelId,
-                 twitchInformation.Id,
-                 twitchInformation.Name,
-                 debutDate,
-                 graduateDate,
-                 isActive,
-                 groupName,
-                 nationality,
-                 importanceLevel
-                 )
-            );
+            (
+                id,
+                displayName,
+                aliasNames,
+                YouTubeChannelId,
+                twitchInformation,
+                debutDate,
+                graduateDate,
+                isActive,
+                groupName,
+                nationality,
+                importanceLevel
+                ) => new VTuberData(
+                    id,
+                    displayName,
+                    aliasNames,
+                    YouTubeChannelId,
+                    twitchInformation.Id,
+                    twitchInformation.Name,
+                    debutDate,
+                    graduateDate,
+                    isActive,
+                    groupName,
+                    nationality,
+                    importanceLevel
+                    )
+                );
+    }
+
+    private static Validation<ValidationError, string> ValidateId(string rawId)
+    {
+        if (rawId.Length != 32)
+        {
+            return new ValidationError($"ID should be a valid UUID with lowercase and no '-': {rawId}");
+        }
+        else
+        {
+            return rawId;
+        }
     }
 
     private static Validation<ValidationError, string> ValidateDisplayName(string rawName)

@@ -1,5 +1,6 @@
 ﻿namespace Common;
 public readonly record struct VTuberData(
+    string Id,
     string DisplayName,
     List<string> LstAliasName,
     string YouTubeChannelId,
