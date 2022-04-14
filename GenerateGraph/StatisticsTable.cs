@@ -14,9 +14,9 @@ class StatisticsTable : DataTable
     private readonly TrackList _TrackList;
     private readonly List<DateTime> _RowDateTime;
 
-    public StatisticsTable(string trackListFilePath, int requiredLevel, bool byGroup)
+    public StatisticsTable(TrackList trackList, int requiredLevel, bool byGroup)
     {
-        _TrackList = new TrackList(trackListFilePath, requiredLevel, throwOnValidationFail: true);
+        _TrackList = trackList;
         _RowDateTime = new List<DateTime>();
 
         if (byGroup)

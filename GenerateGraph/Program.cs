@@ -8,7 +8,8 @@ if (args.Length == 1)
     recentDays = int.Parse(args[0]);
 
 string csvDirectory = GetCsvDirectory("./CsvDirectory");
-TrackList trackList = new(csvFilePath: "./TW_VTUBER_TRACK_LIST.csv", requiredLevel: 999, throwOnValidationFail: true);
+string trackListPath = Path.Combine(csvDirectory, "./DATA/TW_VTUBER_TRACK_LIST.csv");
+TrackList trackList = new(csvFilePath: trackListPath, requiredLevel: 999, throwOnValidationFail: true);
 
 WriteDateTimeStatistics(trackList, csvDirectory, recentDays, byGroup: false, "Individual");
 WriteDateTimeStatistics(trackList, csvDirectory, recentDays, byGroup: true, "Group");
@@ -33,7 +34,7 @@ static void WriteDateTimeStatistics(TrackList trackList, string recordDirectory,
 {
     List<Tuple<FileInfo, DateTime>> csvFileList = FileUtility.GetFileInfoDateTimeList(recordDirectory, recentDays);
 
-    StatisticsTable statisticsTable = new(trackListFilePath: "./TW_VTUBER_TRACK_LIST.csv", requiredLevel: 999, byGroup);
+    StatisticsTable statisticsTable = new(trackList, requiredLevel: 999, byGroup);
     foreach (Tuple<FileInfo, DateTime> fileInfoDateTime in csvFileList)
     {
         Dictionary<string, VTuberStatistics> statisticsDictionary = GetStatisticsDictionaryFromRecordCSV(trackList, fileInfoDateTime.Item1.FullName, byGroup);
