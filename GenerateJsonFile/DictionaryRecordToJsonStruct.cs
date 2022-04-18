@@ -35,6 +35,37 @@ class DictionaryRecordToJsonStruct
         }
     }
 
+    public List<VTuberFullData> AllWithFullData(DictionaryRecord dictRecord, DateTime latestRecordTime)
+    {
+        List<Types.VTuberFullData> rLst = new();
+
+        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord)
+        {
+            string displayName = vtuberStatPair.Key;
+            VTuberRecord record = vtuberStatPair.Value;
+
+            ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
+            bool hasDebut = TodayDate > record.DebutDate;
+
+            VTuberFullData vTuberData = new(
+                id: record.Id,
+                activity: record.IsActive ? hasDebut ? Activity.active : Activity.preparing : Activity.graduate,
+                name: record.DisplayName,
+                imgUrl: record.ThumbnailUrl,
+                YouTube: record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
+                Twitch: record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
+                popularVideo: GetPopularVideo(record, latestRecordTime),
+                group: record.GroupName == "" ? null : record.GroupName,
+                nationality: record.Nationality,
+                debutDate: record.DebutDate == DateTime.UnixEpoch ? null : record.DebutDate.ToString("yyyy-MM-dd"),
+                graduateDate: record.GraduationDate == DateTime.UnixEpoch ? null : record.GraduationDate.ToString("yyyy-MM-dd"));
+
+            rLst.Add(vTuberData);
+        }
+
+        return rLst;
+    }
+
     public List<Types.VTuberData> All(DictionaryRecord dictRecord, DateTime latestRecordTime, int? count)
     {
         List<Types.VTuberData> rLst = new();

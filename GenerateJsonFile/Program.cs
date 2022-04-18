@@ -41,6 +41,12 @@ class Program
         };
         WriteJson(updateTimeWrapper, "update-time.json");
 
+        List<VTuberFullData> lstAllVTuber = (new DictionaryRecordToJsonStruct(DateTime.Today, "")).AllWithFullData(dictRecord, latestRecordTime);
+        foreach (VTuberFullData vtuber in lstAllVTuber)
+        {
+            WriteJson(vtuber, $"vtubers/{vtuber.id}.json");
+        }
+
         foreach (var nationality in new List<(string, string)> { ("", "all"), ("TW", "TW"), ("HK", "HK"), ("MY", "MY") })
         {
             DictionaryRecordToJsonStruct transformer = new(DateTime.Today, nationality.Item1);
@@ -144,6 +150,7 @@ class Program
 
     readonly record struct UpdateTime(string statisticUpdateTime, string VTuberDataUpdateTime);
     readonly record struct UpdateTimeWrapper(UpdateTime time);
+    readonly record struct VTuberFullWrapper(VTuberFullData VTuber);
     readonly record struct VTubersWrapper(List<Types.VTuberData> VTubers);
     readonly record struct VTubersGrowingWrapper(List<VTuberGrowthData> VTubers);
     readonly record struct VTubersDebutWrapper(List<VTuberDebutData> VTubers);
@@ -160,6 +167,15 @@ class Program
             outputFilePath
            );
     }
+    private static void WriteJson(VTuberFullData vTuberFullData, string outputFilePath)
+    {
+        WriteJsonString(
+            GetJsonString(new VTuberFullWrapper(VTuber: vTuberFullData)),
+            "",
+            outputFilePath
+           );
+    }
+
     private static void WriteJson(List<Types.VTuberData> lstVTuberData, string nationality, string outputFilePath)
     {
         WriteJsonString(
