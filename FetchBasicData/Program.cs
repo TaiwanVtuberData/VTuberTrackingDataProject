@@ -11,7 +11,15 @@ string TwitchClientIdPath = args.Length >= 3 ? args[2] : "./DATA/TWITCH_CLIENT_I
 string TwitchSecretPath = args.Length >= 4 ? args[3] : "./DATA/TWITCH_SECRET";
 string newSavePath = args.Length >= 5 ? args[4] : "./DATA";
 
+Console.WriteLine(trackListPath);
+Console.WriteLine(YouTubeApiKeyPath);
+Console.WriteLine(TwitchClientIdPath);
+Console.WriteLine(TwitchSecretPath);
+Console.WriteLine(newSavePath);
+
 TrackList trackList = new(trackListPath, requiredLevel: 999, throwOnValidationFail: true);
+
+Console.WriteLine($"Total entries: {trackList.GetCount()}");
 
 Dictionary<string, YouTubeData> dictYouTubeNameData = GenerateYouTubeNameDataDict(trackList, FileUtility.GetSingleLineFromFile(YouTubeApiKeyPath));
 Dictionary<string, TwitchData> dictTwitchNameData = GenerateTwitchNameDataDict(trackList,
@@ -102,6 +110,12 @@ static Dictionary<string, YouTubeData> GenerateYouTubeNameDataDict(TrackList tra
         channelListRequest.MaxResults = 50;
 
         Google.Apis.YouTube.v3.Data.ChannelListResponse channellistItemsListResponse = channelListRequest.Execute();
+        // channellistItemsListResponse.Items is actually nullable
+        if (channellistItemsListResponse.Items is null)
+        {
+            continue;
+        }
+
         foreach (Google.Apis.YouTube.v3.Data.Channel channelItem in channellistItemsListResponse.Items)
         {
             string channelId = channelItem.Id;
