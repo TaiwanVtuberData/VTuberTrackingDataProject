@@ -35,6 +35,11 @@ class DictionaryRecordToJsonStruct
         }
     }
 
+    private static string YouTubeImgUrlResize(string YouTubeImgUrl, int origSize, int newSize)
+    {
+        return YouTubeImgUrl.Replace($"=s{origSize}", $"=s{newSize}");
+    }
+
     public List<VTuberFullData> AllWithFullData(DictionaryRecord dictRecord, DateTime latestRecordTime)
     {
         List<Types.VTuberFullData> rLst = new();
@@ -51,7 +56,7 @@ class DictionaryRecordToJsonStruct
                 id: record.Id,
                 activity: record.IsActive ? hasDebut ? Activity.active : Activity.preparing : Activity.graduate,
                 name: record.DisplayName,
-                imgUrl: record.ThumbnailUrl,
+                imgUrl: YouTubeImgUrlResize(record.ThumbnailUrl, 88, 240),
                 YouTube: record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
                 Twitch: record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
                 popularVideo: GetPopularVideo(record, latestRecordTime),
