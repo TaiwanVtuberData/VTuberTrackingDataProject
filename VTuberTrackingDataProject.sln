@@ -17,9 +17,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FetchBasicData", "FetchBasi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GenerateJsonFile", "GenerateJsonFile\GenerateJsonFile.csproj", "{6A118D18-F9DB-48B3-8A10-45C4B23C9DA1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenerateGraph", "GenerateGraph\GenerateGraph.csproj", "{8F3CCB4C-AF01-43F2-8D29-EC097FA23941}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GenerateGraph", "GenerateGraph\GenerateGraph.csproj", "{8F3CCB4C-AF01-43F2-8D29-EC097FA23941}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenerateReportForPTT", "GenerateReportForPTT\GenerateReportForPTT.csproj", "{64F36841-37DC-460B-BABC-023042733B6A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GenerateReportForPTT", "GenerateReportForPTT\GenerateReportForPTT.csproj", "{64F36841-37DC-460B-BABC-023042733B6A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

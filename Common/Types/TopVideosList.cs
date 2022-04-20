@@ -6,10 +6,10 @@ public class TopVideosList
 
     readonly List<VideoInformation> InternalList;
     readonly int MaxListCount;
-    public TopVideosList(int videoCount = 500)
+    public TopVideosList(int videoCount = int.MaxValue)
     {
         MaxListCount = Math.Max(1, videoCount);
-        InternalList = new(capacity: MaxListCount);
+        InternalList = new();
     }
 
     public IEnumerator<VideoInformation> GetEnumerator()
@@ -32,7 +32,7 @@ public class TopVideosList
         foreach (VideoInformation videoInfo in GetSortedList().OrderByDescending(e => e.ViewCount))
         {
             // if list already contains videoInfo.Owner
-            if (rLst.Where(e => e.Owner == videoInfo.Owner).Count() > 0)
+            if (rLst.Any(e => e.Id == videoInfo.Id))
             {
                 continue;
             }
@@ -47,7 +47,7 @@ public class TopVideosList
     {
         Insert(new VideoInformation()
         {
-            Owner = entryBlock[0],
+            Id = entryBlock[0],
             ViewCount = ulong.Parse(entryBlock[1]),
             Title = entryBlock[2],
             PublishDateTime = XmlConvert.ToDateTime(entryBlock[3], XmlDateTimeSerializationMode.Utc),

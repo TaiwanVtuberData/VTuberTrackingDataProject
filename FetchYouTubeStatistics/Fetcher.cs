@@ -178,7 +178,7 @@ public class Fetcher
 
                     topVideosList.Insert(new VideoInformation
                     {
-                        Owner = channelInfo.Id,
+                        Id = channelInfo.Id,
                         Url = $"https://www.youtube.com/watch?v={video.Id}",
                         Title = video.Snippet.Title,
                         ThumbnailUrl = video.Snippet.Thumbnails.Medium.Url,

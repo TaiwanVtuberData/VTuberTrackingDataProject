@@ -3,46 +3,47 @@ using Common.Utils;
 
 namespace GenerateJsonFile.Types;
 
+// Key: VTuber ID
 public class DictionaryRecord : Dictionary<string, VTuberRecord>
 {
     public DictionaryRecord(TrackList trackList, List<string> excluedList, Dictionary<string, VTuberBasicData> dictBasicData)
     {
-        List<string> lstDisplayName = trackList.GetDisplayNameList();
+        List<string> lstId = trackList.GetIdList();
 
-        foreach (string displayName in lstDisplayName)
+        foreach (string id in lstId)
         {
-            if (excluedList.Contains(displayName))
+            if (excluedList.Contains(id))
             {
                 continue;
             }
 
-            bool hasBasicData = dictBasicData.TryGetValue(displayName, out VTuberBasicData? basicData);
-            string imageUrl = (hasBasicData && basicData is not null) ? basicData.GetRepresentImageUrl() : "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+            bool hasBasicData = dictBasicData.TryGetValue(id, out VTuberBasicData basicData);
+            string imageUrl = hasBasicData ? basicData.GetRepresentImageUrl() : "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
             VTuberRecord vtuberRecord = new()
             {
-                DisplayName = displayName,
-                Id = trackList.GetId(displayName),
-                DebutDate = trackList.GetDebutDate(displayName),
-                GraduationDate = trackList.GetGraduationDate(displayName),
-                IsActive = trackList.GetIsActive(displayName),
-                GroupName = trackList.GetGroupNameByName(displayName),
-                Nationality = trackList.GetNationalityByName(displayName),
+                Id = id,
+                DisplayName = trackList.GetDisplayName(id),
+                DebutDate = trackList.GetDebutDate(id),
+                GraduationDate = trackList.GetGraduationDate(id),
+                IsActive = trackList.GetIsActive(id),
+                GroupName = trackList.GetGroupName(id),
+                Nationality = trackList.GetNationality(id),
                 ThumbnailUrl = imageUrl,
 
                 YouTube = new()
                 {
-                    ChannelId = trackList.GetYouTubeChannelIdByName(displayName),
+                    ChannelId = trackList.GetYouTubeChannelId(id),
                 },
 
                 Twitch = new()
                 {
-                    ChannelId = trackList.GetTwitchChannelIdByName(displayName),
-                    ChannelName = trackList.GetTwitchChannelNameByName(displayName),
+                    ChannelId = trackList.GetTwitchChannelId(id),
+                    ChannelName = trackList.GetTwitchChannelName(id),
                 },
             };
 
-            this.Add(displayName, vtuberRecord);
+            this.Add(id, vtuberRecord);
         }
     }
 
@@ -50,8 +51,8 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
     {
         foreach (KeyValuePair<string, VTuberStatistics> vtuberStatPair in statisticsDict)
         {
-            string displayName = vtuberStatPair.Key;
-            if (!this.ContainsKey(displayName))
+            string id = vtuberStatPair.Key;
+            if (!this.ContainsKey(id))
             {
                 continue;
             }
@@ -75,8 +76,8 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
                 HighestViewedVideoId = Utility.TwitchVideoUrlToId(vtuberStat.Twitch.HighestViewedVideoURL),
             };
 
-            this[displayName].YouTube.DictRecord.Add(recordDateTime, youTubeRecord);
-            this[displayName].Twitch.DictRecord.Add(recordDateTime, twitchRecord);
+            this[id].YouTube.DictRecord.Add(recordDateTime, youTubeRecord);
+            this[id].Twitch.DictRecord.Add(recordDateTime, twitchRecord);
         }
     }
 

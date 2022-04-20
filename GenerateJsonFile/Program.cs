@@ -263,62 +263,19 @@ class Program
 
     private static void FillRecord(ref DictionaryRecord dictRecord, TrackList trackList, string recordDir, int recentDays)
     {
-        List<Tuple<FileInfo, DateTime>> csvFileList = FileUtility.GetFileInfoDateTimeList(recordDir, recentDays);
+        List<Tuple<FileInfo, DateTime>> csvFileList = FileUtility.GetFileInfoDateTimeList(
+            directory: recordDir,
+            prefix: "record",
+            recentDays: recentDays);
 
         foreach (Tuple<FileInfo, DateTime> fileInfoDateTime in csvFileList)
         {
-            Dictionary<string, VTuberStatistics> dictStatistics = GetStatisticsDictionaryFromRecordCSV(trackList, fileInfoDateTime.Item1.FullName);
+            Dictionary<string, VTuberStatistics> dictStatistics = CsvUtility.ReadStatisticsDictionary(trackList, fileInfoDateTime.Item1.FullName);
 
             if (dictStatistics.Count >= trackList.GetCount() * 0.5)
             {
                 dictRecord.AppendStatistic(fileInfoDateTime.Item2, dictStatistics);
             }
         }
-    }
-
-    private static Dictionary<string, VTuberStatistics> GetStatisticsDictionaryFromRecordCSV(TrackList trackList, string filePath)
-    {
-        // CSV Format:
-        // Name,SubscriberCount,ViewCount,MedianViewCount,HighestViewCount
-        // 鳥羽樂奈,40600,1613960,9725,23248
-        // 香草奈若,26900,1509583,15267,57825
-
-        TextFieldParser reader = new(filePath)
-        {
-            HasFieldsEnclosedInQuotes = true,
-            Delimiters = new string[] { "," },
-            CommentTokens = new string[] { "#" },
-            TrimWhiteSpace = false,
-            TextFieldType = FieldType.Delimited,
-        };
-
-        // consume header
-        string[]? headerBlock = reader.ReadFields();
-
-        if (headerBlock is null)
-            return new();
-
-        VTuberStatistics.Version version = VTuberStatistics.GetVersionByHeaderLength(headerBlock.Length);
-        if (version == VTuberStatistics.Version.Unknown)
-            return new();
-
-        Dictionary<string, VTuberStatistics> rDict = new();
-
-        while (!reader.EndOfData)
-        {
-            string[]? entryBlock = reader.ReadFields();
-
-            if (entryBlock is null || entryBlock.Length < 1)
-            {
-                continue;
-            }
-
-            string name = entryBlock[0];
-            string displayName = trackList.GetDisplayName(name);
-
-            rDict.Add(displayName, new VTuberStatistics(entryBlock));
-        }
-
-        return rDict;
     }
 }

@@ -35,7 +35,7 @@ class TopVideosListToJsonStruct
             if (y is null)
                 return false;
 
-            return x.Owner == y.Owner;
+            return x.Id == y.Id;
         }
 
         int IEqualityComparer<VideoInformation>.GetHashCode(VideoInformation obj)
@@ -58,13 +58,11 @@ class TopVideosListToJsonStruct
         }
 
         foreach (VideoInformation videoInfo in lstVideoInformation
-            .Where(p => dictRecord[trackList.GetDisplayName(p.Owner)].Nationality.Contains(NationalityFilter))
+            .Where(p => dictRecord[p.Id].Nationality.Contains(NationalityFilter))
             .OrderByDescending(e => e.ViewCount)
             .Take(count))
         {
-            string displayName = trackList.GetDisplayName(videoInfo.Owner);
-
-            VTuberRecord record = dictRecord[displayName];
+            VTuberRecord record = dictRecord[videoInfo.Id];
 
             VideoPopularityData videoData = new()
             {

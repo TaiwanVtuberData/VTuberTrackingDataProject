@@ -132,7 +132,7 @@ public class Fetcher
                     {
                         topVideosList.Insert(new VideoInformation
                         {
-                            Owner = userId,
+                            Id = userId,
                             Url = $"https://www.twitch.tv/videos/{video.Id}",
                             Title = video.Title,
                             ThumbnailUrl = video.ThumbnailUrl,

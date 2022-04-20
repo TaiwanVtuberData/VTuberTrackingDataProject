@@ -6,7 +6,7 @@ namespace Common.Types;
 public class VideoInformation : IComparable<VideoInformation>
 {
     [Index(0), HeaderPrefix]
-    public string Owner { get; set; } = "";
+    public string Id { get; set; } = "";
     [Index(4)]
     public string Url { get; init; } = "";
     [Index(2)]
@@ -31,7 +31,7 @@ public sealed class VideoInformationMap : ClassMap<VideoInformation>
 {
     public VideoInformationMap()
     {
-        Map(m => m.Owner).Name("Display Name");
+        Map(m => m.Id).Name("VTuber ID");
         Map(m => m.ViewCount).Name("View Count");
         Map(m => m.Title).Name("Title");
         Map(m => m.PublishDateTime).Name("Publish Time");

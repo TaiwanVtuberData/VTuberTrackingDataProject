@@ -26,24 +26,23 @@ public class VTuberStatistics
         };
     }
 
-    public string DisplayName { get; private set; } = "";
+    public string Id { get; private set; } = "";
     public YouTubeStatistics YouTube { get; private set; } = new();
     public TwitchStatistics Twitch { get; private set; } = new();
     // Combined
     public ulong CombinedRecentMedianViewCount { get; private set; } = 0;
 
-    public VTuberStatistics(string displayName)
+    public VTuberStatistics(string id)
     {
-        this.DisplayName = displayName;
+        this.Id = id;
     }
 
-    public VTuberStatistics(string displayName, YouTubeStatistics youTubeStatistics, TwitchStatistics twitchStatistics)
+    public VTuberStatistics(string id, YouTubeStatistics youTubeStatistics, TwitchStatistics twitchStatistics)
     {
-        this.DisplayName = displayName;
+        this.Id = id;
         this.YouTube = youTubeStatistics;
         this.Twitch = twitchStatistics;
     }
-
     public VTuberStatistics(string[] stringBlocks)
     {
         Version version = GetVersionByHeaderLength(stringBlocks.Length);
@@ -53,7 +52,7 @@ public class VTuberStatistics
                 {
                     // V1
                     // Name,SubscriberCount,ViewCount,MedianViewCount,HighestViewCount
-                    this.DisplayName = stringBlocks[0];
+                    this.Id = stringBlocks[0];
 
                     this.YouTube = new YouTubeStatistics
                     {
@@ -68,7 +67,7 @@ public class VTuberStatistics
                 {
                     // V2
                     // Name,SubscriberCount,ViewCount,MedianViewCount,HighestViewCount,HighestViewedVideoURL
-                    this.DisplayName = stringBlocks[0];
+                    this.Id = stringBlocks[0];
 
                     this.YouTube = new YouTubeStatistics
                     {
@@ -85,7 +84,7 @@ public class VTuberStatistics
                 {
                     // V3
                     // Display Name,YouTube Subscriber Count,YouTube View Count,YouTube Recent Median View Count,YouTube Recent Highest View Count,YouTube Recent Highest Viewed Video URL,Twitch Follower Count,Twitch Recent Median View Count,Twitch Recent Highest View Count,Twitch Recent Highest Viewed Video URL
-                    this.DisplayName = stringBlocks[0];
+                    this.Id = stringBlocks[0];
 
                     this.YouTube = new YouTubeStatistics
                     {
@@ -113,7 +112,77 @@ public class VTuberStatistics
 
         this.YouTube.UpdateSubscriberCountToMedianViewCount();
         this.Twitch.UpdateFollowerCountToMedianViewCount();
+    }
 
+    public VTuberStatistics(string[] stringBlocks, string displayName)
+    {
+        Version version = GetVersionByHeaderLength(stringBlocks.Length);
+        switch (version)
+        {
+            case Version.V1:
+                {
+                    // V1
+                    // Name,SubscriberCount,ViewCount,MedianViewCount,HighestViewCount
+                    this.Id = displayName;
+
+                    this.YouTube = new YouTubeStatistics
+                    {
+                        SubscriberCount = ulong.Parse(stringBlocks[1]),
+                        ViewCount = ulong.Parse(stringBlocks[2]),
+                        RecentMedianViewCount = ulong.Parse(stringBlocks[3]),
+                        RecentHighestViewCount = ulong.Parse(stringBlocks[4]),
+                    };
+                }
+                break;
+            case Version.V2:
+                {
+                    // V2
+                    // Name,SubscriberCount,ViewCount,MedianViewCount,HighestViewCount,HighestViewedVideoURL
+                    this.Id = displayName;
+
+                    this.YouTube = new YouTubeStatistics
+                    {
+                        SubscriberCount = ulong.Parse(stringBlocks[1]),
+                        ViewCount = ulong.Parse(stringBlocks[2]),
+                        RecentMedianViewCount = ulong.Parse(stringBlocks[3]),
+                        RecentHighestViewCount = ulong.Parse(stringBlocks[4]),
+                        HighestViewedVideoURL = stringBlocks[5],
+                    };
+                }
+                break;
+
+            case Version.V3:
+                {
+                    // V3
+                    // Display Name,YouTube Subscriber Count,YouTube View Count,YouTube Recent Median View Count,YouTube Recent Highest View Count,YouTube Recent Highest Viewed Video URL,Twitch Follower Count,Twitch Recent Median View Count,Twitch Recent Highest View Count,Twitch Recent Highest Viewed Video URL
+                    this.Id = displayName;
+
+                    this.YouTube = new YouTubeStatistics
+                    {
+                        SubscriberCount = ulong.Parse(stringBlocks[1]),
+                        ViewCount = ulong.Parse(stringBlocks[2]),
+                        RecentMedianViewCount = ulong.Parse(stringBlocks[3]),
+                        RecentHighestViewCount = ulong.Parse(stringBlocks[4]),
+                        HighestViewedVideoURL = stringBlocks[5],
+                    };
+
+                    this.Twitch = new TwitchStatistics
+                    {
+                        FollowerCount = ulong.Parse(stringBlocks[6]),
+                        RecentMedianViewCount = ulong.Parse(stringBlocks[7]),
+                        RecentHighestViewCount = ulong.Parse(stringBlocks[8]),
+                        HighestViewedVideoURL = stringBlocks[9],
+                    };
+                }
+                break;
+            case Version.Unknown:
+                throw new Exception("Unknown CSV version.");
+        }
+
+        this.CombinedRecentMedianViewCount = this.YouTube.RecentMedianViewCount + this.Twitch.RecentMedianViewCount;
+
+        this.YouTube.UpdateSubscriberCountToMedianViewCount();
+        this.Twitch.UpdateFollowerCountToMedianViewCount();
     }
 
     public void Add(string[] stringBlocks)
@@ -199,7 +268,7 @@ public class VTuberStatistics
     {
         decimal postRatio = 1m - preRatio;
 
-        VTuberStatistics rValue = new(preStat.DisplayName);
+        VTuberStatistics rValue = new(preStat.Id);
         rValue.YouTube.SubscriberCount = (ulong)(preRatio * preStat.YouTube.SubscriberCount + postRatio * postStat.YouTube.SubscriberCount);
         rValue.YouTube.ViewCount = (ulong)(preRatio * preStat.YouTube.ViewCount + postRatio * postStat.YouTube.ViewCount);
         rValue.YouTube.RecentMedianViewCount = (ulong)(preRatio * preStat.YouTube.RecentMedianViewCount + postRatio * postStat.YouTube.RecentMedianViewCount);

@@ -5,6 +5,7 @@ using System.Globalization;
 namespace Common.Types;
 public class TrackList
 {
+    // Key: ID, Value: VTuberData
     private Dictionary<string, VTuberData> internalDictionary = new();
     public IEnumerator<VTuberData> GetEnumerator()
     {
@@ -104,7 +105,7 @@ public class TrackList
                         {
                             if (data.ImportanceLevel <= requiredLevel)
                             {
-                                dictLoaded.Add(data.DisplayName, data);
+                                dictLoaded.Add(data.Id, data);
                             }
                         }
 
@@ -307,7 +308,7 @@ public class TrackList
 
     private static Validation<ValidationError, List<string>> ValidateAliasNames(string rawNames)
     {
-        List<string> result = rawNames.Split(',').ToList().Where( p => p !="").ToList();
+        List<string> result = rawNames.Split(',').ToList().Where(p => p != "").ToList();
 
         if (result.Where(p => p.Length == 0).Any())
         {
@@ -441,110 +442,65 @@ public class TrackList
             out result);
     }
 
-    public string GetDisplayName(string name)
+    public string GetDisplayName(string id)
     {
-        if (internalDictionary.ContainsKey(name))
-            return name;
-
-        foreach (KeyValuePair<string, VTuberData> keyValuePair in internalDictionary)
-        {
-            string displayName = keyValuePair.Key;
-            VTuberData vtuberData = keyValuePair.Value;
-
-            foreach (string aliasName in vtuberData.LstAliasName)
-            {
-                if (aliasName == name)
-                    return displayName;
-            }
-        }
-
-        throw new KeyNotFoundException($"Could not find {name}");
-    }
-    public string GetDisplayNameByYouTubeChannelId(string id)
-    {
-        foreach (KeyValuePair<string, VTuberData> keyValuePair in internalDictionary)
-        {
-            string displayName = keyValuePair.Key;
-            VTuberData vtuberData = keyValuePair.Value;
-
-            if (vtuberData.YouTubeChannelId == id)
-                return displayName;
-        }
-
-        throw new KeyNotFoundException($"Could not find YouTube Channel ID: {id}");
+        return internalDictionary[id].DisplayName;
     }
 
-    public string GetDisplayNameByTwitchChannelId(string id)
+    public string GetIdByYouTubeChannelId(string YouTubeChannelId)
     {
-        foreach (KeyValuePair<string, VTuberData> keyValuePair in internalDictionary)
-        {
-            string displayName = keyValuePair.Key;
-            VTuberData vtuberData = keyValuePair.Value;
-
-            if (vtuberData.TwitchChannelId == id)
-                return displayName;
-        }
-
-        throw new KeyNotFoundException($"Could not find Twitch Channel ID: {id}");
-    }
-    public string GetId(string name)
-    {
-        string displayName = GetDisplayName(name);
-
-        return internalDictionary[displayName].Id;
+        return internalDictionary.Find(p => p.Value.YouTubeChannelId == YouTubeChannelId)
+            .Match(
+            some => some.Key,
+            None: () => throw new KeyNotFoundException($"Could not find YouTube Channel ID: {YouTubeChannelId}"));
     }
 
-    public string GetYouTubeChannelIdByName(string name)
+    public string GetIdByTwitchChannelId(string TwitchChannelId)
     {
-        string displayName = GetDisplayName(name);
-
-        return internalDictionary[displayName].YouTubeChannelId;
-    }
-    public string GetTwitchChannelIdByName(string name)
-    {
-        string displayName = GetDisplayName(name);
-
-        return internalDictionary[displayName].TwitchChannelId;
-    }
-    public string GetTwitchChannelNameByName(string name)
-    {
-        string displayName = GetDisplayName(name);
-
-        return internalDictionary[displayName].TwitchChannelName;
-    }
-    public string GetGroupNameByName(string name)
-    {
-        string displayName = GetDisplayName(name);
-
-        return internalDictionary[displayName].GroupName;
+        return internalDictionary.Find(p => p.Value.TwitchChannelId == TwitchChannelId)
+            .Match(
+            some => some.Key,
+            None: () => throw new KeyNotFoundException($"Could not find Twitch Channel ID: {TwitchChannelId}"));
     }
 
-    public DateTime GetDebutDate(string name)
+    public string GetYouTubeChannelId(string id)
     {
-        string displayName = GetDisplayName(name);
-
-        return internalDictionary[displayName].DebuteDate;
+        return internalDictionary[id].YouTubeChannelId;
     }
 
-    public DateTime GetGraduationDate(string name)
+    public string GetTwitchChannelId(string id)
     {
-        string displayName = GetDisplayName(name);
-
-        return internalDictionary[displayName].GraduationDate;
+        return internalDictionary[id].TwitchChannelId;
     }
 
-    public string GetNationalityByName(string name)
+    public string GetTwitchChannelName(string id)
     {
-        string displayName = GetDisplayName(name);
-
-        return internalDictionary[displayName].Nationality;
+        return internalDictionary[id].TwitchChannelName;
     }
 
-    public bool GetIsActive(string name)
+    public string GetGroupName(string id)
     {
-        string displayName = GetDisplayName(name);
+        return internalDictionary[id].GroupName;
+    }
 
-        return internalDictionary[displayName].IsActive;
+    public DateTime GetDebutDate(string id)
+    {
+        return internalDictionary[id].DebuteDate;
+    }
+
+    public DateTime GetGraduationDate(string id)
+    {
+        return internalDictionary[id].GraduationDate;
+    }
+
+    public string GetNationality(string id)
+    {
+        return internalDictionary[id].Nationality;
+    }
+
+    public bool GetIsActive(string id)
+    {
+        return internalDictionary[id].IsActive;
     }
 
     public int GetVtuberWithGroupCount()
@@ -560,10 +516,14 @@ public class TrackList
 
         return vtuberWithGroupCount;
     }
+    public List<string> GetIdList()
+    {
+        return internalDictionary.Keys.ToList();
+    }
 
     public List<string> GetDisplayNameList()
     {
-        return internalDictionary.Keys.ToList();
+        return internalDictionary.Select(p => p.Value.DisplayName).ToList();
     }
 
     public List<string> GetGroupNameList()

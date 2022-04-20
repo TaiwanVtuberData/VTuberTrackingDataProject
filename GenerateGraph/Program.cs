@@ -32,7 +32,10 @@ static string GetCsvDirectory(string filePath)
 // ignore recentDays if it's lower than 0
 static void WriteDateTimeStatistics(TrackList trackList, string recordDirectory, int recentDays, bool byGroup, string writePrefix)
 {
-    List<Tuple<FileInfo, DateTime>> csvFileList = FileUtility.GetFileInfoDateTimeList(recordDirectory, recentDays);
+    List<Tuple<FileInfo, DateTime>> csvFileList = FileUtility.GetFileInfoDateTimeList(
+        directory: recordDirectory, 
+        prefix: "record", 
+        recentDays: recentDays);
 
     StatisticsTable statisticsTable = new(trackList, requiredLevel: 999, byGroup);
     foreach (Tuple<FileInfo, DateTime> fileInfoDateTime in csvFileList)
@@ -127,8 +130,8 @@ static Dictionary<string, VTuberStatistics> GetStatisticsDictionaryFromRecordCSV
 
         entryCount++;
 
-        string name = entryBlock[0];
-        string displayName = trackList.GetDisplayName(name);
+        string id = entryBlock[0];
+        string displayName = trackList.GetDisplayName(id);
 
         if (byGroup == false)
         {
@@ -136,7 +139,7 @@ static Dictionary<string, VTuberStatistics> GetStatisticsDictionaryFromRecordCSV
         }
         else
         {
-            string groupName = trackList.GetGroupNameByName(displayName);
+            string groupName = trackList.GetGroupName(id);
             if (groupName == "")
                 continue;
 

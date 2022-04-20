@@ -34,7 +34,7 @@ foreach (VideoInformation videoInfo in topVideoList)
 {
     try
     {
-        videoInfo.Owner = trackList.GetDisplayNameByYouTubeChannelId(videoInfo.Owner);
+        videoInfo.Id = trackList.GetIdByYouTubeChannelId(videoInfo.Id);
     }
     catch
     {
@@ -57,7 +57,7 @@ foreach (VTuberData vtuber in trackList)
     {
         try
         {
-            videoInfo.Owner = trackList.GetDisplayNameByTwitchChannelId(videoInfo.Owner);
+            videoInfo.Id = trackList.GetIdByTwitchChannelId(videoInfo.Id);
         }
         catch
         {
@@ -67,12 +67,12 @@ foreach (VTuberData vtuber in trackList)
     }
 
     YouTubeStatistics youtubeStatistics = new();
-    string YouTubeChannelId = trackList.GetYouTubeChannelIdByName(vtuber.DisplayName);
+    string YouTubeChannelId = trackList.GetYouTubeChannelId(vtuber.Id);
     if (dictIdYouTubeStatistics.ContainsKey(YouTubeChannelId))
     {
         youtubeStatistics = dictIdYouTubeStatistics[YouTubeChannelId];
     }
-    lstStatistics.Add(new VTuberStatistics(vtuber.DisplayName, youtubeStatistics, twitchStatistics));
+    lstStatistics.Add(new VTuberStatistics(vtuber.Id, youtubeStatistics, twitchStatistics));
 }
 
 // save date as UTC+8 (Taiwan time zone)
@@ -93,7 +93,7 @@ static void WriteResult(List<VTuberStatistics> vtuberStatisticsList, DateTime cu
 
     using StreamWriter recordFile = new($"{fileDir}/record_{currentDateTime:yyyy-MM-dd-HH-mm-ss}.csv");
     recordFile.Write(
-        "Display Name," +
+        "VTuber ID," +
         "YouTube Subscriber Count," +
         "YouTube View Count," +
         "YouTube Recent Median View Count," +
@@ -105,7 +105,7 @@ static void WriteResult(List<VTuberStatistics> vtuberStatisticsList, DateTime cu
         "Twitch Recent Highest Viewed Video URL\n");
     foreach (VTuberStatistics statistics in vtuberStatisticsList.OrderByDescending(p => p.YouTube.SubscriberCount))
     {
-        recordFile.Write(statistics.DisplayName);
+        recordFile.Write(statistics.Id);
         recordFile.Write(',');
 
         recordFile.Write(statistics.YouTube.SubscriberCount);

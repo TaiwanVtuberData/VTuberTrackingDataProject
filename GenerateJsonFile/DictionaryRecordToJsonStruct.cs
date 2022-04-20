@@ -46,7 +46,6 @@ class DictionaryRecordToJsonStruct
 
         foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord)
         {
-            string displayName = vtuberStatPair.Key;
             VTuberRecord record = vtuberStatPair.Value;
 
             ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);

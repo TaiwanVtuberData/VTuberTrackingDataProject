@@ -6,12 +6,13 @@ using System.Text.RegularExpressions;
 namespace Common.Utils;
 public class FileUtility
 {
-    public static List<Tuple<FileInfo, DateTime>> GetFileInfoDateTimeList(string directory, int recentDays)
+    public static List<Tuple<FileInfo, DateTime>> GetFileInfoDateTimeList(string directory, string prefix, int recentDays)
     {
         List<Tuple<FileInfo, DateTime>> fileInfoDateTimeList = new();
 
         // format: record_2021-02-21-21-52-13.csv
-        Regex fileNameRegex = new(@"^record_(?<Date>[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]).csv$");
+        string pattern = $"^{prefix}_(?<Date>[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]).csv$";
+        Regex fileNameRegex = new(pattern);
         DateTime latestDateTime = DateTime.UnixEpoch;
         foreach (string fileName in Directory.GetFiles(directory, "*.csv", System.IO.SearchOption.AllDirectories))
         {
