@@ -127,7 +127,6 @@ public class TrackList
     {
         return (
             CheckIdDuplicate(lstVtuberData),
-            CheckNamesDuplicate(lstVtuberData),
             CheckYouTubeIdDuplicate(lstVtuberData),
             CheckTwitchIdDuplicate(lstVtuberData),
             CheckTwitchNameDuplicate(lstVtuberData)
@@ -136,8 +135,7 @@ public class TrackList
                 dummy1,
                 dummy2,
                 dummy3,
-                dummy4,
-                dummy5
+                dummy4
                 )
             => lstVtuberData
             );
@@ -154,26 +152,6 @@ public class TrackList
         if (duplicateId.Any())
         {
             return new ValidationError($"Duplicate IDs: {string.Join(", ", duplicateId)}");
-        }
-        else
-        {
-            return new OptionNone();
-        }
-    }
-
-    private static Validation<ValidationError, OptionNone> CheckNamesDuplicate(IEnumerable<VTuberData> lstVtuberData)
-    {
-        List<string> lstName = lstVtuberData.Map(p => p.DisplayName).ToList();
-        List<string> lstAliasNames = lstVtuberData.Map(p => p.LstAliasName).SelectMany(p => p).ToList();
-
-        List<string> duplicateNames = (lstName.Append(lstAliasNames)).GroupBy(p => p)
-            .Where(p => p.Count() > 1)
-            .Select(p => p.Key)
-            .ToList();
-
-        if (duplicateNames.Any())
-        {
-            return new ValidationError($"Duplicate names and alias names: {string.Join(", ", duplicateNames)}");
         }
         else
         {
