@@ -57,7 +57,10 @@ class TopVideosListToJsonStruct
             lstVideoInformation = topVideoList.GetNoDuplicateList();
         }
 
+        List<string> lstValidVTubers = dictRecord.Keys.ToList();
+
         foreach (VideoInformation videoInfo in lstVideoInformation
+            .Where(p => lstValidVTubers.Contains(p.Id))
             .Where(p => dictRecord[p.Id].Nationality.Contains(NationalityFilter))
             .OrderByDescending(e => e.ViewCount)
             .Take(count))
