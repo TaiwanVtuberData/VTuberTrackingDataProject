@@ -26,7 +26,7 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
                 DisplayName = trackList.GetDisplayName(id),
                 DebutDate = trackList.GetDebutDate(id),
                 GraduationDate = trackList.GetGraduationDate(id),
-                IsActive = trackList.GetIsActive(id),
+                Activity = trackList.GetActivity(id),
                 GroupName = trackList.GetGroupName(id),
                 Nationality = trackList.GetNationality(id),
                 ThumbnailUrl = imageUrl,

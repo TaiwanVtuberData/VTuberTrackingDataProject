@@ -27,7 +27,7 @@ public class TrackList
         { "Twitch Channel Name", 5 },
         { "Debut Date", 6 },
         { "Graduation Date", 7 },
-        { "Active", 8 },
+        { "Activity", 8 },
         { "Group Name", 9 },
         { "Nationality", 10 },
     };
@@ -220,7 +220,7 @@ public class TrackList
             ValidateTwitchInformation(entryBlock[csvHeaderIndexs["Twitch Channel ID"]], entryBlock[csvHeaderIndexs["Twitch Channel Name"]]),
             ValidateDebutDate(entryBlock[csvHeaderIndexs["Debut Date"]]),
             ValidateGraduateDate(entryBlock[csvHeaderIndexs["Graduation Date"]]),
-            ValidateActivity(entryBlock[csvHeaderIndexs["Active"]]),
+            ValidateActivity(entryBlock[csvHeaderIndexs["Activity"]]),
             ValidateGroupName(entryBlock[csvHeaderIndexs["Group Name"]]),
             ValidateNationality(entryBlock[csvHeaderIndexs["Nationality"]])
             ).Apply(
@@ -232,7 +232,7 @@ public class TrackList
                 twitchInformation,
                 debutDate,
                 graduateDate,
-                isActive,
+                Activity,
                 groupName,
                 nationality
                 ) => new VTuberData(
@@ -244,7 +244,7 @@ public class TrackList
                     twitchInformation.Name,
                     debutDate,
                     graduateDate,
-                    isActive,
+                    Activity,
                     groupName,
                     nationality
                     )
@@ -349,10 +349,9 @@ public class TrackList
         }
     }
 
-    private static Validation<ValidationError, bool> ValidateActivity(string rawActivity)
+    private static Validation<ValidationError, Activity> ValidateActivity(string rawActivity)
     {
-        bool isValid = int.TryParse(rawActivity, out int result);
-        bool isActive = result == 1 ? true : false;
+        bool isValid = Enum.TryParse(rawActivity, out Activity parsedActivity);
 
         if (!isValid)
         {
@@ -360,7 +359,7 @@ public class TrackList
         }
         else
         {
-            return isActive;
+            return parsedActivity;
         }
     }
 
@@ -453,9 +452,9 @@ public class TrackList
         return internalDictionary[id].Nationality;
     }
 
-    public bool GetIsActive(string id)
+    public Activity GetActivity(string id)
     {
-        return internalDictionary[id].IsActive;
+        return internalDictionary[id].Activity;
     }
 
     public int GetVtuberWithGroupCount()

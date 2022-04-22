@@ -40,6 +40,17 @@ class DictionaryRecordToJsonStruct
         return YouTubeImgUrl.Replace($"=s{origSize}", $"=s{newSize}");
     }
 
+    private static Types.Activity CommonActivityToJsonActivity(Common.Types.Activity commonActivity)
+    {
+        return commonActivity switch
+        {
+            Common.Types.Activity.Preparing => Types.Activity.preparing,
+            Common.Types.Activity.Active => Types.Activity.active,
+            Common.Types.Activity.Graduated => Types.Activity.graduate,
+            _ => throw new InvalidOperationException(),
+        };
+    }
+
     public List<VTuberFullData> AllWithFullData(DictionaryRecord dictRecord, DateTime latestRecordTime)
     {
         List<Types.VTuberFullData> rLst = new();
@@ -53,7 +64,7 @@ class DictionaryRecordToJsonStruct
 
             VTuberFullData vTuberData = new(
                 id: record.Id,
-                activity: record.IsActive ? hasDebut ? Activity.active : Activity.preparing : Activity.graduate,
+                activity: CommonActivityToJsonActivity(record.Activity),
                 name: record.DisplayName,
                 imgUrl: YouTubeImgUrlResize(record.ThumbnailUrl, 88, 240),
                 YouTube: record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
@@ -88,7 +99,7 @@ class DictionaryRecordToJsonStruct
             Types.VTuberData vTuberData = new()
             {
                 id = record.Id,
-                activity = record.IsActive ? hasDebut ? Activity.active : Activity.preparing : Activity.graduate,
+                activity = CommonActivityToJsonActivity(record.Activity),
                 name = record.DisplayName,
                 imgUrl = record.ThumbnailUrl,
                 YouTube = record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
@@ -158,7 +169,7 @@ class DictionaryRecordToJsonStruct
             VTuberGrowthData vTuberData = new()
             {
                 id = record.Id,
-                activity = record.IsActive ? hasDebut ? Activity.active : Activity.preparing : Activity.graduate,
+                activity = CommonActivityToJsonActivity(record.Activity),
                 name = record.DisplayName,
                 imgUrl = record.ThumbnailUrl,
                 YouTube = record.YouTube.ChannelId == "" ? null : new YouTubeGrowthData()
@@ -255,7 +266,7 @@ class DictionaryRecordToJsonStruct
             VTuberGrowthData vTuberData = new()
             {
                 id = record.Id,
-                activity = record.IsActive ? hasDebut ? Activity.active : Activity.preparing : Activity.graduate,
+                activity = CommonActivityToJsonActivity(record.Activity),
                 name = record.DisplayName,
                 imgUrl = record.ThumbnailUrl,
                 YouTube = record.YouTube.ChannelId == "" ? null : new YouTubeGrowthData()
@@ -297,7 +308,7 @@ class DictionaryRecordToJsonStruct
 
             VTuberDebutData vTuberData = new(
                 id: record.Id,
-                activity: record.IsActive ? hasDebut ? Activity.active : Activity.preparing : Activity.graduate,
+                activity: CommonActivityToJsonActivity(record.Activity),
                 name: record.DisplayName,
                 imgUrl: record.ThumbnailUrl,
                 YouTube: record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
@@ -333,7 +344,7 @@ class DictionaryRecordToJsonStruct
 
             VTuberGraduateData vTuberData = new(
                 id: record.Id,
-                activity: record.IsActive ? hasDebut ? Activity.active : Activity.preparing : Activity.graduate,
+                activity: CommonActivityToJsonActivity(record.Activity),
                 name: record.DisplayName,
                 imgUrl: record.ThumbnailUrl,
                 YouTube: record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
@@ -366,7 +377,7 @@ class DictionaryRecordToJsonStruct
 
             VTuberPopularityData vTuberData = new(
                 id: record.Id,
-                activity: record.IsActive ? hasDebut ? Activity.active : Activity.preparing : Activity.graduate,
+                activity: CommonActivityToJsonActivity(record.Activity),
                 name: record.DisplayName,
                 imgUrl: record.ThumbnailUrl,
                 YouTube: record.YouTube.ChannelId == "" ? null : new YouTubePopularityData(
@@ -416,7 +427,7 @@ class DictionaryRecordToJsonStruct
                 Types.VTuberData vTuberData = new()
                 {
                     id = record.Id,
-                    activity = record.IsActive ? hasDebut ? Activity.active : Activity.preparing : Activity.graduate,
+                    activity = CommonActivityToJsonActivity(record.Activity),
                     name = record.DisplayName,
                     imgUrl = record.ThumbnailUrl,
                     YouTube = record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
@@ -468,7 +479,7 @@ class DictionaryRecordToJsonStruct
                 Types.VTuberData vTuberData = new()
                 {
                     id = record.Id,
-                    activity = record.IsActive ? hasDebut ? Activity.active : Activity.preparing : Activity.graduate,
+                    activity = CommonActivityToJsonActivity(record.Activity),
                     name = record.DisplayName == groupName ? record.DisplayName + "(官方頻道)" : record.DisplayName,
                     imgUrl = record.ThumbnailUrl,
                     YouTube = record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },

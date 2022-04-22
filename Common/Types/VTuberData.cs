@@ -8,6 +8,6 @@ public readonly record struct VTuberData(
     string TwitchChannelName,
     DateTime DebuteDate,
     DateTime GraduationDate,
-    bool IsActive,
+    Activity Activity,
     string GroupName,
     string Nationality);
