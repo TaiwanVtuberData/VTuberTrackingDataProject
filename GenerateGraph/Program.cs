@@ -33,8 +33,8 @@ static string GetCsvDirectory(string filePath)
 static void WriteDateTimeStatistics(TrackList trackList, string recordDirectory, int recentDays, bool byGroup, string writePrefix)
 {
     List<Tuple<FileInfo, DateTime>> csvFileList = FileUtility.GetFileInfoDateTimeList(
-        directory: recordDirectory, 
-        prefix: "record", 
+        directory: recordDirectory,
+        prefix: "record",
         recentDays: recentDays);
 
     StatisticsTable statisticsTable = new(trackList, byGroup);
@@ -80,7 +80,7 @@ static void WriteDateTimeStatistics(TrackList trackList, string recordDirectory,
 
     foreach (string name in names)
     {
-        WriteIndividualRecordCSV(statisticsTable, name, null, writePrefix);
+        WritelRecordCSV(trackList, statisticsTable, name, null, byGroup, writePrefix);
     }
 
     string[] namesConstriant = {
@@ -89,7 +89,7 @@ static void WriteDateTimeStatistics(TrackList trackList, string recordDirectory,
 
     foreach (string name in namesConstriant)
     {
-        WriteIndividualRecordCSV(statisticsTable, name, 2000m, writePrefix);
+        WritelRecordCSV(trackList, statisticsTable, name, 2000m, byGroup, writePrefix);
     }
 }
 
@@ -161,7 +161,7 @@ static Dictionary<string, VTuberStatistics> GetStatisticsDictionaryFromRecordCSV
     return ans;
 }
 
-static void WriteIndividualRecordCSV(StatisticsTable statisticsTable, string writeColumnName, decimal? subConstriant, string writePrefix)
+static void WritelRecordCSV(TrackList trackList, StatisticsTable statisticsTable, string writeColumnName, decimal? subConstriant, bool byGroup, string writePrefix)
 {
     List<DateTime> dateList = statisticsTable.GetDateTimeList();
     dateList.Sort();
@@ -185,7 +185,7 @@ static void WriteIndividualRecordCSV(StatisticsTable statisticsTable, string wri
     // then write the data by the order of the latest value
     foreach (KeyValuePair<string, List<decimal>> writtenValue in statisticsDict.OrderByDescending(p => p.Value.Last()))
     {
-        string line = writtenValue.Key;
+        string line = byGroup ? writtenValue.Key : trackList.GetDisplayName(writtenValue.Key);
         List<decimal> copiedList = writtenValue.Value;
 
         foreach (decimal value in copiedList)
