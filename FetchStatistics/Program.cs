@@ -22,7 +22,7 @@ FetchYouTubeStatistics.Fetcher youtubeDataFetcher = new(FileUtility.GetSingleLin
 FetchTwitchStatistics.Fetcher twitchDataFetcher = new(FileUtility.GetSingleLineFromFile(TwitchClientIdPath),
     FileUtility.GetSingleLineFromFile(TwitchSecretPath));
 
-TrackList trackList = new(csvFilePath: trackListPath, requiredLevel: importanceLevel, throwOnValidationFail: true);
+TrackList trackList = new(csvFilePath: trackListPath, throwOnValidationFail: true);
 
 List<string> lstYouTubeChannelId = trackList.GetYouTubeChannelIdList();
 Console.WriteLine($"Get all YouTube statistics: {lstYouTubeChannelId.Count} channenls");

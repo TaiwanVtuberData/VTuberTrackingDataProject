@@ -9,7 +9,7 @@ if (args.Length == 1)
 
 string csvDirectory = GetCsvDirectory("./CsvDirectory");
 string trackListPath = Path.Combine(csvDirectory, "./DATA/TW_VTUBER_TRACK_LIST.csv");
-TrackList trackList = new(csvFilePath: trackListPath, requiredLevel: 999, throwOnValidationFail: true);
+TrackList trackList = new(csvFilePath: trackListPath, throwOnValidationFail: true);
 
 WriteDateTimeStatistics(trackList, csvDirectory, recentDays, byGroup: false, "Individual");
 WriteDateTimeStatistics(trackList, csvDirectory, recentDays, byGroup: true, "Group");

@@ -19,7 +19,7 @@ class Program
         DateTime now = DateTime.UtcNow;
 
         (_, DateTime latestRecordTime) = FileUtility.GetLatestRecord(dataRepoPath, "record");
-        TrackList trackList = new(Path.Combine(dataRepoPath, "DATA/TW_VTUBER_TRACK_LIST.csv"), requiredLevel: 999, throwOnValidationFail: true);
+        TrackList trackList = new(Path.Combine(dataRepoPath, "DATA/TW_VTUBER_TRACK_LIST.csv"), throwOnValidationFail: true);
         List<string> excluedList = FileUtility.GetListFromCsv(Path.Combine(dataRepoPath, "DATA/EXCLUDE_LIST.csv"));
 
         (string latestBasicDataFilePath, _) = FileUtility.GetLatestRecord(dataRepoPath, "basic-data");

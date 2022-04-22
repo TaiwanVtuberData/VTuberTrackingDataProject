@@ -17,7 +17,7 @@ Console.WriteLine(TwitchClientIdPath);
 Console.WriteLine(TwitchSecretPath);
 Console.WriteLine(saveDir);
 
-TrackList trackList = new(trackListPath, requiredLevel: 999, throwOnValidationFail: true);
+TrackList trackList = new(csvFilePath: trackListPath, throwOnValidationFail: true);
 
 Console.WriteLine($"Total entries: {trackList.GetCount()}");
 

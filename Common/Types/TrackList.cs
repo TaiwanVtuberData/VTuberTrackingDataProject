@@ -30,12 +30,11 @@ public class TrackList
         { "Active", 8 },
         { "Group Name", 9 },
         { "Nationality", 10 },
-        { "Importance Level", 11 },
     };
 
-    public TrackList(string csvFilePath, int requiredLevel, bool throwOnValidationFail)
+    public TrackList(string csvFilePath, bool throwOnValidationFail)
     {
-        Validation<ValidationError, TrackList> loadResult = Load(csvFilePath, requiredLevel);
+        Validation<ValidationError, TrackList> loadResult = Load(csvFilePath);
 
         loadResult.Match(
             result =>
@@ -57,7 +56,7 @@ public class TrackList
         internalDictionary = dict;
     }
 
-    public static Validation<ValidationError, TrackList> Load(string csvFilePath, int requiredLevel)
+    public static Validation<ValidationError, TrackList> Load(string csvFilePath)
     {
         TextFieldParser reader = new(csvFilePath)
         {
@@ -99,15 +98,10 @@ public class TrackList
                 return CheckFieldsDuplicate(lstData).Match<Validation<ValidationError, TrackList>>(
                     validatedLstData =>
                     {
-                        Dictionary<string, VTuberData> dictLoaded = new();
-
-                        foreach (VTuberData data in validatedLstData)
-                        {
-                            if (data.ImportanceLevel <= requiredLevel)
-                            {
-                                dictLoaded.Add(data.Id, data);
-                            }
-                        }
+                        Dictionary<string, VTuberData> dictLoaded =
+                        validatedLstData.ToDictionary(
+                            t => t.Id,
+                            t => t);
 
                         return new TrackList(dictLoaded);
                     },
@@ -228,9 +222,8 @@ public class TrackList
             ValidateGraduateDate(entryBlock[csvHeaderIndexs["Graduation Date"]]),
             ValidateActivity(entryBlock[csvHeaderIndexs["Active"]]),
             ValidateGroupName(entryBlock[csvHeaderIndexs["Group Name"]]),
-            ValidateNationality(entryBlock[csvHeaderIndexs["Nationality"]]),
-            ValidateImportance(entryBlock[csvHeaderIndexs["Importance Level"]]))
-            .Apply(
+            ValidateNationality(entryBlock[csvHeaderIndexs["Nationality"]])
+            ).Apply(
             (
                 id,
                 displayName,
@@ -241,8 +234,7 @@ public class TrackList
                 graduateDate,
                 isActive,
                 groupName,
-                nationality,
-                importanceLevel
+                nationality
                 ) => new VTuberData(
                     id,
                     displayName,
@@ -254,8 +246,7 @@ public class TrackList
                     graduateDate,
                     isActive,
                     groupName,
-                    nationality,
-                    importanceLevel
+                    nationality
                     )
                 );
     }
@@ -388,20 +379,6 @@ public class TrackList
         {
 
             return rawNationality;
-        }
-    }
-
-    private static Validation<ValidationError, int> ValidateImportance(string rawImportance)
-    {
-        bool isValid = int.TryParse(rawImportance, out int result);
-
-        if (!isValid)
-        {
-            return new ValidationError($"Invalid importance level: {rawImportance}");
-        }
-        else
-        {
-            return result;
         }
     }
 

@@ -10,5 +10,4 @@ public readonly record struct VTuberData(
     DateTime GraduationDate,
     bool IsActive,
     string GroupName,
-    string Nationality,
-    int ImportanceLevel);
+    string Nationality);

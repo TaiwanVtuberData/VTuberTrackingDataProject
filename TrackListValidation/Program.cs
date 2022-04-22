@@ -3,7 +3,7 @@ using LanguageExt;
 
 string tracklistPath = args.Length >= 1 ? args[0] : "./DATA/TW_VTUBER_TRACK_LIST.csv";
 
-Validation<ValidationError, TrackList> trackListResult = TrackList.Load(csvFilePath: tracklistPath, requiredLevel: 999);
+Validation<ValidationError, TrackList> trackListResult = TrackList.Load(csvFilePath: tracklistPath);
 
 Console.WriteLine($"Validating track list: {tracklistPath}");
 
