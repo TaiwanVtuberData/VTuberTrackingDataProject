@@ -51,7 +51,7 @@ class DictionaryRecordToJsonStruct
         };
     }
 
-    public List<VTuberFullData> AllWithFullData(DictionaryRecord dictRecord, DateTime latestRecordTime)
+    public static List<VTuberFullData> AllWithFullData(DictionaryRecord dictRecord, DateTime latestRecordTime)
     {
         List<Types.VTuberFullData> rLst = new();
 
@@ -60,7 +60,6 @@ class DictionaryRecordToJsonStruct
             VTuberRecord record = vtuberStatPair.Value;
 
             ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
-            bool hasDebut = TodayDate > record.DebutDate;
 
             VTuberFullData vTuberData = new(
                 id: record.Id,
@@ -72,8 +71,9 @@ class DictionaryRecordToJsonStruct
                 popularVideo: GetPopularVideo(record, latestRecordTime),
                 group: record.GroupName == "" ? null : record.GroupName,
                 nationality: record.Nationality,
-                debutDate: record.DebutDate == DateTime.UnixEpoch ? null : record.DebutDate.ToString("yyyy-MM-dd"),
-                graduateDate: record.GraduationDate == DateTime.UnixEpoch ? null : record.GraduationDate.ToString("yyyy-MM-dd"));
+                debutDate: record.DebutDate?.ToString("yyyy-MM-dd"),
+                graduateDate: record.GraduationDate?.ToString("yyyy-MM-dd")
+                );
 
             rLst.Add(vTuberData);
         }
@@ -303,8 +303,12 @@ class DictionaryRecordToJsonStruct
             string displayName = vtuberStatPair.Key;
             VTuberRecord record = vtuberStatPair.Value;
 
+            if (record.DebutDate is null)
+            {
+                continue;
+            }
+
             ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
-            bool hasDebut = TodayDate > record.DebutDate;
 
             VTuberDebutData vTuberData = new(
                 id: record.Id,
@@ -316,7 +320,8 @@ class DictionaryRecordToJsonStruct
                 popularVideo: GetPopularVideo(record, latestRecordTime),
                 group: record.GroupName == "" ? null : record.GroupName,
                 nationality: record.Nationality,
-                debutDate: record.DebutDate.ToString("yyyy-MM-dd"));
+                debutDate: record.DebutDate.Value.ToString("yyyy-MM-dd")
+                );
 
             rLst.Add(vTuberData);
         }
@@ -339,8 +344,12 @@ class DictionaryRecordToJsonStruct
             string displayName = vtuberStatPair.Key;
             VTuberRecord record = vtuberStatPair.Value;
 
+            if (record.GraduationDate is null)
+            {
+                continue;
+            }
+
             ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
-            bool hasDebut = TodayDate > record.DebutDate;
 
             VTuberGraduateData vTuberData = new(
                 id: record.Id,
@@ -352,7 +361,8 @@ class DictionaryRecordToJsonStruct
                 popularVideo: GetPopularVideo(record, latestRecordTime),
                 group: record.GroupName == "" ? null : record.GroupName,
                 nationality: record.Nationality,
-                graduateDate: record.GraduationDate.ToString("yyyy-MM-dd"));
+                graduateDate: record.GraduationDate.Value.ToString("yyyy-MM-dd")
+                );
 
             rLst.Add(vTuberData);
         }

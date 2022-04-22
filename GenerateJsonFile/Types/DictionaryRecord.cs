@@ -92,7 +92,12 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
         {
             VTuberRecord record = pair.Value;
 
-            double days = (record.DebutDate - currentDate).TotalDays;
+            if(record.DebutDate is null)
+            {
+                continue;
+            }
+
+            double days = (record.DebutDate.Value - currentDate).TotalDays;
             if (beforeCurrentDay <= days && days <= afterCurrentDay)
             {
                 rLst.Add(record);
@@ -111,7 +116,12 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
         {
             VTuberRecord record = pair.Value;
 
-            if (Math.Abs((record.GraduationDate - currentDate).TotalDays) <= 30)
+            if (record.GraduationDate is null)
+            {
+                continue;
+            }
+
+            if (Math.Abs((record.GraduationDate.Value - currentDate).TotalDays) <= 30)
             {
                 rLst.Add(record);
             }

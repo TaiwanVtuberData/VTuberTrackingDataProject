@@ -34,7 +34,7 @@ public class TrackList
 
     public TrackList(string csvFilePath, bool throwOnValidationFail)
     {
-        Validation<ValidationError, TrackList> loadResult = Load(csvFilePath);
+        Validation<ValidationError, TrackList> loadResult = LoadAndValidateDateAndActivity(csvFilePath, todayDate: null);
 
         loadResult.Match(
             result =>
@@ -56,7 +56,7 @@ public class TrackList
         internalDictionary = dict;
     }
 
-    public static Validation<ValidationError, TrackList> Load(string csvFilePath)
+    public static Validation<ValidationError, TrackList> LoadAndValidateDateAndActivity(string csvFilePath, DateTime? todayDate)
     {
         TextFieldParser reader = new(csvFilePath)
         {
@@ -87,7 +87,7 @@ public class TrackList
             string[]? entryBlock = reader.ReadFields();
 
             if (entryBlock is not null)
-                lstResult.Add(Validate(entryBlock));
+                lstResult.Add(Validate(entryBlock, todayDate));
         }
 
         return lstResult.
@@ -210,7 +210,7 @@ public class TrackList
         }
     }
 
-    private static Validation<ValidationError, VTuberData> Validate(string[] entryBlock)
+    private static Validation<ValidationError, VTuberData> Validate(string[] entryBlock, DateTime? todayDate)
     {
         return (
             ValidateId(entryBlock[csvHeaderIndexs["ID"]]),
@@ -218,9 +218,7 @@ public class TrackList
             ValidateAliasNames(entryBlock[csvHeaderIndexs["Alias Names"]]),
             ValidateYouTubeChannelId(entryBlock[csvHeaderIndexs["YouTube Channel ID"]]),
             ValidateTwitchInformation(entryBlock[csvHeaderIndexs["Twitch Channel ID"]], entryBlock[csvHeaderIndexs["Twitch Channel Name"]]),
-            ValidateDebutDate(entryBlock[csvHeaderIndexs["Debut Date"]]),
-            ValidateGraduateDate(entryBlock[csvHeaderIndexs["Graduation Date"]]),
-            ValidateActivity(entryBlock[csvHeaderIndexs["Activity"]]),
+            ValidateActivityDate(entryBlock[csvHeaderIndexs["Debut Date"]], entryBlock[csvHeaderIndexs["Graduation Date"]], entryBlock[csvHeaderIndexs["Activity"]], todayDate),
             ValidateGroupName(entryBlock[csvHeaderIndexs["Group Name"]]),
             ValidateNationality(entryBlock[csvHeaderIndexs["Nationality"]])
             ).Apply(
@@ -230,9 +228,7 @@ public class TrackList
                 aliasNames,
                 YouTubeChannelId,
                 twitchInformation,
-                debutDate,
-                graduateDate,
-                Activity,
+                activityDate,
                 groupName,
                 nationality
                 ) => new VTuberData(
@@ -242,9 +238,9 @@ public class TrackList
                     YouTubeChannelId,
                     twitchInformation.Id,
                     twitchInformation.Name,
-                    debutDate,
-                    graduateDate,
-                    Activity,
+                    activityDate.DebutDate,
+                    activityDate.GrduateDate,
+                    activityDate.Activity,
                     groupName,
                     nationality
                     )
@@ -321,8 +317,132 @@ public class TrackList
         return new TwitchInformation(Id: rawId, Name: rawName);
     }
 
-    private static Validation<ValidationError, DateTime> ValidateDebutDate(string rawDate)
+    private readonly record struct ActivityDate(DateTime? DebutDate, DateTime? GrduateDate, Activity Activity);
+
+    private static Validation<ValidationError, ActivityDate> ValidateActivityDate(string rawDebutDate, string rawGraduateDate, string rawActivity, DateTime? todayDate)
     {
+        return (Validation<ValidationError, ActivityDate>)(
+            ValidateDebutDate(rawDebutDate),
+            ValidateGraduateDate(rawGraduateDate),
+            ValidateActivity(rawActivity)
+            ).Apply(
+            (
+                debutDate,
+                graduateDate,
+                activity
+                ) =>
+            {
+                if (todayDate is not null)
+                {
+                    return (
+                    ValidateActivityDebutDate(debutDate, todayDate.Value, activity),
+                    ValidateActivityGraduateDate(graduateDate, todayDate.Value, activity)
+                    ).Apply(
+                        (
+                            validatedDebutDate,
+                            validatedGraduateDate
+                            ) => new ActivityDate(
+                                validatedDebutDate.ToNullable(),
+                                validatedGraduateDate.ToNullable(),
+                                activity
+                                )
+                            );
+                }
+                else
+                {
+                    return new ActivityDate(
+                                debutDate.ToNullable(),
+                                graduateDate.ToNullable(),
+                                activity
+                                );
+                }
+            }
+            );
+    }
+
+    private static Validation<ValidationError, Option<DateTime>> ValidateActivityDebutDate(Option<DateTime> debutDate, DateTime todayDate, Activity activity)
+    {
+        return debutDate.Match<Validation<ValidationError, Option<DateTime>>>(
+            None: () => Option<DateTime>.None,
+            Some: validDebutDate =>
+            {
+                switch (activity)
+                {
+                    case Activity.Preparing:
+                        {
+                            if (validDebutDate < todayDate)
+                            {
+                                return new ValidationError($"Invalid debute date when preparing: {validDebutDate}");
+                            }
+                            else
+                            {
+                                return Option<DateTime>.Some(validDebutDate);
+                            }
+                        }
+                    case Activity.Active:
+                    case Activity.Graduated:
+                        {
+                            if (debutDate > todayDate)
+                            {
+                                return new ValidationError($"Invalid debute date when active or graduated: {validDebutDate}");
+                            }
+                            else
+                            {
+                                return Option<DateTime>.Some(validDebutDate);
+                            }
+                        }
+                }
+
+                return new ValidationError($"Invalid activity: {activity}");
+            }
+            );
+    }
+
+    private static Validation<ValidationError, Option<DateTime>> ValidateActivityGraduateDate(Option<DateTime> graduateDate, DateTime todayDate, Activity activity)
+    {
+        return graduateDate.Match<Validation<ValidationError, Option<DateTime>>>(
+            None: () => Option<DateTime>.None,
+            Some: validGraduateDate =>
+            {
+                switch (activity)
+                {
+                    case Activity.Preparing:
+                    case Activity.Active:
+                        {
+                            if (validGraduateDate < todayDate)
+                            {
+                                return new ValidationError($"Invalid graduate date when preparing or active: {validGraduateDate}");
+                            }
+                            else
+                            {
+                                return graduateDate;
+                            }
+                        }
+                    case Activity.Graduated:
+                        {
+                            if (validGraduateDate > todayDate)
+                            {
+                                return new ValidationError($"Invalid graduate date when graduated: {validGraduateDate}");
+                            }
+                            else
+                            {
+                                return graduateDate;
+                            }
+                        }
+                }
+
+                return new ValidationError($"Invalid activity: {activity}");
+            }
+            );
+    }
+
+    private static Validation<ValidationError, Option<DateTime>> ValidateDebutDate(string rawDate)
+    {
+        if (rawDate.Length == 0)
+        {
+            return Option<DateTime>.None;
+        }
+
         bool isValid = TryParseDate(rawDate, out DateTime parsedDate);
 
         if (!isValid)
@@ -331,12 +451,17 @@ public class TrackList
         }
         else
         {
-            return parsedDate;
+            return Option<DateTime>.Some(parsedDate);
         }
     }
 
-    private static Validation<ValidationError, DateTime> ValidateGraduateDate(string rawDate)
+    private static Validation<ValidationError, Option<DateTime>> ValidateGraduateDate(string rawDate)
     {
+        if (rawDate.Length == 0)
+        {
+            return Option<DateTime>.None;
+        }
+
         bool isValid = TryParseDate(rawDate, out DateTime parsedDate);
 
         if (!isValid)
@@ -345,7 +470,7 @@ public class TrackList
         }
         else
         {
-            return parsedDate;
+            return Option<DateTime>.Some(parsedDate);
         }
     }
 
@@ -437,12 +562,12 @@ public class TrackList
         return internalDictionary[id].GroupName;
     }
 
-    public DateTime GetDebutDate(string id)
+    public DateTime? GetDebutDate(string id)
     {
         return internalDictionary[id].DebuteDate;
     }
 
-    public DateTime GetGraduationDate(string id)
+    public DateTime? GetGraduationDate(string id)
     {
         return internalDictionary[id].GraduationDate;
     }

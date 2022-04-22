@@ -6,8 +6,8 @@ public readonly record struct VTuberData(
     string YouTubeChannelId,
     string TwitchChannelId,
     string TwitchChannelName,
-    DateTime DebuteDate,
-    DateTime GraduationDate,
+    DateTime? DebuteDate,
+    DateTime? GraduationDate,
     Activity Activity,
     string GroupName,
     string Nationality);
