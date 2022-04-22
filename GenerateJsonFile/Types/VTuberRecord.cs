@@ -3,8 +3,8 @@ public class VTuberRecord
 {
     public string Id { get; set; } = "";
     public string DisplayName { get; set; } = "";
-    public DateTime? DebutDate { get; set; }
-    public DateTime? GraduationDate { get; set; }
+    public DateOnly? DebutDate { get; set; }
+    public DateOnly? GraduationDate { get; set; }
     public Common.Types.Activity Activity { get; set; } = Common.Types.Activity.Active;
     public string GroupName { get; set; } = "";
     public string Nationality { get; set; } = "";

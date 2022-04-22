@@ -56,7 +56,7 @@ public class TrackList
         internalDictionary = dict;
     }
 
-    public static Validation<ValidationError, TrackList> LoadAndValidateDateAndActivity(string csvFilePath, DateTime? todayDate)
+    public static Validation<ValidationError, TrackList> LoadAndValidateDateAndActivity(string csvFilePath, DateOnly? todayDate)
     {
         TextFieldParser reader = new(csvFilePath)
         {
@@ -210,7 +210,7 @@ public class TrackList
         }
     }
 
-    private static Validation<ValidationError, VTuberData> Validate(string[] entryBlock, DateTime? todayDate)
+    private static Validation<ValidationError, VTuberData> Validate(string[] entryBlock, DateOnly? todayDate)
     {
         return (
             ValidateId(entryBlock[csvHeaderIndexs["ID"]]),
@@ -317,9 +317,9 @@ public class TrackList
         return new TwitchInformation(Id: rawId, Name: rawName);
     }
 
-    private readonly record struct ActivityDate(DateTime? DebutDate, DateTime? GrduateDate, Activity Activity);
+    private readonly record struct ActivityDate(DateOnly? DebutDate, DateOnly? GrduateDate, Activity Activity);
 
-    private static Validation<ValidationError, ActivityDate> ValidateActivityDate(string rawDebutDate, string rawGraduateDate, string rawActivity, DateTime? todayDate)
+    private static Validation<ValidationError, ActivityDate> ValidateActivityDate(string rawDebutDate, string rawGraduateDate, string rawActivity, DateOnly? todayDate)
     {
         return (Validation<ValidationError, ActivityDate>)(
             ValidateDebutDate(rawDebutDate),
@@ -360,10 +360,10 @@ public class TrackList
             );
     }
 
-    private static Validation<ValidationError, Option<DateTime>> ValidateActivityDebutDate(Option<DateTime> debutDate, DateTime todayDate, Activity activity)
+    private static Validation<ValidationError, Option<DateOnly>> ValidateActivityDebutDate(Option<DateOnly> debutDate, DateOnly todayDate, Activity activity)
     {
-        return debutDate.Match<Validation<ValidationError, Option<DateTime>>>(
-            None: () => Option<DateTime>.None,
+        return debutDate.Match<Validation<ValidationError, Option<DateOnly>>>(
+            None: () => Option<DateOnly>.None,
             Some: validDebutDate =>
             {
                 switch (activity)
@@ -376,7 +376,7 @@ public class TrackList
                             }
                             else
                             {
-                                return Option<DateTime>.Some(validDebutDate);
+                                return Option<DateOnly>.Some(validDebutDate);
                             }
                         }
                     case Activity.Active:
@@ -388,7 +388,7 @@ public class TrackList
                             }
                             else
                             {
-                                return Option<DateTime>.Some(validDebutDate);
+                                return Option<DateOnly>.Some(validDebutDate);
                             }
                         }
                 }
@@ -398,10 +398,10 @@ public class TrackList
             );
     }
 
-    private static Validation<ValidationError, Option<DateTime>> ValidateActivityGraduateDate(Option<DateTime> graduateDate, DateTime todayDate, Activity activity)
+    private static Validation<ValidationError, Option<DateOnly>> ValidateActivityGraduateDate(Option<DateOnly> graduateDate, DateOnly todayDate, Activity activity)
     {
-        return graduateDate.Match<Validation<ValidationError, Option<DateTime>>>(
-            None: () => Option<DateTime>.None,
+        return graduateDate.Match<Validation<ValidationError, Option<DateOnly>>>(
+            None: () => Option<DateOnly>.None,
             Some: validGraduateDate =>
             {
                 switch (activity)
@@ -436,42 +436,14 @@ public class TrackList
             );
     }
 
-    private static Validation<ValidationError, Option<DateTime>> ValidateDebutDate(string rawDate)
+    private static Validation<ValidationError, Option<DateOnly>> ValidateDebutDate(string rawDate)
     {
-        if (rawDate.Length == 0)
-        {
-            return Option<DateTime>.None;
-        }
-
-        bool isValid = TryParseDate(rawDate, out DateTime parsedDate);
-
-        if (!isValid)
-        {
-            return new ValidationError($"Invalid deubt date: {rawDate}");
-        }
-        else
-        {
-            return Option<DateTime>.Some(parsedDate);
-        }
+        return ParseDate(rawDate);
     }
 
-    private static Validation<ValidationError, Option<DateTime>> ValidateGraduateDate(string rawDate)
+    private static Validation<ValidationError, Option<DateOnly>> ValidateGraduateDate(string rawDate)
     {
-        if (rawDate.Length == 0)
-        {
-            return Option<DateTime>.None;
-        }
-
-        bool isValid = TryParseDate(rawDate, out DateTime parsedDate);
-
-        if (!isValid)
-        {
-            return new ValidationError($"Invalid graduate date: {rawDate}");
-        }
-        else
-        {
-            return Option<DateTime>.Some(parsedDate);
-        }
+        return ParseDate(rawDate);
     }
 
     private static Validation<ValidationError, Activity> ValidateActivity(string rawActivity)
@@ -506,19 +478,25 @@ public class TrackList
         }
     }
 
-    private static bool TryParseDate(string dateString, out DateTime result)
+    private static Validation<ValidationError, Option<DateOnly>> ParseDate(string dateString)
     {
         if (dateString.Length == 0)
         {
-            result = DateTime.UnixEpoch;
-            return true;
+            return Option<DateOnly>.None;
         }
 
-        return DateTime.TryParseExact(dateString,
+        bool isValid = DateOnly.TryParseExact(dateString,
             new string[] { "yyyy/MM/dd", "yyyy/M/dd", "yyyy/MM/d", "yyyy/M/d" },
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.None,
-            out result);
+            out DateOnly parseResult);
+
+        if(isValid)
+        {
+            return Option<DateOnly>.Some(parseResult);
+        }
+        else
+        {
+            return new ValidationError($"Failed to parse date: {dateString}");
+        }
     }
 
     public string GetDisplayName(string id)
@@ -562,12 +540,12 @@ public class TrackList
         return internalDictionary[id].GroupName;
     }
 
-    public DateTime? GetDebutDate(string id)
+    public DateOnly? GetDebutDate(string id)
     {
         return internalDictionary[id].DebuteDate;
     }
 
-    public DateTime? GetGraduationDate(string id)
+    public DateOnly? GetGraduationDate(string id)
     {
         return internalDictionary[id].GraduationDate;
     }

@@ -94,7 +94,6 @@ class DictionaryRecordToJsonStruct
             VTuberRecord record = vtuberStatPair.Value;
 
             ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
-            bool hasDebut = TodayDate > record.DebutDate;
 
             Types.VTuberData vTuberData = new()
             {
@@ -164,7 +163,6 @@ class DictionaryRecordToJsonStruct
             VTuberRecord record = dictRecord[displayName];
 
             ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
-            bool hasDebut = TodayDate > record.DebutDate;
 
             VTuberGrowthData vTuberData = new()
             {
@@ -261,7 +259,6 @@ class DictionaryRecordToJsonStruct
             VTuberRecord record = dictRecord[displayName];
 
             ulong sub = record.YouTube.GetLatestTotalViewCount(latestRecordTime);
-            bool hasDebut = TodayDate > record.DebutDate;
 
             VTuberGrowthData vTuberData = new()
             {
@@ -295,9 +292,11 @@ class DictionaryRecordToJsonStruct
         DateTime _30DaysBefore = TodayDate.AddDays(-daysBefore);
         DateTime _30DaysAfter = TodayDate.AddDays(daysAfter);
 
+
         foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
             .Where(p => p.Value.Nationality.Contains(NationalityFilter))
-            .Where(p => _30DaysBefore <= p.Value.DebutDate && p.Value.DebutDate < _30DaysAfter)
+            .Where(p => p.Value.DebutDate.HasValue)
+            .Where(p => _30DaysBefore <= p.Value.DebutDate.Value.ToDateTime(TimeOnly.MinValue) && p.Value.DebutDate.Value.ToDateTime(TimeOnly.MinValue) < _30DaysAfter)
             .OrderByDescending(p => p.Value.DebutDate))
         {
             string displayName = vtuberStatPair.Key;
@@ -338,7 +337,8 @@ class DictionaryRecordToJsonStruct
 
         foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
             .Where(p => p.Value.Nationality.Contains(NationalityFilter))
-            .Where(p => _30DaysBefore <= p.Value.GraduationDate && p.Value.GraduationDate < _30DaysAfter)
+            .Where(p => p.Value.GraduationDate.HasValue)
+            .Where(p => _30DaysBefore <= p.Value.GraduationDate.Value.ToDateTime(TimeOnly.MinValue) && p.Value.GraduationDate.Value.ToDateTime(TimeOnly.MinValue) < _30DaysAfter)
             .OrderByDescending(p => p.Value.GraduationDate))
         {
             string displayName = vtuberStatPair.Key;
@@ -383,7 +383,6 @@ class DictionaryRecordToJsonStruct
             VTuberRecord record = vtuberStatPair.Value;
 
             ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
-            bool hasDebut = TodayDate > record.DebutDate;
 
             VTuberPopularityData vTuberData = new(
                 id: record.Id,
@@ -432,7 +431,6 @@ class DictionaryRecordToJsonStruct
                 popularity += record.YouTube.GetLatestRecentMedianViewCount(latestRecordTime) + record.Twitch.GetLatestRecentMedianViewCount(latestRecordTime);
 
                 ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
-                bool hasDebut = TodayDate > record.DebutDate;
 
                 Types.VTuberData vTuberData = new()
                 {
@@ -484,7 +482,6 @@ class DictionaryRecordToJsonStruct
                 VTuberRecord record = vtuberStatPair.Value;
 
                 ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
-                bool hasDebut = TodayDate > record.DebutDate;
 
                 Types.VTuberData vTuberData = new()
                 {
