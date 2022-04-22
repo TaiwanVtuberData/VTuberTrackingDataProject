@@ -1,10 +1,5 @@
 ﻿using Common.Types;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GenerateGraph;
 // column: Channel name
@@ -14,26 +9,25 @@ class StatisticsTable : DataTable
     private readonly TrackList _TrackList;
     private readonly List<DateTime> _RowDateTime;
 
-    public StatisticsTable(TrackList trackList, int requiredLevel, bool byGroup)
+    public StatisticsTable(TrackList trackList, bool byGroup)
     {
         _TrackList = trackList;
         _RowDateTime = new List<DateTime>();
 
         if (byGroup)
         {
-            foreach (string dispalyName in _TrackList.GetGroupNameList())
+            foreach (string groupName in _TrackList.GetGroupNameList())
             {
-                this.Columns.Add(dispalyName, typeof(VTuberStatistics));
+                this.Columns.Add(groupName, typeof(VTuberStatistics));
             }
         }
         else
         {
-            foreach (string dispalyName in _TrackList.GetDisplayNameList())
+            foreach (string id in _TrackList.GetIdList())
             {
-                this.Columns.Add(dispalyName, typeof(VTuberStatistics));
+                this.Columns.Add(id, typeof(VTuberStatistics));
             }
         }
-
     }
 
     public void AddRow(DateTime dateTime, Dictionary<string, VTuberStatistics> statisticsDict)

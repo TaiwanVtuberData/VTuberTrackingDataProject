@@ -37,7 +37,7 @@ static void WriteDateTimeStatistics(TrackList trackList, string recordDirectory,
         prefix: "record", 
         recentDays: recentDays);
 
-    StatisticsTable statisticsTable = new(trackList, requiredLevel: 999, byGroup);
+    StatisticsTable statisticsTable = new(trackList, byGroup);
     foreach (Tuple<FileInfo, DateTime> fileInfoDateTime in csvFileList)
     {
         Dictionary<string, VTuberStatistics> statisticsDictionary = GetStatisticsDictionaryFromRecordCSV(trackList, fileInfoDateTime.Item1.FullName, byGroup);
@@ -93,6 +93,7 @@ static void WriteDateTimeStatistics(TrackList trackList, string recordDirectory,
     }
 }
 
+// Key: VTuber ID or group name
 static Dictionary<string, VTuberStatistics> GetStatisticsDictionaryFromRecordCSV(TrackList trackList, string filePath, bool byGroup)
 {
     // CSV Format:
@@ -131,11 +132,10 @@ static Dictionary<string, VTuberStatistics> GetStatisticsDictionaryFromRecordCSV
         entryCount++;
 
         string id = entryBlock[0];
-        string displayName = trackList.GetDisplayName(id);
 
         if (byGroup == false)
         {
-            ans.Add(displayName, new VTuberStatistics(entryBlock));
+            ans.Add(id, new VTuberStatistics(entryBlock));
         }
         else
         {
