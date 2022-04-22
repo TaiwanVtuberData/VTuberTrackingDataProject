@@ -69,7 +69,7 @@ class DictionaryRecordToJsonStruct
                 YouTube: record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
                 Twitch: record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
                 popularVideo: GetPopularVideo(record, latestRecordTime),
-                group: record.GroupName == "" ? null : record.GroupName,
+                group: record.GroupName,
                 nationality: record.Nationality,
                 debutDate: record.DebutDate?.ToString("yyyy-MM-dd"),
                 graduateDate: record.GraduationDate?.ToString("yyyy-MM-dd")
@@ -104,7 +104,7 @@ class DictionaryRecordToJsonStruct
                 YouTube = record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
                 Twitch = record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
                 popularVideo = GetPopularVideo(record, latestRecordTime),
-                group = record.GroupName == "" ? null : record.GroupName,
+                group = record.GroupName,
                 nationality = record.Nationality,
             };
 
@@ -179,7 +179,7 @@ class DictionaryRecordToJsonStruct
                 },
                 Twitch = record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
                 popularVideo = GetPopularVideo(record, latestRecordTime),
-                group = record.GroupName == "" ? null : record.GroupName,
+                group = record.GroupName,
                 nationality = record.Nationality,
             };
 
@@ -275,7 +275,7 @@ class DictionaryRecordToJsonStruct
                 },
                 Twitch = record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
                 popularVideo = GetPopularVideo(record, latestRecordTime),
-                group = record.GroupName == "" ? null : record.GroupName,
+                group = record.GroupName,
                 nationality = record.Nationality,
             };
 
@@ -317,7 +317,7 @@ class DictionaryRecordToJsonStruct
                 YouTube: record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
                 Twitch: record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
                 popularVideo: GetPopularVideo(record, latestRecordTime),
-                group: record.GroupName == "" ? null : record.GroupName,
+                group: record.GroupName,
                 nationality: record.Nationality,
                 debutDate: record.DebutDate.Value.ToString("yyyy-MM-dd")
                 );
@@ -359,7 +359,7 @@ class DictionaryRecordToJsonStruct
                 YouTube: record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
                 Twitch: record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
                 popularVideo: GetPopularVideo(record, latestRecordTime),
-                group: record.GroupName == "" ? null : record.GroupName,
+                group: record.GroupName,
                 nationality: record.Nationality,
                 graduateDate: record.GraduationDate.Value.ToString("yyyy-MM-dd")
                 );
@@ -398,7 +398,7 @@ class DictionaryRecordToJsonStruct
                     followerCount: record.Twitch.GetLatestFollowerCount(latestRecordTime),
                     popularity: record.Twitch.GetLatestRecentMedianViewCount(latestRecordTime)),
                 popularVideo: GetPopularVideo(record, latestRecordTime),
-                group: record.GroupName == "" ? null : record.GroupName,
+                group: record.GroupName,
                 nationality: record.Nationality);
 
             rLst.Add(vTuberData);
@@ -440,7 +440,7 @@ class DictionaryRecordToJsonStruct
                     imgUrl = record.ThumbnailUrl,
                     YouTube = record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
                     Twitch = record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
-                    group = record.GroupName == "" ? null : record.GroupName,
+                    group = record.GroupName,
                     nationality = record.Nationality,
                 };
 
@@ -492,7 +492,7 @@ class DictionaryRecordToJsonStruct
                     YouTube = record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
                     Twitch = record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
                     popularVideo = GetPopularVideo(record, latestRecordTime),
-                    group = record.GroupName == "" ? null : record.GroupName,
+                    group = record.GroupName,
                     nationality = record.Nationality,
                 };
 

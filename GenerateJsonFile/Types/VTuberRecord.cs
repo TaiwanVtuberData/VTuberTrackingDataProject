@@ -6,7 +6,7 @@ public class VTuberRecord
     public DateOnly? DebutDate { get; set; }
     public DateOnly? GraduationDate { get; set; }
     public Common.Types.Activity Activity { get; set; } = Common.Types.Activity.Active;
-    public string GroupName { get; set; } = "";
+    public string? GroupName { get; set; }
     public string Nationality { get; set; } = "";
     public string ThumbnailUrl { get; set; } = "";
 

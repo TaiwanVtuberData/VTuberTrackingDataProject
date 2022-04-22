@@ -9,5 +9,5 @@ public readonly record struct VTuberData(
     DateOnly? DebuteDate,
     DateOnly? GraduationDate,
     Activity Activity,
-    string GroupName,
+    string? GroupName,
     string Nationality);

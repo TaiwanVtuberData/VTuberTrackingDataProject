@@ -210,6 +210,13 @@ public class TrackList
         }
     }
 
+    private static string? OptionToNullable(Option<string> optionalValue)
+    {
+        return optionalValue.MatchUnsafe(
+            None: () => null,
+            Some: v => v);
+    }
+
     private static Validation<ValidationError, VTuberData> Validate(string[] entryBlock, DateOnly? todayDate)
     {
         return (
@@ -241,7 +248,7 @@ public class TrackList
                     activityDate.DebutDate,
                     activityDate.GrduateDate,
                     activityDate.Activity,
-                    groupName,
+                    OptionToNullable(groupName),
                     nationality
                     )
                 );
@@ -460,9 +467,16 @@ public class TrackList
         }
     }
 
-    private static Validation<ValidationError, string> ValidateGroupName(string rawName)
+    private static Validation<ValidationError, Option<string>> ValidateGroupName(string rawName)
     {
-        return rawName;
+        if (rawName.Length == 0)
+        {
+            return Option<string>.None;
+        }
+        else
+        {
+            return Option<string>.Some(rawName);
+        }
     }
 
     private static Validation<ValidationError, string> ValidateNationality(string rawNationality)
@@ -489,7 +503,7 @@ public class TrackList
             new string[] { "yyyy/MM/dd", "yyyy/M/dd", "yyyy/MM/d", "yyyy/M/d" },
             out DateOnly parseResult);
 
-        if(isValid)
+        if (isValid)
         {
             return Option<DateOnly>.Some(parseResult);
         }
@@ -535,7 +549,7 @@ public class TrackList
         return internalDictionary[id].TwitchChannelName;
     }
 
-    public string GetGroupName(string id)
+    public string? GetGroupName(string id)
     {
         return internalDictionary[id].GroupName;
     }
@@ -565,9 +579,7 @@ public class TrackList
         int vtuberWithGroupCount = 0;
         foreach (KeyValuePair<string, VTuberData> keyValuePair in internalDictionary)
         {
-            string groupName = keyValuePair.Value.GroupName;
-
-            if (groupName != "")
+            if (keyValuePair.Value.GroupName is not null)
                 vtuberWithGroupCount++;
         }
 
@@ -585,15 +597,10 @@ public class TrackList
 
     public List<string> GetGroupNameList()
     {
-        List<string> rList = new();
-        foreach (KeyValuePair<string, VTuberData> keyValuePair in internalDictionary)
-        {
-            if (!rList.Contains(keyValuePair.Value.GroupName))
-                rList.Add(keyValuePair.Value.GroupName);
-        }
-
-        rList.Remove("");
-        return rList;
+        return internalDictionary.GroupBy(p => p.Value.GroupName)
+            .Select(p => p.Key)
+            .OfType<string>()
+            .ToList();
     }
 
     public List<string> GetYouTubeChannelIdList()

@@ -294,7 +294,12 @@ class ChannelTable : DataTable
         int maxOccupiedSpace = GetOccupiedSpace(headerString);
         foreach (DataRow row in this.Rows)
         {
-            string currentString = row[index].ToString();
+            string? currentString = row[index].ToString();
+            if(currentString is null)
+            {
+                continue;
+            }
+
             int currentOccupiedSpace = GetOccupiedSpace(currentString);
             if (currentOccupiedSpace > maxOccupiedSpace)
                 maxOccupiedSpace = currentOccupiedSpace;

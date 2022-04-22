@@ -139,8 +139,8 @@ static Dictionary<string, VTuberStatistics> GetStatisticsDictionaryFromRecordCSV
         }
         else
         {
-            string groupName = trackList.GetGroupName(id);
-            if (groupName == "")
+            string? groupName = trackList.GetGroupName(id);
+            if (groupName is null)
                 continue;
 
             groupEntryCount++;
