@@ -14,13 +14,14 @@ class Program
     static void Main(string[] args)
     {
         string dataRepoPath = args.Length >= 1 ? args[0] : "/tw_vtuber";
-        OUTPUT_PATH = args.Length >= 3 ? args[2] : "/out/api/v0";
+        OUTPUT_PATH = args.Length >= 2 ? args[1] : "/out/api/v0";
 
         DateTime now = DateTime.UtcNow;
 
         (_, DateTime latestRecordTime) = FileUtility.GetLatestRecord(dataRepoPath, "record");
-        TrackList trackList = new(Path.Combine(dataRepoPath, "DATA/TW_VTUBER_TRACK_LIST.csv"), throwOnValidationFail: true);
+
         List<string> excluedList = FileUtility.GetListFromCsv(Path.Combine(dataRepoPath, "DATA/EXCLUDE_LIST.csv"));
+        TrackList trackList = new(Path.Combine(dataRepoPath, "DATA/TW_VTUBER_TRACK_LIST.csv"), lstExcludeId: excluedList, throwOnValidationFail: true);
 
         (string latestBasicDataFilePath, _) = FileUtility.GetLatestRecord(dataRepoPath, "basic-data");
         Dictionary<string, VTuberBasicData> dictBasicData = VTuberBasicData.ReadFromCsv(latestBasicDataFilePath);

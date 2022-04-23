@@ -32,13 +32,14 @@ public class TrackList
         { "Nationality", 10 },
     };
 
-    public TrackList(string csvFilePath, bool throwOnValidationFail)
+    public TrackList(string csvFilePath, List<string> lstExcludeId, bool throwOnValidationFail)
     {
         Validation<ValidationError, TrackList> loadResult = LoadAndValidateDateAndActivity(csvFilePath, todayDate: null);
 
         loadResult.Match(
             result =>
             {
+                lstExcludeId.ForEach( e => result.internalDictionary.Remove(e) );
                 this.internalDictionary = result.internalDictionary;
             },
             error =>

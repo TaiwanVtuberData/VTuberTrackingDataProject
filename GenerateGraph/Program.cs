@@ -8,8 +8,11 @@ if (args.Length == 1)
     recentDays = int.Parse(args[0]);
 
 string csvDirectory = GetCsvDirectory("./CsvDirectory");
+string excludeListPath = Path.Combine(csvDirectory, "./DATA/EXCLUDE_LIST.csv");
 string trackListPath = Path.Combine(csvDirectory, "./DATA/TW_VTUBER_TRACK_LIST.csv");
-TrackList trackList = new(csvFilePath: trackListPath, throwOnValidationFail: true);
+
+List<string> excluedList = FileUtility.GetListFromCsv(excludeListPath);
+TrackList trackList = new(csvFilePath: trackListPath, lstExcludeId: excluedList, throwOnValidationFail: true);
 
 WriteDateTimeStatistics(trackList, csvDirectory, recentDays, byGroup: false, "Individual");
 WriteDateTimeStatistics(trackList, csvDirectory, recentDays, byGroup: true, "Group");

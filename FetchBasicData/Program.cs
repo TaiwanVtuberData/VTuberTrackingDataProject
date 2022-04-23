@@ -4,20 +4,23 @@ using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using TwitchLib.Api;
 
-string trackListPath = args.Length >= 1 ? args[0] : "./DATA/TW_VTUBER_TRACK_LIST.csv";
-string YouTubeApiKeyPath = args.Length >= 2 ? args[1] : "./DATA/API_KEY";
-string TwitchClientIdPath = args.Length >= 3 ? args[2] : "./DATA/TWITCH_CLIENT_ID";
-string TwitchSecretPath = args.Length >= 4 ? args[3] : "./DATA/TWITCH_SECRET";
-string saveDir = args.Length >= 5 ? args[4] : "./DATA";
+string YouTubeApiKeyPath = args.Length >= 1 ? args[0] : "./DATA/YOUTUBE_API_KEY";
+string TwitchClientIdPath = args.Length >= 2 ? args[1] : "./DATA/TWITCH_CLIENT_ID";
+string TwitchSecretPath = args.Length >= 3 ? args[2] : "./DATA/TWITCH_SECRET";
+string trackListPath = args.Length >= 4 ? args[3] : "./DATA/TW_VTUBER_TRACK_LIST.csv";
+string excludeListPath = args.Length >= 5 ? args[4] : "./DATA/EXCLUDE_LIST.csv";
+string saveDir = args.Length >= 6 ? args[5] : "./DATA";
 
 Console.WriteLine("Configuration:");
-Console.WriteLine(trackListPath);
 Console.WriteLine(YouTubeApiKeyPath);
 Console.WriteLine(TwitchClientIdPath);
 Console.WriteLine(TwitchSecretPath);
+Console.WriteLine(trackListPath);
+Console.WriteLine(excludeListPath);
 Console.WriteLine(saveDir);
 
-TrackList trackList = new(csvFilePath: trackListPath, throwOnValidationFail: true);
+List<string> excluedList = FileUtility.GetListFromCsv(excludeListPath);
+TrackList trackList = new(csvFilePath: trackListPath, lstExcludeId: excluedList, throwOnValidationFail: true);
 
 Console.WriteLine($"Total entries: {trackList.GetCount()}");
 
