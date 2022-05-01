@@ -40,7 +40,10 @@ class StatisticsTable : DataTable
             string channelName = channelStat.Key;
             VTuberStatistics stat = channelStat.Value;
 
-            dataRow[channelName] = stat;
+            if (this.Columns.Contains(channelName))
+            {
+                dataRow[channelName] = stat;
+            }
         }
 
         this.Rows.Add(dataRow);

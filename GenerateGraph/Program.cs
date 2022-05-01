@@ -136,6 +136,11 @@ static Dictionary<string, VTuberStatistics> GetStatisticsDictionaryFromRecordCSV
 
         string id = entryBlock[0];
 
+        if(!trackList.HasId(id))
+        {
+            continue;
+        }
+
         if (byGroup == false)
         {
             ans.Add(id, new VTuberStatistics(entryBlock));

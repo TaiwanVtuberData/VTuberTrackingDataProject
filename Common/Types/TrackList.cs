@@ -514,6 +514,11 @@ public class TrackList
         }
     }
 
+    public bool HasId(string id)
+    {
+        return internalDictionary.ContainsKey(id);
+    }
+
     public string GetDisplayName(string id)
     {
         return internalDictionary[id].DisplayName;
