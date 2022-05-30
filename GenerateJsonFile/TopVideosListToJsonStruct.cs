@@ -71,7 +71,7 @@ class TopVideosListToJsonStruct
             {
                 id = record.Id,
                 name = record.DisplayName,
-                imgUrl = record.ThumbnailUrl,
+                imgUrl = record.ImageUrl,
                 title = videoInfo.Title,
                 videoUrl = videoInfo.Url,
                 thumbnailUrl = SetTwitchThumbnailUrlSize(videoInfo.ThumbnailUrl, width: 320, height: 180),

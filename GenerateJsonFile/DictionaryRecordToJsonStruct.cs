@@ -6,33 +6,444 @@ namespace GenerateJsonFile;
 
 class DictionaryRecordToJsonStruct
 {
+    private static readonly string DATE_FORMAT = "yyyy-MM-dd";
+
     private readonly DateTime TodayDate;
+    private readonly DateTime LatestRecordTime;
+    private readonly DataTransform dataTransform;
     private readonly string NationalityFilter;
 
-    public DictionaryRecordToJsonStruct(DateTime todayDate, string nationalityFilter)
+    public DictionaryRecordToJsonStruct(DateTime todayDate, DateTime latestRecordTime, string nationalityFilter)
     {
         TodayDate = todayDate;
+        LatestRecordTime = latestRecordTime;
+        dataTransform = new(latestRecordTime);
         NationalityFilter = nationalityFilter;
     }
 
-    private static VideoInfo? GetPopularVideo(VTuberRecord vtuberRecord, DateTime latestRecordTime)
+    public List<VTuberFullData> AllWithFullData(DictionaryRecord dictRecord)
     {
-        ulong YouTubeVideoViewCount = vtuberRecord.YouTube.GetLatestHighestViewCount(latestRecordTime);
-        ulong TwitchVideoViewCount = vtuberRecord.Twitch.GetLatestHighestViewCount(latestRecordTime);
+        List<Types.VTuberFullData> rLst = new();
 
-        if (YouTubeVideoViewCount == 0 && TwitchVideoViewCount == 0)
+        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord)
         {
-            return null;
+            VTuberRecord record = vtuberStatPair.Value;
+
+            VTuberFullData vTuberData = new(
+                id: record.Id,
+                activity: CommonActivityToJsonActivity(record.Activity),
+                name: record.DisplayName,
+                imgUrl: record.ImageUrl != null ? YouTubeImgUrlResize(record.ImageUrl, 88, 240) : null,
+                YouTube: dataTransform.ToYouTubeData(record.YouTube),
+                Twitch: dataTransform.ToTwitchData(record.Twitch),
+                popularVideo: dataTransform.GetPopularVideo(record),
+                group: record.GroupName,
+                nationality: record.Nationality,
+                debutDate: record.DebutDate?.ToString(DATE_FORMAT),
+                graduateDate: record.GraduationDate?.ToString(DATE_FORMAT)
+                );
+
+            rLst.Add(vTuberData);
         }
 
-        if (YouTubeVideoViewCount > TwitchVideoViewCount)
+        return rLst;
+    }
+
+    public List<Types.VTuberData> All(DictionaryRecord dictRecord, int? count)
+    {
+        List<Types.VTuberData> rLst = new();
+
+        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
+            .Where(p => p.Value.Nationality.Contains(NationalityFilter))
+            .OrderByDescending(p => p, new VTuberRecordComparator.CombinedCount(LatestRecordTime))
+            .Take(count ?? int.MaxValue))
         {
-            return new VideoInfo() { type = VideoType.YouTube, id = vtuberRecord.YouTube.DictRecord[latestRecordTime].HighestViewedVideoId };
+            string displayName = vtuberStatPair.Key;
+            VTuberRecord record = vtuberStatPair.Value;
+
+            Types.VTuberData vTuberData = new(
+                id: record.Id,
+                activity: CommonActivityToJsonActivity(record.Activity),
+                name: record.DisplayName,
+                imgUrl: record.ImageUrl,
+                YouTube: dataTransform.ToYouTubeData(record.YouTube),
+                Twitch: dataTransform.ToTwitchData(record.Twitch),
+                popularVideo: dataTransform.GetPopularVideo(record),
+                group: record.GroupName,
+                nationality: record.Nationality)
+            ;
+
+            rLst.Add(vTuberData);
         }
-        else
+
+        return rLst;
+    }
+
+    public List<VTuberGrowthData> GrowingVTubers(DictionaryRecord dictRecord, int? count)
+    {
+        Dictionary<string, YouTubeGrowthData> dictGrowth = new(dictRecord.Count);
+
+        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord)
         {
-            return new VideoInfo() { type = VideoType.Twitch, id = vtuberRecord.Twitch.DictRecord[latestRecordTime].HighestViewedVideoId };
+            string id = vtuberStatPair.Key;
+            VTuberRecord record = vtuberStatPair.Value;
+
+            if (record.YouTube == null)
+            {
+                continue;
+            }
+
+            DictionaryRecord.GetGrowthResult _7DaysResult = dictRecord.GetYouTubeSubscriberCountGrowth(id, days: 7, daysLimit: 1, out long _7DaysGrowth, out decimal _7DaysGrowthRate);
+            DictionaryRecord.GetGrowthResult _30DaysResult = dictRecord.GetYouTubeSubscriberCountGrowth(id, days: 30, daysLimit: 7, out long _30DaysGrowth, out decimal _30DaysGrowthRate);
+
+            YouTubeGrowthData growthData = new(
+                id: record.YouTube.ChannelId,
+                subscriber: dataTransform.ToYouTubeSubscriber(record.YouTube),
+                _7DaysGrowth: new GrowthData(diff: _7DaysGrowth, recordType: GetGrowthResultToString(_7DaysResult)),
+                _30DaysGrowth: new GrowthData(diff: _30DaysGrowth, recordType: GetGrowthResultToString(_30DaysResult)),
+                Nationality: record.Nationality);
+
+            dictGrowth.Add(id, growthData);
         }
+
+        List<VTuberGrowthData> rLst = new();
+
+        foreach (KeyValuePair<string, YouTubeGrowthData> growthPair in dictGrowth
+            .Where(p => p.Value.Nationality != null && p.Value.Nationality.Contains(NationalityFilter))
+            .Where(p => p.Value.subscriber.tag == CountTag.has)
+            .Where(p => p.Value._7DaysGrowth.diff >= 100)
+            .Where(p => dictRecord[p.Key].YouTube != null)
+            .OrderByDescending(p => ToGrowthPercentage(p.Value))
+            .Take(count ?? int.MaxValue))
+        {
+            string id = growthPair.Key;
+            YouTubeGrowthData youTubeGrowthData = growthPair.Value;
+
+            VTuberRecord record = dictRecord[id];
+
+            VTuberGrowthData vTuberData = new(
+                id: record.Id,
+                activity: CommonActivityToJsonActivity(record.Activity),
+                name: record.DisplayName,
+                imgUrl: record.ImageUrl,
+                YouTube: new YouTubeGrowthData(
+                id: youTubeGrowthData.id,
+                subscriber: youTubeGrowthData.subscriber,
+                _7DaysGrowth: youTubeGrowthData._7DaysGrowth,
+                _30DaysGrowth: youTubeGrowthData._30DaysGrowth,
+                Nationality: null),
+                Twitch: dataTransform.ToTwitchData(record.Twitch),
+                popularVideo: dataTransform.GetPopularVideo(record),
+                group: record.GroupName,
+                nationality: record.Nationality
+            );
+
+            rLst.Add(vTuberData);
+        }
+
+        return rLst;
+    }
+
+    private class _7DaysGrowthComparer : IComparer<YouTubeViewCountGrowthData>
+    {
+        public int Compare(YouTubeViewCountGrowthData? a, YouTubeViewCountGrowthData? b)
+        {
+            if (a == null || b == null)
+                return 0;
+
+            return a._7DaysGrowth.diff.CompareTo(b._7DaysGrowth.diff);
+        }
+    }
+
+    private class _30DaysGrowthComparer : IComparer<YouTubeViewCountGrowthData>
+    {
+        public int Compare(YouTubeViewCountGrowthData? a, YouTubeViewCountGrowthData? b)
+        {
+            if (a == null || b == null)
+                return 0;
+
+            return a._30DaysGrowth.diff.CompareTo(b._30DaysGrowth.diff);
+        }
+    }
+
+    private static IComparer<YouTubeViewCountGrowthData> GetSortFunction(SortBy sortBy)
+    {
+        return sortBy switch
+        {
+            SortBy._30Days => new _30DaysGrowthComparer(),
+            _ => new _7DaysGrowthComparer(),
+        };
+    }
+
+    public List<VTuberViewCountGrowthData> VTubersViewCountChange(DictionaryRecord dictRecord, SortBy sortBy, int? count)
+    {
+        Dictionary<string, YouTubeViewCountGrowthData> dictGrowth = new(dictRecord.Count);
+
+        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord)
+        {
+            string id = vtuberStatPair.Key;
+            VTuberRecord record = vtuberStatPair.Value;
+
+            if (record.YouTube == null)
+            {
+                continue;
+            }
+
+            DictionaryRecord.GetGrowthResult _7DaysResult = dictRecord.GetYouTubeViewCountGrowth(id, days: 7, daysLimit: 1, out decimal _7DaysGrowth, out decimal _7DaysGrowthRate);
+            DictionaryRecord.GetGrowthResult _30DaysResult = dictRecord.GetYouTubeViewCountGrowth(id, days: 30, daysLimit: 7, out decimal _30DaysGrowth, out decimal _30DaysGrowthRate);
+
+            YouTubeViewCountGrowthData growthData = new(
+                id: record.YouTube.ChannelId,
+                totalViewCount: dataTransform.ToYouTubeTotalViewCount(record.YouTube),
+                _7DaysGrowth: new GrowthData(diff: _7DaysGrowth, recordType: GetGrowthResultToString(_7DaysResult)),
+                _30DaysGrowth: new GrowthData(diff: _30DaysGrowth, recordType: GetGrowthResultToString(_30DaysResult)),
+                Nationality: record.Nationality
+            );
+
+            dictGrowth.Add(id, growthData);
+        }
+
+        List<VTuberViewCountGrowthData> rLst = new();
+
+        foreach (KeyValuePair<string, YouTubeViewCountGrowthData> growthPair in dictGrowth
+            .Where(p => p.Value.Nationality != null && p.Value.Nationality.Contains(NationalityFilter))
+            .Where(p => p.Value.totalViewCount != 0)
+            .Where(p => p.Value._7DaysGrowth.diff >= 0)
+            .Where(p => dictRecord[p.Key].YouTube != null)
+            .OrderByDescending(p => p.Value, GetSortFunction(sortBy))
+            .Take(count ?? int.MaxValue))
+        {
+            string id = growthPair.Key;
+            YouTubeViewCountGrowthData youTubeGrowthData = growthPair.Value;
+
+            VTuberRecord record = dictRecord[id];
+
+            VTuberViewCountGrowthData vTuberData = new(
+                id: record.Id,
+                activity: CommonActivityToJsonActivity(record.Activity),
+                name: record.DisplayName,
+                imgUrl: record.ImageUrl,
+                YouTube: new YouTubeViewCountGrowthData(
+                    id: youTubeGrowthData.id,
+                    totalViewCount: youTubeGrowthData.totalViewCount,
+                    _7DaysGrowth: youTubeGrowthData._7DaysGrowth,
+                    _30DaysGrowth: youTubeGrowthData._30DaysGrowth,
+                    Nationality: null
+                ),
+                Twitch: dataTransform.ToTwitchData(record.Twitch),
+                popularVideo: dataTransform.GetPopularVideo(record),
+                group: record.GroupName,
+                nationality: record.Nationality
+            );
+
+            rLst.Add(vTuberData);
+        }
+
+        return rLst;
+    }
+
+    public List<VTuberDebutData> DebutVTubers(DictionaryRecord dictRecord, uint daysBefore, uint daysAfter)
+    {
+        List<VTuberDebutData> rLst = new();
+
+        DateTime _30DaysBefore = TodayDate.AddDays(-daysBefore);
+        DateTime _30DaysAfter = TodayDate.AddDays(daysAfter);
+
+
+        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
+            .Where(p => p.Value.Nationality.Contains(NationalityFilter))
+            .Where(p => p.Value.DebutDate.HasValue)
+            .Where(p => IsBetween(p.Value.DebutDate, _30DaysBefore, _30DaysAfter))
+            .OrderByDescending(p => p.Value.DebutDate))
+        {
+            string displayName = vtuberStatPair.Key;
+            VTuberRecord record = vtuberStatPair.Value;
+
+            if (record.DebutDate is null)
+            {
+                continue;
+            }
+
+            VTuberDebutData vTuberData = new(
+                id: record.Id,
+                activity: CommonActivityToJsonActivity(record.Activity),
+                name: record.DisplayName,
+                imgUrl: record.ImageUrl,
+                YouTube: dataTransform.ToYouTubeData(record.YouTube),
+                Twitch: dataTransform.ToTwitchData(record.Twitch),
+                popularVideo: dataTransform.GetPopularVideo(record),
+                group: record.GroupName,
+                nationality: record.Nationality,
+                debutDate: record.DebutDate.Value.ToString(DATE_FORMAT)
+                );
+
+            rLst.Add(vTuberData);
+        }
+
+        return rLst;
+    }
+
+    public List<VTuberGraduateData> GraduateVTubers(DictionaryRecord dictRecord, uint daysBefore, uint daysAfter)
+    {
+        List<VTuberGraduateData> rLst = new();
+
+        DateTime _30DaysBefore = TodayDate.AddDays(-daysBefore);
+        DateTime _30DaysAfter = TodayDate.AddDays(daysAfter);
+
+        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
+            .Where(p => p.Value.Nationality.Contains(NationalityFilter))
+            .Where(p => p.Value.GraduationDate.HasValue)
+            .Where(p => IsBetween(p.Value.GraduationDate, _30DaysBefore, _30DaysAfter))
+            .OrderByDescending(p => p.Value.GraduationDate))
+        {
+            string displayName = vtuberStatPair.Key;
+            VTuberRecord record = vtuberStatPair.Value;
+
+            if (record.GraduationDate is null)
+            {
+                continue;
+            }
+
+            VTuberGraduateData vTuberData = new(
+                id: record.Id,
+                activity: CommonActivityToJsonActivity(record.Activity),
+                name: record.DisplayName,
+                imgUrl: record.ImageUrl,
+                YouTube: dataTransform.ToYouTubeData(record.YouTube),
+                Twitch: dataTransform.ToTwitchData(record.Twitch),
+                popularVideo: dataTransform.GetPopularVideo(record),
+                group: record.GroupName,
+                nationality: record.Nationality,
+                graduateDate: record.GraduationDate.Value.ToString(DATE_FORMAT)
+                );
+
+            rLst.Add(vTuberData);
+        }
+
+        return rLst;
+    }
+
+    public List<VTuberPopularityData> TrendingVTubers(DictionaryRecord dictRecord, int? count)
+    {
+        List<VTuberPopularityData> rLst = new();
+
+        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
+            .Where(p => p.Value.Nationality.Contains(NationalityFilter))
+            .OrderByDescending(p => p, new VTuberRecordComparator.CombinedViewCount(LatestRecordTime))
+            .Take(count ?? int.MaxValue))
+        {
+            string displayName = vtuberStatPair.Key;
+            VTuberRecord record = vtuberStatPair.Value;
+
+            VTuberPopularityData vTuberData = new(
+                id: record.Id,
+                activity: CommonActivityToJsonActivity(record.Activity),
+                name: record.DisplayName,
+                imgUrl: record.ImageUrl,
+                YouTube: dataTransform.ToYouTubePopularityData(record.YouTube),
+                Twitch: dataTransform.ToTwitchPopularityData(record.Twitch),
+                popularVideo: dataTransform.GetPopularVideo(record),
+                group: record.GroupName,
+                nationality: record.Nationality);
+
+            rLst.Add(vTuberData);
+        }
+
+        return rLst;
+    }
+
+    public List<GroupData> Groups(TrackList trackList, DictionaryRecord dictRecord)
+    {
+        List<GroupData> rLst = new();
+
+        foreach (string groupName in trackList.GetGroupNameList())
+        {
+            ulong popularity = 0;
+            List<Types.VTuberData> lstMembers = new();
+
+            foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
+                .Where(p => p.Value.Nationality.Contains(NationalityFilter))
+                .Where(p => p.Value.GroupName == groupName)
+                .OrderByDescending(p => p, new VTuberRecordComparator.CombinedCount(LatestRecordTime)))
+            {
+                string displayName = vtuberStatPair.Key;
+                VTuberRecord record = vtuberStatPair.Value;
+
+                if (displayName == groupName)
+                    continue;
+
+                popularity += dataTransform.ToCombinedPopularity(record);
+
+                Types.VTuberData vTuberData = new(
+                    id: record.Id,
+                    activity: CommonActivityToJsonActivity(record.Activity),
+                    name: record.DisplayName,
+                    imgUrl: record.ImageUrl,
+                    YouTube: dataTransform.ToYouTubeData(record.YouTube),
+                    Twitch: dataTransform.ToTwitchData(record.Twitch),
+                    popularVideo: dataTransform.GetPopularVideo(record),
+                    group: record.GroupName,
+                    nationality: record.Nationality
+                );
+
+                lstMembers.Add(vTuberData);
+            }
+
+            if (lstMembers.Count == 0)
+                continue;
+
+            GroupData groupData = new()
+            {
+                id = groupName,
+                name = groupName,
+                popularity = popularity,
+                members = lstMembers,
+            };
+
+            rLst.Add(groupData);
+        }
+
+        return rLst;
+    }
+
+    public Dictionary<string, List<Types.VTuberData>> GroupMembers(TrackList trackList, DictionaryRecord dictRecord)
+    {
+        Dictionary<string, List<Types.VTuberData>> rDict = new();
+
+        foreach (string groupName in trackList.GetGroupNameList())
+        {
+            List<Types.VTuberData> lstMembers = new();
+
+            foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
+                .Where(p => p.Value.Nationality.Contains(NationalityFilter))
+                .Where(p => p.Value.GroupName == groupName)
+                .OrderByDescending(p => p, new VTuberRecordComparator.CombinedCount(LatestRecordTime)))
+            {
+                string displayName = vtuberStatPair.Key;
+                VTuberRecord record = vtuberStatPair.Value;
+
+                Types.VTuberData vTuberData = new(
+                    id: record.Id,
+                    activity: CommonActivityToJsonActivity(record.Activity),
+                    name: record.DisplayName == groupName ? record.DisplayName + "(官方頻道)" : record.DisplayName,
+                    imgUrl: record.ImageUrl,
+                    YouTube: dataTransform.ToYouTubeData(record.YouTube),
+                    Twitch: dataTransform.ToTwitchData(record.Twitch),
+                    popularVideo: dataTransform.GetPopularVideo(record),
+                    group: record.GroupName,
+                    nationality: record.Nationality
+                );
+
+                lstMembers.Add(vTuberData);
+            }
+
+            if (lstMembers.Count == 0)
+                continue;
+
+            rDict.Add(groupName, lstMembers);
+        }
+
+        return rDict;
     }
 
     private static string YouTubeImgUrlResize(string YouTubeImgUrl, int origSize, int newSize)
@@ -51,460 +462,32 @@ class DictionaryRecordToJsonStruct
         };
     }
 
-    public static List<VTuberFullData> AllWithFullData(DictionaryRecord dictRecord, DateTime latestRecordTime)
-    {
-        List<Types.VTuberFullData> rLst = new();
-
-        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord)
-        {
-            VTuberRecord record = vtuberStatPair.Value;
-
-            ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
-
-            VTuberFullData vTuberData = new(
-                id: record.Id,
-                activity: CommonActivityToJsonActivity(record.Activity),
-                name: record.DisplayName,
-                imgUrl: YouTubeImgUrlResize(record.ThumbnailUrl, 88, 240),
-                YouTube: record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
-                Twitch: record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
-                popularVideo: GetPopularVideo(record, latestRecordTime),
-                group: record.GroupName,
-                nationality: record.Nationality,
-                debutDate: record.DebutDate?.ToString("yyyy-MM-dd"),
-                graduateDate: record.GraduationDate?.ToString("yyyy-MM-dd")
-                );
-
-            rLst.Add(vTuberData);
-        }
-
-        return rLst;
-    }
-
-    public List<Types.VTuberData> All(DictionaryRecord dictRecord, DateTime latestRecordTime, int? count)
-    {
-        List<Types.VTuberData> rLst = new();
-
-        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
-            .Where(p => p.Value.Nationality.Contains(NationalityFilter))
-            .OrderByDescending(p => p, new VTuberRecordComparator.CombinedCount(latestRecordTime))
-            .Take(count ?? int.MaxValue))
-        {
-            string displayName = vtuberStatPair.Key;
-            VTuberRecord record = vtuberStatPair.Value;
-
-            ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
-
-            Types.VTuberData vTuberData = new()
-            {
-                id = record.Id,
-                activity = CommonActivityToJsonActivity(record.Activity),
-                name = record.DisplayName,
-                imgUrl = record.ThumbnailUrl,
-                YouTube = record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
-                Twitch = record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
-                popularVideo = GetPopularVideo(record, latestRecordTime),
-                group = record.GroupName,
-                nationality = record.Nationality,
-            };
-
-            rLst.Add(vTuberData);
-        }
-
-        return rLst;
-    }
-
-    private static string GetGrowthResultToString(DictionaryRecord.GetGrowthResult getGrowthResult)
+    private static GrowthRecordType GetGrowthResultToString(DictionaryRecord.GetGrowthResult getGrowthResult)
     {
         return getGrowthResult switch
         {
-            DictionaryRecord.GetGrowthResult.Found => "full",
-            DictionaryRecord.GetGrowthResult.NotExact => "partial",
-            _ => "none",
+            DictionaryRecord.GetGrowthResult.Found => GrowthRecordType.full,
+            DictionaryRecord.GetGrowthResult.NotExact => GrowthRecordType.partial,
+            _ => GrowthRecordType.none,
         };
     }
 
-    public List<VTuberGrowthData> GrowingVTubers(DictionaryRecord dictRecord, DateTime latestRecordTime, int? count)
+    private static decimal ToGrowthPercentage(YouTubeGrowthData growthData)
     {
-        Dictionary<string, YouTubeGrowthData> dictGrowth = new(dictRecord.Count);
-
-        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord)
+        if (growthData.subscriber.tag != CountTag.has)
         {
-            string displayName = vtuberStatPair.Key;
-            VTuberRecord record = vtuberStatPair.Value;
-
-            DictionaryRecord.GetGrowthResult _7DaysResult = dictRecord.GetYouTubeSubscriberCountGrowth(displayName, days: 7, daysLimit: 1, out long _7DaysGrowth, out decimal _7DaysGrowthRate);
-            DictionaryRecord.GetGrowthResult _30DaysResult = dictRecord.GetYouTubeSubscriberCountGrowth(displayName, days: 30, daysLimit: 7, out long _30DaysGrowth, out decimal _30DaysGrowthRate);
-
-            YouTubeGrowthData growthData = new()
-            {
-                _7DaysGrowth = new GrowthData() { diff = _7DaysGrowth, recordType = GetGrowthResultToString(_7DaysResult) },
-                _30DaysGrowth = new GrowthData() { diff = _30DaysGrowth, recordType = GetGrowthResultToString(_30DaysResult) },
-                subscriberCount = record.YouTube.GetLatestSubscriberCount(latestRecordTime),
-                Nationality = record.Nationality,
-            };
-
-            dictGrowth.Add(displayName, growthData);
+            return decimal.MinValue;
         }
 
-        List<VTuberGrowthData> rLst = new();
-
-        foreach (KeyValuePair<string, YouTubeGrowthData> growthPair in dictGrowth
-            .Where(p => p.Value.Nationality.Contains(NationalityFilter))
-            .Where(p => (p.Value.subscriberCount != null) && (p.Value.subscriberCount != 0))
-            .Where(p => p.Value._7DaysGrowth.diff >= 100)
-            .Where(p => dictRecord[p.Key].YouTube.DictRecord.ContainsKey(latestRecordTime))
-            .OrderByDescending(p => (p.Value._7DaysGrowth.diff) / (decimal)p.Value.subscriberCount)
-            .Take(count ?? int.MaxValue))
-        {
-            string displayName = growthPair.Key;
-            YouTubeGrowthData youTubeGrowthData = growthPair.Value;
-
-            VTuberRecord record = dictRecord[displayName];
-
-            ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
-
-            VTuberGrowthData vTuberData = new()
-            {
-                id = record.Id,
-                activity = CommonActivityToJsonActivity(record.Activity),
-                name = record.DisplayName,
-                imgUrl = record.ThumbnailUrl,
-                YouTube = record.YouTube.ChannelId == "" ? null : new YouTubeGrowthData()
-                {
-                    id = record.YouTube.ChannelId,
-                    subscriberCount = sub == 0 ? null : sub,
-                    _7DaysGrowth = youTubeGrowthData._7DaysGrowth,
-                    _30DaysGrowth = youTubeGrowthData._30DaysGrowth,
-                },
-                Twitch = record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
-                popularVideo = GetPopularVideo(record, latestRecordTime),
-                group = record.GroupName,
-                nationality = record.Nationality,
-            };
-
-            rLst.Add(vTuberData);
-        }
-
-        return rLst;
+        // subscriber should be HasCountType now
+        return (growthData._7DaysGrowth.diff) / ((HasCountType)growthData.subscriber).count;
     }
 
-    private class _7DaysGrowthComparer : IComparer<YouTubeGrowthData>
+    private static bool IsBetween(DateOnly? date, DateTime _30DaysBefore, DateTime _30DaysAfter)
     {
-        public int Compare(YouTubeGrowthData? a, YouTubeGrowthData? b)
-        {
-            if (a == null || b == null)
-                return 0;
+        if (date.HasValue)
+            return _30DaysBefore <= date.Value.ToDateTime(TimeOnly.MinValue) && date.Value.ToDateTime(TimeOnly.MinValue) < _30DaysAfter;
 
-            return a._7DaysGrowth.diff.CompareTo(b._7DaysGrowth.diff);
-        }
-    }
-
-    private class _30DaysGrowthComparer : IComparer<YouTubeGrowthData>
-    {
-        public int Compare(YouTubeGrowthData? a, YouTubeGrowthData? b)
-        {
-            if (a == null || b == null)
-                return 0;
-
-            return a._30DaysGrowth.diff.CompareTo(b._30DaysGrowth.diff);
-        }
-    }
-
-    private static IComparer<YouTubeGrowthData> GetSortFunction(SortBy sortBy)
-    {
-        return sortBy switch
-        {
-            SortBy._30Days => new _30DaysGrowthComparer(),
-            _ => new _7DaysGrowthComparer(),
-        };
-    }
-
-    public List<VTuberGrowthData> VTubersViewCountChange(DictionaryRecord dictRecord, DateTime latestRecordTime, SortBy sortBy, int? count)
-    {
-        Dictionary<string, YouTubeGrowthData> dictGrowth = new(dictRecord.Count);
-
-        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord)
-        {
-            string displayName = vtuberStatPair.Key;
-            VTuberRecord record = vtuberStatPair.Value;
-
-            DictionaryRecord.GetGrowthResult _7DaysResult = dictRecord.GetYouTubeViewCountGrowth(displayName, days: 7, daysLimit: 1, out decimal _7DaysGrowth, out decimal _7DaysGrowthRate);
-            DictionaryRecord.GetGrowthResult _30DaysResult = dictRecord.GetYouTubeViewCountGrowth(displayName, days: 30, daysLimit: 7, out decimal _30DaysGrowth, out decimal _30DaysGrowthRate);
-
-            YouTubeGrowthData growthData = new()
-            {
-                _7DaysGrowth = new GrowthData() { diff = _7DaysGrowth, recordType = GetGrowthResultToString(_7DaysResult) },
-                _30DaysGrowth = new GrowthData() { diff = _30DaysGrowth, recordType = GetGrowthResultToString(_30DaysResult) },
-                totalViewCount = record.YouTube.GetLatestTotalViewCount(latestRecordTime),
-                Nationality = record.Nationality,
-            };
-
-            dictGrowth.Add(displayName, growthData);
-        }
-
-        List<VTuberGrowthData> rLst = new();
-
-        foreach (KeyValuePair<string, YouTubeGrowthData> growthPair in dictGrowth
-            .Where(p => p.Value.Nationality.Contains(NationalityFilter))
-            .Where(p => (p.Value.totalViewCount != null) && (p.Value.totalViewCount != 0))
-            .Where(p => p.Value._7DaysGrowth.diff >= 0)
-            .Where(p => dictRecord[p.Key].YouTube.DictRecord.ContainsKey(latestRecordTime))
-            .OrderByDescending(p => p.Value, GetSortFunction(sortBy))
-            .Take(count ?? int.MaxValue))
-        {
-            string displayName = growthPair.Key;
-            YouTubeGrowthData youTubeGrowthData = growthPair.Value;
-
-            VTuberRecord record = dictRecord[displayName];
-
-            ulong sub = record.YouTube.GetLatestTotalViewCount(latestRecordTime);
-
-            VTuberGrowthData vTuberData = new()
-            {
-                id = record.Id,
-                activity = CommonActivityToJsonActivity(record.Activity),
-                name = record.DisplayName,
-                imgUrl = record.ThumbnailUrl,
-                YouTube = record.YouTube.ChannelId == "" ? null : new YouTubeGrowthData()
-                {
-                    id = record.YouTube.ChannelId,
-                    totalViewCount = sub == 0 ? null : sub,
-                    _7DaysGrowth = youTubeGrowthData._7DaysGrowth,
-                    _30DaysGrowth = youTubeGrowthData._30DaysGrowth,
-                },
-                Twitch = record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
-                popularVideo = GetPopularVideo(record, latestRecordTime),
-                group = record.GroupName,
-                nationality = record.Nationality,
-            };
-
-            rLst.Add(vTuberData);
-        }
-
-        return rLst;
-    }
-
-    public List<VTuberDebutData> DebutVTubers(DictionaryRecord dictRecord, DateTime latestRecordTime, uint daysBefore, uint daysAfter)
-    {
-        List<VTuberDebutData> rLst = new();
-
-        DateTime _30DaysBefore = TodayDate.AddDays(-daysBefore);
-        DateTime _30DaysAfter = TodayDate.AddDays(daysAfter);
-
-
-        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
-            .Where(p => p.Value.Nationality.Contains(NationalityFilter))
-            .Where(p => p.Value.DebutDate.HasValue)
-            .Where(p => _30DaysBefore <= p.Value.DebutDate.Value.ToDateTime(TimeOnly.MinValue) && p.Value.DebutDate.Value.ToDateTime(TimeOnly.MinValue) < _30DaysAfter)
-            .OrderByDescending(p => p.Value.DebutDate))
-        {
-            string displayName = vtuberStatPair.Key;
-            VTuberRecord record = vtuberStatPair.Value;
-
-            if (record.DebutDate is null)
-            {
-                continue;
-            }
-
-            ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
-
-            VTuberDebutData vTuberData = new(
-                id: record.Id,
-                activity: CommonActivityToJsonActivity(record.Activity),
-                name: record.DisplayName,
-                imgUrl: record.ThumbnailUrl,
-                YouTube: record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
-                Twitch: record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
-                popularVideo: GetPopularVideo(record, latestRecordTime),
-                group: record.GroupName,
-                nationality: record.Nationality,
-                debutDate: record.DebutDate.Value.ToString("yyyy-MM-dd")
-                );
-
-            rLst.Add(vTuberData);
-        }
-
-        return rLst;
-    }
-
-    public List<VTuberGraduateData> GraduateVTubers(DictionaryRecord dictRecord, DateTime latestRecordTime, uint daysBefore, uint daysAfter)
-    {
-        List<VTuberGraduateData> rLst = new();
-
-        DateTime _30DaysBefore = TodayDate.AddDays(-daysBefore);
-        DateTime _30DaysAfter = TodayDate.AddDays(daysAfter);
-
-        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
-            .Where(p => p.Value.Nationality.Contains(NationalityFilter))
-            .Where(p => p.Value.GraduationDate.HasValue)
-            .Where(p => _30DaysBefore <= p.Value.GraduationDate.Value.ToDateTime(TimeOnly.MinValue) && p.Value.GraduationDate.Value.ToDateTime(TimeOnly.MinValue) < _30DaysAfter)
-            .OrderByDescending(p => p.Value.GraduationDate))
-        {
-            string displayName = vtuberStatPair.Key;
-            VTuberRecord record = vtuberStatPair.Value;
-
-            if (record.GraduationDate is null)
-            {
-                continue;
-            }
-
-            ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
-
-            VTuberGraduateData vTuberData = new(
-                id: record.Id,
-                activity: CommonActivityToJsonActivity(record.Activity),
-                name: record.DisplayName,
-                imgUrl: record.ThumbnailUrl,
-                YouTube: record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
-                Twitch: record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
-                popularVideo: GetPopularVideo(record, latestRecordTime),
-                group: record.GroupName,
-                nationality: record.Nationality,
-                graduateDate: record.GraduationDate.Value.ToString("yyyy-MM-dd")
-                );
-
-            rLst.Add(vTuberData);
-        }
-
-        return rLst;
-    }
-
-    public List<VTuberPopularityData> TrendingVTubers(DictionaryRecord dictRecord, DateTime latestRecordTime, int? count)
-    {
-        List<VTuberPopularityData> rLst = new();
-
-        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
-            .Where(p => p.Value.Nationality.Contains(NationalityFilter))
-            .OrderByDescending(p => p, new VTuberRecordComparator.CombinedViewCount(latestRecordTime))
-            .Take(count ?? int.MaxValue))
-        {
-            string displayName = vtuberStatPair.Key;
-            VTuberRecord record = vtuberStatPair.Value;
-
-            ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
-
-            VTuberPopularityData vTuberData = new(
-                id: record.Id,
-                activity: CommonActivityToJsonActivity(record.Activity),
-                name: record.DisplayName,
-                imgUrl: record.ThumbnailUrl,
-                YouTube: record.YouTube.ChannelId == "" ? null : new YouTubePopularityData(
-                    id: record.YouTube.ChannelId,
-                    subscriberCount: sub == 0 ? null : sub,
-                    popularity: record.YouTube.GetLatestRecentMedianViewCount(latestRecordTime)),
-                Twitch: record.Twitch.ChannelName == "" ? null : new TwitchPopularityData(
-                    id: record.Twitch.ChannelName,
-                    followerCount: record.Twitch.GetLatestFollowerCount(latestRecordTime),
-                    popularity: record.Twitch.GetLatestRecentMedianViewCount(latestRecordTime)),
-                popularVideo: GetPopularVideo(record, latestRecordTime),
-                group: record.GroupName,
-                nationality: record.Nationality);
-
-            rLst.Add(vTuberData);
-        }
-
-        return rLst;
-    }
-
-    public List<GroupData> Groups(TrackList trackList, DictionaryRecord dictRecord, DateTime latestRecordTime)
-    {
-        List<GroupData> rLst = new();
-
-        int id = 0;
-        foreach (string groupName in trackList.GetGroupNameList())
-        {
-            ulong popularity = 0;
-            List<Types.VTuberData> lstMembers = new();
-
-            foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
-                .Where(p => p.Value.Nationality.Contains(NationalityFilter))
-                .Where(p => p.Value.GroupName == groupName)
-                .OrderByDescending(p => p, new VTuberRecordComparator.CombinedCount(latestRecordTime)))
-            {
-                string displayName = vtuberStatPair.Key;
-                VTuberRecord record = vtuberStatPair.Value;
-
-                if (displayName == groupName)
-                    continue;
-
-                popularity += record.YouTube.GetLatestRecentMedianViewCount(latestRecordTime) + record.Twitch.GetLatestRecentMedianViewCount(latestRecordTime);
-
-                ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
-
-                Types.VTuberData vTuberData = new()
-                {
-                    id = record.Id,
-                    activity = CommonActivityToJsonActivity(record.Activity),
-                    name = record.DisplayName,
-                    imgUrl = record.ThumbnailUrl,
-                    YouTube = record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
-                    Twitch = record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
-                    group = record.GroupName,
-                    nationality = record.Nationality,
-                };
-
-                lstMembers.Add(vTuberData);
-            }
-
-            if (lstMembers.Count == 0)
-                continue;
-
-            GroupData groupData = new()
-            {
-                id = id.ToString(),
-                name = groupName,
-                popularity = popularity,
-                members = lstMembers,
-            };
-
-            rLst.Add(groupData);
-            id++;
-        }
-
-        return rLst;
-    }
-
-    public Dictionary<string, List<Types.VTuberData>> GroupMembers(TrackList trackList, DictionaryRecord dictRecord, DateTime latestRecordTime)
-    {
-        Dictionary<string, List<Types.VTuberData>> rDict = new();
-
-        foreach (string groupName in trackList.GetGroupNameList())
-        {
-            List<Types.VTuberData> lstMembers = new();
-
-            foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
-                .Where(p => p.Value.Nationality.Contains(NationalityFilter))
-                .Where(p => p.Value.GroupName == groupName)
-                .OrderByDescending(p => p, new VTuberRecordComparator.CombinedCount(latestRecordTime)))
-            {
-                string displayName = vtuberStatPair.Key;
-                VTuberRecord record = vtuberStatPair.Value;
-
-                ulong sub = record.YouTube.GetLatestSubscriberCount(latestRecordTime);
-
-                Types.VTuberData vTuberData = new()
-                {
-                    id = record.Id,
-                    activity = CommonActivityToJsonActivity(record.Activity),
-                    name = record.DisplayName == groupName ? record.DisplayName + "(官方頻道)" : record.DisplayName,
-                    imgUrl = record.ThumbnailUrl,
-                    YouTube = record.YouTube.ChannelId == "" ? null : new Types.YouTubeData() { id = record.YouTube.ChannelId, subscriberCount = sub == 0 ? null : sub },
-                    Twitch = record.Twitch.ChannelName == "" ? null : new Types.TwitchData() { id = record.Twitch.ChannelName, followerCount = record.Twitch.GetLatestFollowerCount(latestRecordTime) },
-                    popularVideo = GetPopularVideo(record, latestRecordTime),
-                    group = record.GroupName,
-                    nationality = record.Nationality,
-                };
-
-                lstMembers.Add(vTuberData);
-            }
-
-            if (lstMembers.Count == 0)
-                continue;
-
-            rDict.Add(groupName, lstMembers);
-        }
-
-        return rDict;
+        return false;
     }
 }
