@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace GenerateJsonFile.Types;
+﻿namespace GenerateJsonFile.Types;
 
 internal readonly record struct VTuberGraduateData(
     string id,
@@ -13,3 +11,6 @@ internal readonly record struct VTuberGraduateData(
     string? group,
     string? nationality,
     string graduateDate);
+
+internal readonly record struct VTuberGraduateDataResponse(
+    List<VTuberGraduateData> VTubers);

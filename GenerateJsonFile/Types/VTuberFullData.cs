@@ -1,6 +1,6 @@
 ﻿namespace GenerateJsonFile.Types;
 
-internal readonly record struct VTuberFullData(
+internal record VTuberFullData(
     string id,
     Activity activity,
     string name,
@@ -12,3 +12,6 @@ internal readonly record struct VTuberFullData(
     string? nationality,
     string? debutDate,
     string? graduateDate);
+
+readonly record struct SingleVTuberFullDataResponse(
+    VTuberFullData VTuber);

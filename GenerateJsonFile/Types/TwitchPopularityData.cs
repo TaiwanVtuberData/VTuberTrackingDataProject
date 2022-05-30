@@ -1,3 +1,9 @@
 ﻿namespace GenerateJsonFile.Types;
 
-internal readonly record struct TwitchPopularityData(string id, ulong followerCount, ulong popularity);
+internal record TwitchPopularityData(
+    string id,
+    BaseCountType follower,
+    ulong popularity) 
+    : TwitchData(
+        id: id,
+        follower: follower);

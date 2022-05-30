@@ -4,11 +4,11 @@ using System.Text.Json.Serialization;
 namespace GenerateJsonFile.Types;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum VideoType
+internal enum VideoType
 {
     [EnumMember(Value = "YouTube")]
     YouTube,
     [EnumMember(Value = "Twitch")]
     Twitch,
 }
-readonly record struct VideoInfo(VideoType type, string id);
+internal readonly record struct VideoInfo(VideoType type, string id);

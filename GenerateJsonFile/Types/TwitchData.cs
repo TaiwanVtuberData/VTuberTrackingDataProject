@@ -1,3 +1,6 @@
 ﻿namespace GenerateJsonFile.Types;
 
-readonly record struct TwitchData(string id, ulong followerCount);
+internal record TwitchData(
+    string id,
+    BaseCountType follower)
+    : BaseTwitchData(id);

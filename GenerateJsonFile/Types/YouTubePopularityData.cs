@@ -1,3 +1,9 @@
 ﻿namespace GenerateJsonFile.Types;
 
-internal readonly record struct YouTubePopularityData(string id, ulong? subscriberCount, ulong popularity);
+internal record YouTubePopularityData(
+    string id,
+    BaseCountType subscriber,
+    ulong popularity)
+    : YouTubeData(
+        id: id,
+        subscriber: subscriber);

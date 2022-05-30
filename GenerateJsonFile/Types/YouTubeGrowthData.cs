@@ -1,8 +1,11 @@
 ﻿namespace GenerateJsonFile.Types;
 
-class YouTubeGrowthData : YouTubeData
-{
-    public GrowthData _7DaysGrowth { get; set; } = new();
-    public GrowthData _30DaysGrowth { get; set; } = new();
-    public string Nationality { get; set; } = "";
-}
+internal record YouTubeGrowthData(
+    string id,
+    BaseCountType subscriber,
+    GrowthData _7DaysGrowth,
+    GrowthData _30DaysGrowth,
+    string? Nationality)
+    : YouTubeData(
+        id: id,
+        subscriber: subscriber);

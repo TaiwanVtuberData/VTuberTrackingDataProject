@@ -10,3 +10,6 @@ internal readonly record struct VTuberPopularityData(
     VideoInfo? popularVideo,
     string? group,
     string? nationality);
+
+readonly record struct VTuberPopularityDataResponse(
+    List<VTuberPopularityData> VTubers);
