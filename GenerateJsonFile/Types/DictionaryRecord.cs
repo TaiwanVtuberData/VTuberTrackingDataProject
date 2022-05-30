@@ -31,12 +31,18 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
                 Nationality = trackList.GetNationality(id),
                 ImageUrl = imageUrl,
 
-                YouTube = trackList.GetYouTubeChannelId(id) != "" ? new() { ChannelId = trackList.GetYouTubeChannelId(id) } : null,
+                YouTube = trackList.GetYouTubeChannelId(id) != "" ? new() 
+                { 
+                    ChannelId = trackList.GetYouTubeChannelId(id) ,
+                    hasValidRecord = basicData.YouTube.HasValue,
+                } 
+                : null,
 
                 Twitch = trackList.GetTwitchChannelId(id) != "" ? new()
                 {
                     ChannelId = trackList.GetTwitchChannelId(id),
                     ChannelName = trackList.GetTwitchChannelName(id),
+                    hasValidRecord = basicData.Twitch.HasValue,
                 }
                 : null,
             };

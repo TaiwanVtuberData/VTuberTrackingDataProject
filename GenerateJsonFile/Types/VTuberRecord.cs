@@ -14,6 +14,7 @@ public class VTuberRecord
     public class YouTubeData
     {
         public string ChannelId { get; set; } = "";
+        public bool hasValidRecord = false;
 
         public readonly record struct YouTubeRecord(
             ulong SubscriberCount,
@@ -47,6 +48,7 @@ public class VTuberRecord
     {
         public string ChannelId { get; set; } = "";
         public string ChannelName { get; set; } = "";
+        public bool hasValidRecord = false;
         public readonly record struct TwitchRecord(
             ulong FollowerCount,
             ulong RecentMedianViewCount,

@@ -20,7 +20,7 @@ internal class DataTransform
 
         return new YouTubeData(
             id: input.ChannelId,
-            subscriber: ToYouTubeCountType(sub));
+            subscriber: ToYouTubeCountType(input.hasValidRecord, sub));
     }
 
     public YouTubePopularityData? ToYouTubePopularityData(VTuberRecord.YouTubeData? input)
@@ -34,7 +34,7 @@ internal class DataTransform
 
         return new YouTubePopularityData(
             id: input.ChannelId,
-            subscriber: ToYouTubeCountType(sub),
+            subscriber: ToYouTubeCountType(input.hasValidRecord, sub),
             popularity: popularity);
     }
     public ulong ToYouTubePopularity(VTuberRecord.YouTubeData? input)
@@ -55,7 +55,7 @@ internal class DataTransform
         VTuberRecord.YouTubeData.YouTubeRecord? record = input.GetRecord(LatestRecordTime);
         ulong? sub = record.HasValue ? record.Value.SubscriberCount : null;
 
-        return ToYouTubeCountType(sub);
+        return ToYouTubeCountType(input.hasValidRecord, sub);
     }
 
     public ulong ToYouTubeTotalViewCount(VTuberRecord.YouTubeData? input)
@@ -79,7 +79,7 @@ internal class DataTransform
 
         return new TwitchData(
             id: input.ChannelName,
-            follower: ToTwitchCountType(follower));
+            follower: ToTwitchCountType(input.hasValidRecord, follower));
     }
 
     public TwitchPopularityData? ToTwitchPopularityData(VTuberRecord.TwitchData? input)
@@ -93,7 +93,7 @@ internal class DataTransform
 
         return new TwitchPopularityData(
             id: input.ChannelId,
-            follower: ToTwitchCountType(follower),
+            follower: ToTwitchCountType(input.hasValidRecord, follower),
             popularity: popularity);
 
     }
@@ -165,9 +165,9 @@ internal class DataTransform
         }
     }
 
-    private static BaseCountType ToYouTubeCountType(ulong? subCount)
+    private static BaseCountType ToYouTubeCountType(bool hasValidRecord, ulong? subCount)
     {
-        if (subCount.HasValue)
+        if (subCount.HasValue && hasValidRecord)
         {
             if (subCount == 0)
                 return new HiddenCountType();
@@ -178,9 +178,9 @@ internal class DataTransform
         return new NoCountType();
     }
 
-    private static BaseCountType ToTwitchCountType(ulong? followerCount)
+    private static BaseCountType ToTwitchCountType(bool hasValidRecord, ulong? followerCount)
     {
-        if (followerCount.HasValue)
+        if (followerCount.HasValue && hasValidRecord)
         {
             return new HasCountType(_count: followerCount.Value);
         }
