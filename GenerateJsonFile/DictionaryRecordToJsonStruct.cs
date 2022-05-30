@@ -480,7 +480,7 @@ class DictionaryRecordToJsonStruct
         }
 
         // subscriber should be HasCountType now
-        return (growthData._7DaysGrowth.diff) / ((HasCountType)growthData.subscriber).count;
+        return growthData.subscriber.count.HasValue ? ((growthData._7DaysGrowth.diff) / growthData.subscriber.count.Value) : decimal.MinValue;
     }
 
     private static bool IsBetween(DateOnly? date, DateTime _30DaysBefore, DateTime _30DaysAfter)

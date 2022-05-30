@@ -172,7 +172,7 @@ internal class DataTransform
             if (subCount == 0)
                 return new HiddenCountType();
 
-            return new HasCountType(count: subCount.Value);
+            return new HasCountType(_count: subCount.Value);
         }
 
         return new NoCountType();
@@ -182,7 +182,7 @@ internal class DataTransform
     {
         if (followerCount.HasValue)
         {
-            return new HasCountType(count: followerCount.Value);
+            return new HasCountType(_count: followerCount.Value);
         }
 
         return new NoCountType();
