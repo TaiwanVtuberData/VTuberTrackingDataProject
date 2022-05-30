@@ -13,7 +13,7 @@ class Program
     static void Main(string[] args)
     {
         string dataRepoPath = args.Length >= 1 ? args[0] : "/tw_vtuber";
-        OUTPUT_PATH = args.Length >= 2 ? args[1] : "/out/api/v0";
+        OUTPUT_PATH = args.Length >= 2 ? args[1] : "/out/api/v2";
 
         DateTime now = DateTime.UtcNow;
 
