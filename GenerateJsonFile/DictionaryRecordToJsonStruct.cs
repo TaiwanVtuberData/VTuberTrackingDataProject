@@ -10,14 +10,16 @@ class DictionaryRecordToJsonStruct
 
     private readonly DateTime TodayDate;
     private readonly DateTime LatestRecordTime;
+    private readonly DateTime LatestBasicDataTime;
     private readonly DataTransform dataTransform;
     private readonly string NationalityFilter;
 
-    public DictionaryRecordToJsonStruct(DateTime todayDate, DateTime latestRecordTime, string nationalityFilter)
+    public DictionaryRecordToJsonStruct(DateTime todayDate, DateTime latestRecordTime, DateTime latestBasicDataTime, string nationalityFilter)
     {
         TodayDate = todayDate;
         LatestRecordTime = latestRecordTime;
-        dataTransform = new(latestRecordTime);
+        LatestBasicDataTime = latestBasicDataTime;
+        dataTransform = new(LatestRecordTime, LatestBasicDataTime);
         NationalityFilter = nationalityFilter;
     }
 

@@ -4,10 +4,12 @@ namespace GenerateJsonFile.Utils;
 internal class DataTransform
 {
     private readonly DateTime LatestRecordTime;
+    private readonly DateTime LatestBasicDataTime;
 
-    public DataTransform(DateTime latestRecordTime)
+    public DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTime)
     {
         LatestRecordTime = latestRecordTime;
+        LatestBasicDataTime = latestBasicDataTime;
     }
 
     public YouTubeData? ToYouTubeData(VTuberRecord.YouTubeData? input)
@@ -15,8 +17,8 @@ internal class DataTransform
         if (input == null)
             return null;
 
-        VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
-        ulong? sub = record.HasValue ? record.Value.SubscriberCount : null;
+        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        ulong? sub = basicData.HasValue ? basicData.Value.SubscriberCount : null;
 
         return new YouTubeData(
             id: input.ChannelId,
@@ -28,8 +30,10 @@ internal class DataTransform
         if (input == null)
             return null;
 
+        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        ulong? sub = basicData.HasValue ? basicData.Value.SubscriberCount : null;
+
         VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
-        ulong? sub = record.HasValue ? record.Value.SubscriberCount : null;
         ulong popularity = record.HasValue ? record.Value.RecentMedianViewCount : 0;
 
         return new YouTubePopularityData(
@@ -52,8 +56,8 @@ internal class DataTransform
         if (input == null)
             return new NoCountType();
 
-        VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
-        ulong? sub = record.HasValue ? record.Value.SubscriberCount : null;
+        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        ulong? sub = basicData.HasValue ? basicData.Value.SubscriberCount : null;
 
         return ToYouTubeCountType(input.hasValidRecord, sub);
     }
@@ -63,9 +67,9 @@ internal class DataTransform
         if (input == null)
             return 0;
 
-        VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
+        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
 
-        return record.HasValue ? record.Value.TotalViewCount : 0;
+        return basicData.HasValue ? basicData.Value.TotalViewCount : 0;
     }
 
     public TwitchData? ToTwitchData(VTuberRecord.TwitchData? input)
@@ -74,8 +78,8 @@ internal class DataTransform
             return null;
 
 
-        VTuberRecord.TwitchData.Record? record = input.GetRecord(LatestRecordTime);
-        ulong? follower = record.HasValue ? record.Value.FollowerCount : null;
+        VTuberRecord.TwitchData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        ulong? follower = basicData.HasValue ? basicData.Value.FollowerCount : null;
 
         return new TwitchData(
             id: input.ChannelName,
@@ -87,8 +91,10 @@ internal class DataTransform
         if (input == null)
             return null;
 
+        VTuberRecord.TwitchData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        ulong? follower = basicData.HasValue ? basicData.Value.FollowerCount : null;
+
         VTuberRecord.TwitchData.Record? record = input.GetRecord(LatestRecordTime);
-        ulong? follower = record.HasValue ? record.Value.FollowerCount : null;
         ulong popularity = record.HasValue ? record.Value.RecentMedianViewCount : 0;
 
         return new TwitchPopularityData(

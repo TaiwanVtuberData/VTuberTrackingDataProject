@@ -47,9 +47,17 @@ public class VTuberRecord
             return DictRecord[TargetDateTime];
         }
 
-        public Dictionary<DateTime, Record>.KeyCollection GetRecordDateTimes()
+        public Dictionary<DateTime, BasicData>.KeyCollection GetBasicDataDateTimes()
         {
-            return DictRecord.Keys;
+            return DictBasicData.Keys;
+        }
+
+        public BasicData? GetBasicData(DateTime TargetDateTime)
+        {
+            if (!DictBasicData.ContainsKey(TargetDateTime))
+                return null;
+
+            return DictBasicData[TargetDateTime];
         }
     }
     public YouTubeData? YouTube { get; set; }
@@ -67,8 +75,7 @@ public class VTuberRecord
         private readonly Dictionary<DateTime, Record> DictRecord = new();
 
         public readonly record struct BasicData(
-            ulong SubscriberCount,
-            ulong TotalViewCount);
+            ulong FollowerCount);
         private readonly Dictionary<DateTime, BasicData> DictBasicData = new();
 
         public void AddRecord(DateTime recordTime, Record record)
@@ -81,13 +88,20 @@ public class VTuberRecord
             DictBasicData.Add(recordTime, basicData);
         }
 
-
         public Record? GetRecord(DateTime TargetDateTime)
         {
             if (!DictRecord.ContainsKey(TargetDateTime))
                 return null;
 
             return DictRecord[TargetDateTime];
+        }
+
+        public BasicData? GetBasicData(DateTime TargetDateTime)
+        {
+            if (!DictBasicData.ContainsKey(TargetDateTime))
+                return null;
+
+            return DictBasicData[TargetDateTime];
         }
     }
     public TwitchData? Twitch { get; set; }
