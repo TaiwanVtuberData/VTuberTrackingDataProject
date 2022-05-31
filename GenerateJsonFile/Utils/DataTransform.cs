@@ -15,7 +15,7 @@ internal class DataTransform
         if (input == null)
             return null;
 
-        VTuberRecord.YouTubeData.YouTubeRecord? record = input.GetRecord(LatestRecordTime);
+        VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
         ulong? sub = record.HasValue ? record.Value.SubscriberCount : null;
 
         return new YouTubeData(
@@ -28,7 +28,7 @@ internal class DataTransform
         if (input == null)
             return null;
 
-        VTuberRecord.YouTubeData.YouTubeRecord? record = input.GetRecord(LatestRecordTime);
+        VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
         ulong? sub = record.HasValue ? record.Value.SubscriberCount : null;
         ulong popularity = record.HasValue ? record.Value.RecentMedianViewCount : 0;
 
@@ -42,7 +42,7 @@ internal class DataTransform
         if (input == null)
             return 0;
 
-        VTuberRecord.YouTubeData.YouTubeRecord? record = input.GetRecord(LatestRecordTime);
+        VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
 
         return record.HasValue ? record.Value.RecentMedianViewCount : 0;
     }
@@ -52,7 +52,7 @@ internal class DataTransform
         if (input == null)
             return new NoCountType();
 
-        VTuberRecord.YouTubeData.YouTubeRecord? record = input.GetRecord(LatestRecordTime);
+        VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
         ulong? sub = record.HasValue ? record.Value.SubscriberCount : null;
 
         return ToYouTubeCountType(input.hasValidRecord, sub);
@@ -63,7 +63,7 @@ internal class DataTransform
         if (input == null)
             return 0;
 
-        VTuberRecord.YouTubeData.YouTubeRecord? record = input.GetRecord(LatestRecordTime);
+        VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
 
         return record.HasValue ? record.Value.TotalViewCount : 0;
     }
@@ -74,7 +74,7 @@ internal class DataTransform
             return null;
 
 
-        VTuberRecord.TwitchData.TwitchRecord? record = input.GetRecord(LatestRecordTime);
+        VTuberRecord.TwitchData.Record? record = input.GetRecord(LatestRecordTime);
         ulong? follower = record.HasValue ? record.Value.FollowerCount : null;
 
         return new TwitchData(
@@ -87,7 +87,7 @@ internal class DataTransform
         if (input == null)
             return null;
 
-        VTuberRecord.TwitchData.TwitchRecord? record = input.GetRecord(LatestRecordTime);
+        VTuberRecord.TwitchData.Record? record = input.GetRecord(LatestRecordTime);
         ulong? follower = record.HasValue ? record.Value.FollowerCount : null;
         ulong popularity = record.HasValue ? record.Value.RecentMedianViewCount : 0;
 
@@ -102,7 +102,7 @@ internal class DataTransform
         if (input == null)
             return 0;
 
-        VTuberRecord.TwitchData.TwitchRecord? record = input.GetRecord(LatestRecordTime);
+        VTuberRecord.TwitchData.Record? record = input.GetRecord(LatestRecordTime);
 
         return record.HasValue ? record.Value.RecentMedianViewCount : 0;
     }
@@ -129,7 +129,7 @@ internal class DataTransform
 
         if (vtuberRecord.YouTube != null)
         {
-            VTuberRecord.YouTubeData.YouTubeRecord? YTRecord = vtuberRecord.YouTube.GetRecord(LatestRecordTime);
+            VTuberRecord.YouTubeData.Record? YTRecord = vtuberRecord.YouTube.GetRecord(LatestRecordTime);
 
             if (YTRecord != null)
             {
@@ -141,7 +141,7 @@ internal class DataTransform
 
         if (vtuberRecord.Twitch != null)
         {
-            VTuberRecord.TwitchData.TwitchRecord? TwitchRecord = vtuberRecord.Twitch.GetRecord(LatestRecordTime);
+            VTuberRecord.TwitchData.Record? TwitchRecord = vtuberRecord.Twitch.GetRecord(LatestRecordTime);
 
             if (TwitchRecord != null)
             {

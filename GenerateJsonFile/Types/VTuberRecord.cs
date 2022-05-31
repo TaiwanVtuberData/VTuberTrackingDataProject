@@ -16,20 +16,30 @@ public class VTuberRecord
         public string ChannelId { get; set; } = "";
         public bool hasValidRecord = false;
 
-        public readonly record struct YouTubeRecord(
+        public readonly record struct Record(
             ulong SubscriberCount,
             ulong TotalViewCount,
             ulong RecentMedianViewCount,
             ulong HighestViewCount,
             string HighestViewedVideoId);
-        private readonly Dictionary<DateTime, YouTubeRecord> DictRecord = new();
+        private readonly Dictionary<DateTime, Record> DictRecord = new();
 
-        public void AddRecord(DateTime recordTime, YouTubeRecord record)
+        public readonly record struct BasicData(
+            ulong SubscriberCount,
+            ulong TotalViewCount);
+        private readonly Dictionary<DateTime, BasicData> DictBasicData = new();
+
+        public void AddRecord(DateTime recordTime, Record record)
         {
             DictRecord.Add(recordTime, record);
         }
 
-        public YouTubeRecord? GetRecord(DateTime TargetDateTime)
+        public void AddBasicData(DateTime recordTime, BasicData basicData)
+        {
+            DictBasicData.Add(recordTime, basicData);
+        }
+
+        public Record? GetRecord(DateTime TargetDateTime)
         {
             if (!DictRecord.ContainsKey(TargetDateTime))
                 return null;
@@ -37,7 +47,7 @@ public class VTuberRecord
             return DictRecord[TargetDateTime];
         }
 
-        public Dictionary<DateTime, YouTubeRecord>.KeyCollection GetDateTimes()
+        public Dictionary<DateTime, Record>.KeyCollection GetRecordDateTimes()
         {
             return DictRecord.Keys;
         }
@@ -49,33 +59,36 @@ public class VTuberRecord
         public string ChannelId { get; set; } = "";
         public string ChannelName { get; set; } = "";
         public bool hasValidRecord = false;
-        public readonly record struct TwitchRecord(
+        public readonly record struct Record(
             ulong FollowerCount,
             ulong RecentMedianViewCount,
             ulong HighestViewCount,
             string HighestViewedVideoId);
-        private Dictionary<DateTime, TwitchRecord> DictRecord = new();
-        private DateTime LatestDateTime = DateTime.MinValue;
+        private readonly Dictionary<DateTime, Record> DictRecord = new();
 
-        public void AddRecord(DateTime recordTime, TwitchRecord record)
+        public readonly record struct BasicData(
+            ulong SubscriberCount,
+            ulong TotalViewCount);
+        private readonly Dictionary<DateTime, BasicData> DictBasicData = new();
+
+        public void AddRecord(DateTime recordTime, Record record)
         {
-            LatestDateTime = Max(recordTime, LatestDateTime);
             DictRecord.Add(recordTime, record);
         }
 
-        public TwitchRecord? GetRecord(DateTime TargetDateTime)
+        public void AddBasicData(DateTime recordTime, BasicData basicData)
+        {
+            DictBasicData.Add(recordTime, basicData);
+        }
+
+
+        public Record? GetRecord(DateTime TargetDateTime)
         {
             if (!DictRecord.ContainsKey(TargetDateTime))
                 return null;
 
-            return DictRecord[LatestDateTime];
+            return DictRecord[TargetDateTime];
         }
     }
     public TwitchData? Twitch { get; set; }
-
-    // Why is that C# doesn't have generic Max function
-    private static DateTime Max(DateTime a, DateTime b)
-    {
-        return (DateTime.Compare(a, b) > 0) ? a : b;
-    }
 }

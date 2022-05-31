@@ -63,7 +63,7 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
 
             VTuberStatistics vtuberStat = vtuberStatPair.Value;
 
-            VTuberRecord.YouTubeData.YouTubeRecord youTubeRecord = new()
+            VTuberRecord.YouTubeData.Record youTubeRecord = new()
             {
                 SubscriberCount = vtuberStat.YouTube.SubscriberCount,
                 TotalViewCount = vtuberStat.YouTube.ViewCount,
@@ -72,7 +72,7 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
                 HighestViewedVideoId = Utility.YouTubeVideoUrlToId(vtuberStat.YouTube.HighestViewedVideoURL),
             };
 
-            VTuberRecord.TwitchData.TwitchRecord twitchRecord = new()
+            VTuberRecord.TwitchData.Record twitchRecord = new()
             {
                 FollowerCount = vtuberStat.Twitch.FollowerCount,
                 RecentMedianViewCount = vtuberStat.Twitch.RecentMedianViewCount,
@@ -158,7 +158,7 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
             return GetGrowthResult.NotFound;
         }
 
-        Dictionary<DateTime, VTuberRecord.YouTubeData.YouTubeRecord>.KeyCollection lstDateTime = youTubeData.GetDateTimes();
+        Dictionary<DateTime, VTuberRecord.YouTubeData.Record>.KeyCollection lstDateTime = youTubeData.GetRecordDateTimes();
         if (lstDateTime.Count <= 0)
         {
             rGrowth = 0;
@@ -171,7 +171,7 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
         DateTime targetDateTime = latestDateTime - new TimeSpan(days: days, hours: 0, minutes: 0, seconds: 0);
         DateTime foundDateTime = lstDateTime.Aggregate((x, y) => (x - targetDateTime).Duration() < (y - targetDateTime).Duration() ? x : y);
 
-        VTuberRecord.YouTubeData.YouTubeRecord? targetRecord = youTubeData.GetRecord(foundDateTime);
+        VTuberRecord.YouTubeData.Record? targetRecord = youTubeData.GetRecord(foundDateTime);
         ulong targetSubscriberCount = targetRecord.HasValue ? targetRecord.Value.SubscriberCount : 0;
         // previously hidden subscriber count doesn't count as growth
         if (targetSubscriberCount == 0)
@@ -181,7 +181,7 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
             return GetGrowthResult.NotFound;
         }
 
-        VTuberRecord.YouTubeData.YouTubeRecord? currentRecord = youTubeData.GetRecord(latestDateTime);
+        VTuberRecord.YouTubeData.Record? currentRecord = youTubeData.GetRecord(latestDateTime);
         ulong currentSubscriberCount = currentRecord.HasValue ? currentRecord.Value.SubscriberCount : 0;
 
         rGrowth = (long)currentSubscriberCount - (long)targetSubscriberCount;
@@ -219,7 +219,7 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
             return GetGrowthResult.NotFound;
         }
 
-        Dictionary<DateTime, VTuberRecord.YouTubeData.YouTubeRecord>.KeyCollection lstDateTime = youTubeData.GetDateTimes();
+        Dictionary<DateTime, VTuberRecord.YouTubeData.Record>.KeyCollection lstDateTime = youTubeData.GetRecordDateTimes();
         if (lstDateTime.Count <= 0)
         {
             rGrowth = 0;
@@ -232,7 +232,7 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
         DateTime targetDateTime = latestDateTime - new TimeSpan(days: days, hours: 0, minutes: 0, seconds: 0);
         DateTime foundDateTime = lstDateTime.Aggregate((x, y) => (x - targetDateTime).Duration() < (y - targetDateTime).Duration() ? x : y);
 
-        VTuberRecord.YouTubeData.YouTubeRecord? targetRecord = youTubeData.GetRecord(foundDateTime);
+        VTuberRecord.YouTubeData.Record? targetRecord = youTubeData.GetRecord(foundDateTime);
         ulong targetTotalViewCount = targetRecord.HasValue ? targetRecord.Value.TotalViewCount : 0;
         if (targetTotalViewCount == 0)
         {
@@ -241,7 +241,7 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
             return GetGrowthResult.NotFound;
         }
 
-        VTuberRecord.YouTubeData.YouTubeRecord? currentRecord = youTubeData.GetRecord(latestDateTime);
+        VTuberRecord.YouTubeData.Record? currentRecord = youTubeData.GetRecord(latestDateTime);
         ulong currentTotalViewCount = currentRecord.HasValue ? currentRecord.Value.TotalViewCount : 0;
 
         rGrowth = (decimal)currentTotalViewCount - (decimal)targetTotalViewCount;
