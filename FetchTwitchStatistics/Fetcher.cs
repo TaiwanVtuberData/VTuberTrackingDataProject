@@ -216,7 +216,7 @@ public class Fetcher
         return (new LiveVideoInformation
         {
             Id = userId,
-            Url = $"https://www.twitch.tv/{stream.UserName}",
+            Url = $"https://www.twitch.tv/{stream.UserLogin}",
             Title = stream.Title,
             ThumbnailUrl = stream.ThumbnailUrl,
             PublishDateTime = stream.StartedAt.ToUniversalTime(),
