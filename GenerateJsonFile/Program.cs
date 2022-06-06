@@ -30,6 +30,11 @@ class Program
         // Start output data
         ClearAndCreateOutputFolders();
 
+        if (latestBasicDataTime < latestRecordTime)
+        {
+            latestBasicDataTime = latestRecordTime;
+        }
+
         UpdateTimeResponse updateTimeResponse = new()
         {
             time = new UpdateTime()
@@ -271,6 +276,7 @@ class Program
             if (dictStatistics.Count >= trackList.GetCount() * 0.5)
             {
                 dictRecord.AppendStatistic(fileInfoDateTime.Item2, dictStatistics);
+                dictRecord.AppendBasicData(fileInfoDateTime.Item2, dictStatistics);
             }
         }
     }

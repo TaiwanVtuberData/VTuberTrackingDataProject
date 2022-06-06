@@ -84,7 +84,40 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
             this[id].Twitch?.AddRecord(recordDateTime, twitchRecord);
         }
     }
+    public void AppendBasicData(DateTime recordDateTime, Dictionary<string, VTuberStatistics> statisticsDict)
+    {
+        foreach (KeyValuePair<string, VTuberStatistics> vtuberStatPair in statisticsDict)
+        {
+            string id = vtuberStatPair.Key;
+            if (!this.ContainsKey(id))
+            {
+                continue;
+            }
 
+            VTuberStatistics vtuberData = vtuberStatPair.Value;
+
+            if (this[id].YouTube != null)
+            {
+                VTuberRecord.YouTubeData.BasicData YTData = new()
+                {
+                    SubscriberCount = vtuberData.YouTube.SubscriberCount,
+                    TotalViewCount = vtuberData.YouTube.ViewCount,
+                };
+
+                this[id].YouTube?.AddBasicData(recordDateTime, YTData);
+            }
+
+            if (this[id].Twitch != null)
+            {
+                VTuberRecord.TwitchData.BasicData twitchData = new()
+                {
+                    FollowerCount = vtuberData.Twitch.FollowerCount,
+                };
+
+                this[id].Twitch?.AddBasicData(recordDateTime, twitchData);
+            }
+        }
+    }
     public void AppendBasicData(DateTime recordDateTime, Dictionary<string, VTuberBasicData> dictBasicData)
     {
         foreach (KeyValuePair<string, VTuberBasicData> vtuberDataPair in dictBasicData)
