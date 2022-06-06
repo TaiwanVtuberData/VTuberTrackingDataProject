@@ -15,8 +15,6 @@ class Program
         string dataRepoPath = args.Length >= 1 ? args[0] : "/tw_vtuber";
         OUTPUT_PATH = args.Length >= 2 ? args[1] : "/out/api/v2";
 
-        DateTime now = DateTime.UtcNow;
-
         (_, DateTime latestRecordTime) = FileUtility.GetLatestRecord(dataRepoPath, "record");
 
         List<string> excluedList = FileUtility.GetListFromCsv(Path.Combine(dataRepoPath, "DATA/EXCLUDE_LIST.csv"));
@@ -37,7 +35,7 @@ class Program
             time = new UpdateTime()
             {
                 statisticUpdateTime = latestRecordTime.ToUniversalTime().ToString("o"),
-                VTuberDataUpdateTime = now.ToUniversalTime().ToString("o"),
+                VTuberDataUpdateTime = latestBasicDataTime.ToUniversalTime().ToString("o"),
             },
         };
         WriteJson(updateTimeResponse, "update-time.json");

@@ -14,16 +14,17 @@ public class Fetcher
         youtubeService = new YouTubeService(new BaseClientService.Initializer() { ApiKey = this.ApiKey });
     }
 
-    public (Dictionary<string, YouTubeStatistics>, TopVideosList) GetAll(List<string> lstChannelId)
+    public (Dictionary<string, YouTubeStatistics>, TopVideosList, LiveVideosList) GetAll(List<string> lstChannelId)
     {
         List<Google.Apis.YouTube.v3.Data.Channel> lstChannelInfo = GetChannelInfoList(lstChannelId);
 
         Dictionary<string, YouTubeStatistics> rDict = GetChannelStatistics(lstChannelInfo);
         TopVideosList rVideoList = new(videoCount: 1000);
+        LiveVideosList rLiveVideoList = new();
 
-        GetChannelRecentViewStatistic(lstChannelInfo, ref rDict, ref rVideoList);
+        GetChannelRecentViewStatistic(lstChannelInfo, ref rDict, ref rVideoList, ref rLiveVideoList);
 
-        return (rDict, rVideoList);
+        return (rDict, rVideoList, rLiveVideoList);
     }
 
     private List<Google.Apis.YouTube.v3.Data.Channel> GetChannelInfoList(List<string> lstChannelId)
@@ -150,7 +151,11 @@ public class Fetcher
         return dictIdTime;
     }
 
-    private void GetChannelRecentViewStatistic(List<Google.Apis.YouTube.v3.Data.Channel> lstChannelInfo, ref Dictionary<string, YouTubeStatistics> dictIdStatistics, ref TopVideosList topVideosList)
+    private void GetChannelRecentViewStatistic(
+        List<Google.Apis.YouTube.v3.Data.Channel> lstChannelInfo,
+        ref Dictionary<string, YouTubeStatistics> dictIdStatistics,
+        ref TopVideosList topVideosList,
+        ref LiveVideosList liveVideosList)
     {
         foreach (Google.Apis.YouTube.v3.Data.Channel channelInfo in lstChannelInfo)
         {
@@ -163,7 +168,7 @@ public class Fetcher
             List<Tuple<string, ulong>> lstIdViewCount = new();
             foreach (string idRequestString in idRequestList)
             {
-                VideosResource.ListRequest videosListRequest = youtubeService.Videos.List("id,snippet,statistics");
+                VideosResource.ListRequest videosListRequest = youtubeService.Videos.List("id,snippet,statistics,liveStreamingDetails");
                 videosListRequest.Id = idRequestString;
 
                 Google.Apis.YouTube.v3.Data.VideoListResponse videoListResponse = videosListRequest.Execute();
@@ -185,6 +190,19 @@ public class Fetcher
                         PublishDateTime = video.Snippet.PublishedAt.GetValueOrDefault(DateTime.UnixEpoch).ToUniversalTime(),
                         ViewCount = viewCount.GetValueOrDefault(),
                     });
+
+                    if (LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent))
+                    {
+                        liveVideosList.Add(new LiveVideoInformation
+                        {
+                            Id = channelInfo.Id,
+                            Url = $"https://www.youtube.com/watch?v={video.Id}",
+                            Title = video.Snippet.Title,
+                            ThumbnailUrl = video.Snippet.Thumbnails.Medium.Url,
+                            PublishDateTime = video.LiveStreamingDetails.ScheduledStartTime.GetValueOrDefault(DateTime.UnixEpoch).ToUniversalTime(),
+                            VideoType = LiveVideoTypeConvert.FromString(video.Snippet.LiveBroadcastContent),
+                        });
+                    }
                 }
             }
 

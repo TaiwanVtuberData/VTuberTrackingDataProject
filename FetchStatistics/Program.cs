@@ -30,8 +30,20 @@ Console.WriteLine($"Get all YouTube statistics: {lstYouTubeChannelId.Count} chan
 
 Dictionary<string, YouTubeStatistics> dictIdYouTubeStatistics;
 TopVideosList topVideoList;
-(dictIdYouTubeStatistics, topVideoList) = youtubeDataFetcher.GetAll(lstYouTubeChannelId);
+LiveVideosList liveVideosList;
+(dictIdYouTubeStatistics, topVideoList, liveVideosList) = youtubeDataFetcher.GetAll(lstYouTubeChannelId);
 foreach (VideoInformation videoInfo in topVideoList)
+{
+    try
+    {
+        videoInfo.Id = trackList.GetIdByYouTubeChannelId(videoInfo.Id);
+    }
+    catch
+    {
+    }
+}
+
+foreach (LiveVideoInformation videoInfo in liveVideosList)
 {
     try
     {
@@ -80,6 +92,7 @@ foreach (VTuberData vtuber in trackList)
 DateTime currentDateTime = DateTime.UtcNow.AddHours(8);
 WriteResult(lstStatistics, currentDateTime, savePath);
 WriteTopVideosListResult(topVideoList, currentDateTime, savePath);
+WriteLiveVideosListResult(liveVideosList, currentDateTime, savePath);
 
 static void WriteResult(List<VTuberStatistics> vtuberStatisticsList, DateTime currentDateTime, string savePath)
 {
@@ -151,6 +164,26 @@ static void WriteTopVideosListResult(TopVideosList topVideoList, DateTime curren
     csv.WriteHeader<VideoInformation>();
 
     foreach (VideoInformation videoInfo in topVideoList.GetSortedList().OrderByDescending(e => e.ViewCount))
+    {
+        csv.NextRecord();
+        csv.WriteRecord(videoInfo);
+    }
+}
+
+static void WriteLiveVideosListResult(LiveVideosList liveVideos, DateTime currentDateTime, string savePath)
+{
+
+    // create monthly directory first
+    string fileDir = $"{savePath}/{currentDateTime:yyyy-MM}";
+    Directory.CreateDirectory(fileDir);
+
+    using StreamWriter writer = new($"{fileDir}/live-videos_{currentDateTime:yyyy-MM-dd-HH-mm-ss}.csv");
+    using CsvWriter csv = new(writer, CultureInfo.InvariantCulture);
+    csv.Context.RegisterClassMap<LiveVideoInformationMap>();
+
+    csv.WriteHeader<LiveVideoInformation>();
+
+    foreach (LiveVideoInformation videoInfo in liveVideos.OrderBy(e => e.PublishDateTime))
     {
         csv.NextRecord();
         csv.WriteRecord(videoInfo);
