@@ -62,9 +62,10 @@ foreach (VTuberData vtuber in trackList)
 
     TwitchStatistics twitchStatistics = new();
     TopVideosList twitchTopVideoList = new();
+    LiveVideosList twitchLiveVideosList = new();
     if (!string.IsNullOrEmpty(vtuber.TwitchChannelId))
     {
-        bool successful = twitchDataFetcher.GetAll(vtuber.TwitchChannelId, out twitchStatistics, out twitchTopVideoList);
+        bool successful = twitchDataFetcher.GetAll(vtuber.TwitchChannelId, out twitchStatistics, out twitchTopVideoList, out twitchLiveVideosList);
     }
     foreach (VideoInformation videoInfo in twitchTopVideoList)
     {
@@ -77,6 +78,18 @@ foreach (VTuberData vtuber in trackList)
         }
 
         topVideoList.Insert(videoInfo);
+    }
+    foreach (LiveVideoInformation videoInfo in twitchLiveVideosList)
+    {
+        try
+        {
+            videoInfo.Id = trackList.GetIdByTwitchChannelId(videoInfo.Id);
+        }
+        catch
+        {
+        }
+
+        liveVideosList.Add(videoInfo);
     }
 
     YouTubeStatistics youtubeStatistics = new();
@@ -172,6 +185,11 @@ static void WriteTopVideosListResult(TopVideosList topVideoList, DateTime curren
 
 static void WriteLiveVideosListResult(LiveVideosList liveVideos, DateTime currentDateTime, string savePath)
 {
+    // CSV Format:
+    // VTuber ID, Video Type,Title,Publish Time, URL, Thumbnail URL
+    // c51f84b3ec9c4501a364a6a4982fa284, live,【中文 / English】元素使握著手把甦醒｜搖桿爬分 Controller Mode｜🌪風絮 FengXu,2022 - 06 - 06T05:29:28Z,https://www.twitch.tv/風絮_,https://static-cdn.jtvnw.net/previews-ttv/live_user_fengxu_vt-{width}x{height}.jpg
+    // c51f84b3ec9c4501a364a6a4982fa284,live,【APEX RANK】元素使握著手把甦醒｜搖桿爬分 Controller Mode｜🌪風絮 FengXu,2022-06-06T05:30:00Z,https://www.youtube.com/watch?v=-xdwl1twrpU,https://i.ytimg.com/vi/-xdwl1twrpU/mqdefault_live.jpg
+    // 60716febdfe949248e8f67d85634bec5,upcoming,【Lolipop】Awake Now／雄之助 (Cover)【歌ってみた】,2022 - 06 - 06T11: 30:00Z,https://www.youtube.com/watch?v=ffPuLoHf404,https://i.ytimg.com/vi/ffPuLoHf404/mqdefault.jpg
 
     // create monthly directory first
     string fileDir = $"{savePath}/{currentDateTime:yyyy-MM}";

@@ -14,10 +14,11 @@ public class Fetcher
         api.Settings.Secret = secret;
     }
 
-    public bool GetAll(string userId, out TwitchStatistics statistics, out TopVideosList topVideoList)
+    public bool GetAll(string userId, out TwitchStatistics statistics, out TopVideosList topVideoList, out LiveVideosList liveVideosList)
     {
         var (successStatistics, followerCount) = GetChannelStatistics(userId);
         var (successRecentViewCount, medianViewCount, highestViewCount, highestViewdVideoID, topVideoList_) = GetChannelRecentViewStatistic(userId);
+        LiveVideosList liveVideos = GetLiveVideosList(userId);
 
         if (successStatistics && successRecentViewCount)
         {
@@ -29,12 +30,14 @@ public class Fetcher
                 HighestViewedVideoURL = (highestViewdVideoID != "") ? $"https://www.twitch.tv/videos/{highestViewdVideoID}" : "",
             };
             topVideoList = topVideoList_;
+            liveVideosList = liveVideos;
             return true;
         }
         else
         {
             statistics = new TwitchStatistics();
             topVideoList = new TopVideosList();
+            liveVideosList = new LiveVideosList();
             return false;
         }
     }
@@ -78,6 +81,7 @@ public class Fetcher
 
         string afterCursor = "";
         TopVideosList topVideosList = new();
+
         while (afterCursor != null)
         {
             TwitchLib.Api.Helix.Models.Videos.GetVideos.GetVideosResponse? videoResponseResult = null;
@@ -142,7 +146,6 @@ public class Fetcher
                     }
                     catch
                     {
-
                     }
                 }
             }
@@ -159,6 +162,119 @@ public class Fetcher
         viewCountList.Sort(CompareTupleSecondValue);
         Tuple<string, ulong> highestViewPair = viewCountList.Last();
         return (true, medianViews, highestViewPair.Item2, highestViewPair.Item1, topVideosList);
+    }
+
+    private LiveVideosList GetLiveVideosList(string userId)
+    {
+        LiveVideosList rLst = GetScheduleLiveVideosList(userId);
+
+        LiveVideoInformation? livestream = GetActiveStream(userId);
+
+        if (livestream != null)
+        {
+            rLst.Add(livestream);
+        }
+
+        return rLst;
+    }
+
+    private LiveVideoInformation? GetActiveStream(string userId)
+    {
+        TwitchLib.Api.Helix.Models.Streams.GetStreams.GetStreamsResponse? streamResponseResult = null;
+
+        bool hasResponse = false;
+        for (int i = 0; i < 2; i++)
+        {
+            try
+            {
+                var streamResponse = api.Helix.Streams.GetStreamsAsync(userIds: new List<string>() { userId });
+                streamResponseResult = streamResponse.Result;
+
+                hasResponse = true;
+                break;
+            }
+            catch
+            {
+            }
+        }
+
+        if (!hasResponse || streamResponseResult is null)
+        {
+            return null;
+        }
+
+        TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream[]? streams = streamResponseResult.Streams;
+
+        if (streams is null || streams.Length != 1)
+        {
+            return null;
+        }
+
+        TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream stream = streams[0];
+
+        return (new LiveVideoInformation
+        {
+            Id = userId,
+            Url = $"https://www.twitch.tv/{stream.UserName}",
+            Title = stream.Title,
+            ThumbnailUrl = stream.ThumbnailUrl,
+            PublishDateTime = stream.StartedAt.ToUniversalTime(),
+            VideoType = LiveVideoType.live,
+        });
+    }
+
+    private LiveVideosList GetScheduleLiveVideosList(string userId)
+    {
+        TwitchLib.Api.Helix.Models.Schedule.GetChannelStreamSchedule.GetChannelStreamScheduleResponse? scheduleResponseResult = null;
+
+        LiveVideosList rLst = new();
+
+        bool hasResponse = false;
+        for (int i = 0; i < 2; i++)
+        {
+            try
+            {
+                var scheduleResponse = api.Helix.Schedule.GetChannelStreamScheduleAsync(
+                    broadcasterId: userId,
+                    first: 10
+                    );
+                scheduleResponseResult = scheduleResponse.Result;
+
+                hasResponse = true;
+                break;
+            }
+            catch
+            {
+            }
+        }
+
+        if (!hasResponse || scheduleResponseResult is null)
+        {
+            return new();
+        }
+
+        TwitchLib.Api.Helix.Models.Schedule.ChannelStreamSchedule? schedule = scheduleResponseResult.Schedule;
+
+        foreach (var segment in schedule.Segments)
+        {
+            try
+            {
+                rLst.Add(new LiveVideoInformation
+                {
+                    Id = userId,
+                    Url = $"https://www.twitch.tv/{schedule.BroadcasterLogin}",
+                    Title = segment.Title,
+                    ThumbnailUrl = "",
+                    PublishDateTime = segment.StartTime.ToUniversalTime(),
+                    VideoType = LiveVideoType.upcoming,
+                });
+            }
+            catch
+            {
+            }
+        }
+
+        return rLst;
     }
 
     private static ulong GetMedian(List<Tuple<string, ulong>> list)
