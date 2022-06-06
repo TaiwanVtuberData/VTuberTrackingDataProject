@@ -193,13 +193,16 @@ public class Fetcher
 
                     if (LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent))
                     {
+                        DateTime startTime = video.LiveStreamingDetails.ScheduledStartTime 
+                            ?? video.LiveStreamingDetails.ActualStartTime.GetValueOrDefault(DateTime.UnixEpoch).ToUniversalTime();
+
                         liveVideosList.Add(new LiveVideoInformation
                         {
                             Id = channelInfo.Id,
                             Url = $"https://www.youtube.com/watch?v={video.Id}",
                             Title = video.Snippet.Title,
                             ThumbnailUrl = video.Snippet.Thumbnails.Medium.Url,
-                            PublishDateTime = video.LiveStreamingDetails.ScheduledStartTime.GetValueOrDefault(DateTime.UnixEpoch).ToUniversalTime(),
+                            PublishDateTime = startTime,
                             VideoType = LiveVideoTypeConvert.FromString(video.Snippet.LiveBroadcastContent),
                         });
                     }
