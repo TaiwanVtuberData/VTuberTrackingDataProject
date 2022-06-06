@@ -127,6 +127,7 @@ public class Fetcher
                 {
                     // there is currently no way to know which video is streaming
                     // 0 view count is observed to be a livestream
+                    // FIXME: the value might not be 0 when livestreaming
                     if (viewCount != 0)
                     {
                         viewCountList.Add(new Tuple<string, ulong>(videoId, viewCount));
