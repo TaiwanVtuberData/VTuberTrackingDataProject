@@ -195,7 +195,7 @@ static void WriteLiveVideosListResult(LiveVideosList liveVideos, DateTime curren
     string fileDir = $"{savePath}/{currentDateTime:yyyy-MM}";
     Directory.CreateDirectory(fileDir);
 
-    using StreamWriter writer = new($"{fileDir}/live-videos_{currentDateTime:yyyy-MM-dd-HH-mm-ss}.csv");
+    using StreamWriter writer = new($"{fileDir}/livestreams_{currentDateTime:yyyy-MM-dd-HH-mm-ss}.csv");
     using CsvWriter csv = new(writer, CultureInfo.InvariantCulture);
     csv.Context.RegisterClassMap<LiveVideoInformationMap>();
 
