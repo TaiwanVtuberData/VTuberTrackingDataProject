@@ -256,6 +256,11 @@ public class Fetcher
 
         TwitchLib.Api.Helix.Models.Schedule.ChannelStreamSchedule? schedule = scheduleResponseResult.Schedule;
 
+        if (schedule.Segments is null)
+        {
+            return new();
+        }
+
         foreach (var segment in schedule.Segments)
         {
             try
