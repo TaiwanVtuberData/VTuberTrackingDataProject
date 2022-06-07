@@ -193,8 +193,9 @@ public class Fetcher
 
                     if (LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent))
                     {
-                        DateTime startTime = video.LiveStreamingDetails.ScheduledStartTime 
-                            ?? video.LiveStreamingDetails.ActualStartTime.GetValueOrDefault(DateTime.UnixEpoch).ToUniversalTime();
+                        DateTime startTime =
+                            (video.LiveStreamingDetails.ActualStartTime ?? video.LiveStreamingDetails.ScheduledStartTime.GetValueOrDefault(DateTime.UnixEpoch))
+                            .ToUniversalTime();
 
                         liveVideosList.Add(new LiveVideoInformation
                         {
