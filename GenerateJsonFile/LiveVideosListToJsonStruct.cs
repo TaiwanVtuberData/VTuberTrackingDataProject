@@ -33,7 +33,7 @@ internal class LiveVideosListToJsonStruct
                 imgUrl: record.ImageUrl,
                 title: videoInfo.Title,
                 videoUrl: videoInfo.Url,
-                thumbnailUrl: MiscUtils.SetTwitchLivestreamThumbnailUrlSize(videoInfo.ThumbnailUrl, width: 320, height: 180),
+                thumbnailUrl: MiscUtils.SetTwitchLivestreamThumbnailUrlSize(videoInfo.ThumbnailUrl, width: 178, height: 100),
                 // https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings#Roundtrip
                 // use "o" specifier to get correct format 2009-06-15T13:45:30.0000000Z
                 startTime: videoInfo.PublishDateTime != DateTime.UnixEpoch ? MiscUtils.ToIso8601UtcString(videoInfo.PublishDateTime) : null
