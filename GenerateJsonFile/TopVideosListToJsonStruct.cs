@@ -43,7 +43,7 @@ class TopVideosListToJsonStruct
             return obj.GetHashCode();
         }
     }
-    public List<VideoPopularityData> Get(TrackList trackList, TopVideosList topVideoList, DictionaryRecord dictRecord, int count, bool allowDuplicate)
+    public List<VideoPopularityData> Get(TopVideosList topVideoList, DictionaryRecord dictRecord, int count, bool allowDuplicate)
     {
         List<VideoPopularityData> rLst = new();
 
