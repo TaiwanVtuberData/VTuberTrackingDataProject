@@ -54,7 +54,7 @@ internal class LiveVideosListToJsonStruct
                 return true;
             case LiveVideoType.upcoming:
                 {
-                    if (videoInfo.PublishDateTime < currentTime)
+                    if (videoInfo.PublishDateTime < currentTime.AddDays(-1))
                     {
                         return false;
                     }
