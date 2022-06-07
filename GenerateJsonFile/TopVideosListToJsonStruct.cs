@@ -1,5 +1,6 @@
 ﻿using Common.Types;
 using GenerateJsonFile.Types;
+using GenerateJsonFile.Utils;
 
 namespace GenerateJsonFile;
 
@@ -10,16 +11,6 @@ class TopVideosListToJsonStruct
     public TopVideosListToJsonStruct(string nationalityFilter)
     {
         NationalityFilter = nationalityFilter;
-    }
-
-    private static string SetTwitchThumbnailUrlSize(string str, int width, int height)
-    {
-        if (!str.Contains("%{width}") || !str.Contains("%{height}"))
-            return str;
-
-        return str
-            .Replace("%{width}", width.ToString())
-            .Replace("%{height}", height.ToString());
     }
 
     class OwnerComparer : IEqualityComparer<VideoInformation>
@@ -74,11 +65,11 @@ class TopVideosListToJsonStruct
                 imgUrl = record.ImageUrl,
                 title = videoInfo.Title,
                 videoUrl = videoInfo.Url,
-                thumbnailUrl = SetTwitchThumbnailUrlSize(videoInfo.ThumbnailUrl, width: 320, height: 180),
+                thumbnailUrl = MiscUtils.SetTwitchThumbnailUrlSize(videoInfo.ThumbnailUrl, width: 320, height: 180),
                 viewCount = videoInfo.ViewCount,
                 // https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings#Roundtrip
                 // use "o" specifier to get correct format 2009-06-15T13:45:30.0000000Z
-                uploadTime = videoInfo.PublishDateTime.ToString("o"),
+                uploadTime = MiscUtils.ToIso8601UtcString(videoInfo.PublishDateTime),
             };
 
             rLst.Add(videoData);
