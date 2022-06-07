@@ -48,7 +48,7 @@ class Program
         };
         WriteJson(updateTimeResponse, "update-time.json");
 
-        List<VTuberFullData> lstAllVTuber = new DictionaryRecordToJsonStruct(DateTime.Today, latestRecordTime, latestBasicDataTime, "").AllWithFullData(dictRecord);
+        List<VTuberFullData> lstAllVTuber = new DictionaryRecordToJsonStruct(trackList, dictRecord, DateTime.Today, latestRecordTime, latestBasicDataTime, "").AllWithFullData();
         foreach (VTuberFullData vtuber in lstAllVTuber)
         {
             WriteJson(vtuber, $"vtubers/{vtuber.id}.json");
@@ -56,12 +56,12 @@ class Program
 
         foreach (var nationality in new List<(string, string)> { ("", "all"), ("TW", "TW"), ("HK", "HK"), ("MY", "MY") })
         {
-            DictionaryRecordToJsonStruct transformer = new(DateTime.Today, latestRecordTime, latestBasicDataTime, nationality.Item1);
+            DictionaryRecordToJsonStruct transformer = new(trackList, dictRecord, DateTime.Today, latestRecordTime, latestBasicDataTime, nationality.Item1);
 
             foreach (var tuple in new List<(int?, string)> { (10, "10"), (null, "all") })
             {
                 WriteJson(
-                    transformer.All(dictRecord, tuple.Item1),
+                    transformer.All(count: tuple.Item1),
                     nationality.Item2,
                     $"vtubers/{tuple.Item2}.json");
             }
@@ -69,7 +69,7 @@ class Program
             foreach (var tuple in new List<(int?, string)> { (10, "10"), (100, "100") })
             {
                 WriteJson(
-                    transformer.TrendingVTubers(dictRecord, tuple.Item1),
+                    transformer.TrendingVTubers(count: tuple.Item1),
                     nationality.Item2,
                     $"trending-vtubers/{tuple.Item2}.json");
             }
@@ -79,7 +79,7 @@ class Program
                 foreach (var countTuple in new List<(int?, string)> { (10, "10"), (100, "100"), (null, "all") })
                 {
                     WriteJson(
-                        transformer.VTubersViewCountChange(dictRecord, sortTuple.Item1, countTuple.Item1),
+                        transformer.VTubersViewCountChange(sortBy: sortTuple.Item1, count: countTuple.Item1),
                     nationality.Item2,
                         $"vtubers-view-count-change/{sortTuple.Item2}/{countTuple.Item2}.json");
                 }
@@ -88,7 +88,7 @@ class Program
             foreach (var tuple in new List<(int?, string)> { (10, "10"), (100, "100"), (null, "all") })
             {
                 WriteJson(
-                    transformer.GrowingVTubers(dictRecord, tuple.Item1),
+                    transformer.GrowingVTubers(count: tuple.Item1),
                     nationality.Item2,
                     $"growing-vtubers/{tuple.Item2}.json");
             }
@@ -96,7 +96,7 @@ class Program
             foreach (var tuple in new List<(uint, uint, string)> { (0, 7, "next-7-days"), (30, 30, "recent") })
             {
                 WriteJson(
-                    transformer.DebutVTubers(dictRecord, daysBefore: tuple.Item1, daysAfter: tuple.Item2),
+                    transformer.DebutVTubers(daysBefore: tuple.Item1, daysAfter: tuple.Item2),
                     nationality.Item2,
                     $"debut-vtubers/{tuple.Item3}.json");
             }
@@ -104,17 +104,17 @@ class Program
             foreach (var tuple in new List<(uint, uint, string)> { (0, 7, "next-7-days"), (30, 30, "recent") })
             {
                 WriteJson(
-                    transformer.GraduateVTubers(dictRecord, daysBefore: tuple.Item1, daysAfter: tuple.Item2),
+                    transformer.GraduateVTubers(daysBefore: tuple.Item1, daysAfter: tuple.Item2),
                     nationality.Item2,
                     $"graduate-vtubers/{tuple.Item3}.json");
             }
 
-            List<GroupData> lstGroupData = transformer.Groups(trackList, dictRecord);
+            List<GroupData> lstGroupData = transformer.Groups();
             WriteJson(lstGroupData,
                     nationality.Item2,
                     "groups.json");
 
-            Dictionary<string, List<Types.VTuberData>> dictGroupVTuberData = transformer.GroupMembers(trackList, dictRecord);
+            Dictionary<string, List<Types.VTuberData>> dictGroupVTuberData = transformer.GroupMembers();
             foreach (KeyValuePair<string, List<Types.VTuberData>> entry in dictGroupVTuberData)
             {
                 string outputDir = $"groups/{entry.Key}";

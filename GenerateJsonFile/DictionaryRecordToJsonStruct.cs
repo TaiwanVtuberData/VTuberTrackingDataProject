@@ -8,14 +8,18 @@ class DictionaryRecordToJsonStruct
 {
     private static readonly string DATE_FORMAT = "yyyy-MM-dd";
 
+    private readonly TrackList _trackList;
+    private readonly DictionaryRecord DictRecord;
     private readonly DateTime TodayDate;
     private readonly DateTime LatestRecordTime;
     private readonly DateTime LatestBasicDataTime;
     private readonly DataTransform dataTransform;
     private readonly string NationalityFilter;
 
-    public DictionaryRecordToJsonStruct(DateTime todayDate, DateTime latestRecordTime, DateTime latestBasicDataTime, string nationalityFilter)
+    public DictionaryRecordToJsonStruct(TrackList trackList, DictionaryRecord dictRecord, DateTime todayDate, DateTime latestRecordTime, DateTime latestBasicDataTime, string nationalityFilter)
     {
+        _trackList = trackList;
+        DictRecord = dictRecord;
         TodayDate = todayDate;
         LatestRecordTime = latestRecordTime;
         LatestBasicDataTime = latestBasicDataTime;
@@ -23,11 +27,11 @@ class DictionaryRecordToJsonStruct
         NationalityFilter = nationalityFilter;
     }
 
-    public List<VTuberFullData> AllWithFullData(DictionaryRecord dictRecord)
+    public List<VTuberFullData> AllWithFullData()
     {
         List<Types.VTuberFullData> rLst = new();
 
-        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord)
+        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in DictRecord)
         {
             VTuberRecord record = vtuberStatPair.Value;
 
@@ -51,11 +55,11 @@ class DictionaryRecordToJsonStruct
         return rLst;
     }
 
-    public List<Types.VTuberData> All(DictionaryRecord dictRecord, int? count)
+    public List<Types.VTuberData> All(int? count)
     {
         List<Types.VTuberData> rLst = new();
 
-        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
+        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in DictRecord
             .Where(p => p.Value.Nationality.Contains(NationalityFilter))
             .OrderByDescending(p => p, new VTuberRecordComparator.CombinedCount(LatestRecordTime))
             .Take(count ?? int.MaxValue))
@@ -81,11 +85,11 @@ class DictionaryRecordToJsonStruct
         return rLst;
     }
 
-    public List<VTuberGrowthData> GrowingVTubers(DictionaryRecord dictRecord, int? count)
+    public List<VTuberGrowthData> GrowingVTubers(int? count)
     {
-        Dictionary<string, YouTubeGrowthData> dictGrowth = new(dictRecord.Count);
+        Dictionary<string, YouTubeGrowthData> dictGrowth = new(DictRecord.Count);
 
-        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord)
+        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in DictRecord)
         {
             string id = vtuberStatPair.Key;
             VTuberRecord record = vtuberStatPair.Value;
@@ -95,8 +99,8 @@ class DictionaryRecordToJsonStruct
                 continue;
             }
 
-            DictionaryRecord.GetGrowthResult _7DaysResult = dictRecord.GetYouTubeSubscriberCountGrowth(id, days: 7, daysLimit: 1, out long _7DaysGrowth, out decimal _7DaysGrowthRate);
-            DictionaryRecord.GetGrowthResult _30DaysResult = dictRecord.GetYouTubeSubscriberCountGrowth(id, days: 30, daysLimit: 7, out long _30DaysGrowth, out decimal _30DaysGrowthRate);
+            DictionaryRecord.GetGrowthResult _7DaysResult = DictRecord.GetYouTubeSubscriberCountGrowth(id, days: 7, daysLimit: 1, out long _7DaysGrowth, out decimal _7DaysGrowthRate);
+            DictionaryRecord.GetGrowthResult _30DaysResult = DictRecord.GetYouTubeSubscriberCountGrowth(id, days: 30, daysLimit: 7, out long _30DaysGrowth, out decimal _30DaysGrowthRate);
 
             YouTubeGrowthData growthData = new(
                 id: record.YouTube.ChannelId,
@@ -114,14 +118,14 @@ class DictionaryRecordToJsonStruct
             .Where(p => p.Value.Nationality != null && p.Value.Nationality.Contains(NationalityFilter))
             .Where(p => p.Value.subscriber.tag == CountTag.has)
             .Where(p => p.Value._7DaysGrowth.diff >= 100)
-            .Where(p => dictRecord[p.Key].YouTube != null)
+            .Where(p => DictRecord[p.Key].YouTube != null)
             .OrderByDescending(p => ToGrowthPercentage(p.Value))
             .Take(count ?? int.MaxValue))
         {
             string id = growthPair.Key;
             YouTubeGrowthData youTubeGrowthData = growthPair.Value;
 
-            VTuberRecord record = dictRecord[id];
+            VTuberRecord record = DictRecord[id];
 
             VTuberGrowthData vTuberData = new(
                 id: record.Id,
@@ -177,11 +181,11 @@ class DictionaryRecordToJsonStruct
         };
     }
 
-    public List<VTuberViewCountGrowthData> VTubersViewCountChange(DictionaryRecord dictRecord, SortBy sortBy, int? count)
+    public List<VTuberViewCountGrowthData> VTubersViewCountChange(SortBy sortBy, int? count)
     {
-        Dictionary<string, YouTubeViewCountGrowthData> dictGrowth = new(dictRecord.Count);
+        Dictionary<string, YouTubeViewCountGrowthData> dictGrowth = new(DictRecord.Count);
 
-        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord)
+        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in DictRecord)
         {
             string id = vtuberStatPair.Key;
             VTuberRecord record = vtuberStatPair.Value;
@@ -191,8 +195,8 @@ class DictionaryRecordToJsonStruct
                 continue;
             }
 
-            DictionaryRecord.GetGrowthResult _7DaysResult = dictRecord.GetYouTubeViewCountGrowth(id, days: 7, daysLimit: 1, out decimal _7DaysGrowth, out decimal _7DaysGrowthRate);
-            DictionaryRecord.GetGrowthResult _30DaysResult = dictRecord.GetYouTubeViewCountGrowth(id, days: 30, daysLimit: 7, out decimal _30DaysGrowth, out decimal _30DaysGrowthRate);
+            DictionaryRecord.GetGrowthResult _7DaysResult = DictRecord.GetYouTubeViewCountGrowth(id, days: 7, daysLimit: 1, out decimal _7DaysGrowth, out decimal _7DaysGrowthRate);
+            DictionaryRecord.GetGrowthResult _30DaysResult = DictRecord.GetYouTubeViewCountGrowth(id, days: 30, daysLimit: 7, out decimal _30DaysGrowth, out decimal _30DaysGrowthRate);
 
             YouTubeViewCountGrowthData growthData = new(
                 id: record.YouTube.ChannelId,
@@ -211,14 +215,14 @@ class DictionaryRecordToJsonStruct
             .Where(p => p.Value.Nationality != null && p.Value.Nationality.Contains(NationalityFilter))
             .Where(p => p.Value.totalViewCount != 0)
             .Where(p => p.Value._7DaysGrowth.diff >= 0)
-            .Where(p => dictRecord[p.Key].YouTube != null)
+            .Where(p => DictRecord[p.Key].YouTube != null)
             .OrderByDescending(p => p.Value, GetSortFunction(sortBy))
             .Take(count ?? int.MaxValue))
         {
             string id = growthPair.Key;
             YouTubeViewCountGrowthData youTubeGrowthData = growthPair.Value;
 
-            VTuberRecord record = dictRecord[id];
+            VTuberRecord record = DictRecord[id];
 
             VTuberViewCountGrowthData vTuberData = new(
                 id: record.Id,
@@ -244,7 +248,7 @@ class DictionaryRecordToJsonStruct
         return rLst;
     }
 
-    public List<VTuberDebutData> DebutVTubers(DictionaryRecord dictRecord, uint daysBefore, uint daysAfter)
+    public List<VTuberDebutData> DebutVTubers(uint daysBefore, uint daysAfter)
     {
         List<VTuberDebutData> rLst = new();
 
@@ -252,7 +256,7 @@ class DictionaryRecordToJsonStruct
         DateTime _30DaysAfter = TodayDate.AddDays(daysAfter);
 
 
-        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
+        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in DictRecord
             .Where(p => p.Value.Nationality.Contains(NationalityFilter))
             .Where(p => p.Value.DebutDate.HasValue)
             .Where(p => IsBetween(p.Value.DebutDate, _30DaysBefore, _30DaysAfter))
@@ -285,14 +289,14 @@ class DictionaryRecordToJsonStruct
         return rLst;
     }
 
-    public List<VTuberGraduateData> GraduateVTubers(DictionaryRecord dictRecord, uint daysBefore, uint daysAfter)
+    public List<VTuberGraduateData> GraduateVTubers(uint daysBefore, uint daysAfter)
     {
         List<VTuberGraduateData> rLst = new();
 
         DateTime _30DaysBefore = TodayDate.AddDays(-daysBefore);
         DateTime _30DaysAfter = TodayDate.AddDays(daysAfter);
 
-        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
+        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in DictRecord
             .Where(p => p.Value.Nationality.Contains(NationalityFilter))
             .Where(p => p.Value.GraduationDate.HasValue)
             .Where(p => IsBetween(p.Value.GraduationDate, _30DaysBefore, _30DaysAfter))
@@ -325,11 +329,11 @@ class DictionaryRecordToJsonStruct
         return rLst;
     }
 
-    public List<VTuberPopularityData> TrendingVTubers(DictionaryRecord dictRecord, int? count)
+    public List<VTuberPopularityData> TrendingVTubers(int? count)
     {
         List<VTuberPopularityData> rLst = new();
 
-        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
+        foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in DictRecord
             .Where(p => p.Value.Nationality.Contains(NationalityFilter))
             .OrderByDescending(p => p, new VTuberRecordComparator.CombinedViewCount(LatestRecordTime))
             .Take(count ?? int.MaxValue))
@@ -354,16 +358,16 @@ class DictionaryRecordToJsonStruct
         return rLst;
     }
 
-    public List<GroupData> Groups(TrackList trackList, DictionaryRecord dictRecord)
+    public List<GroupData> Groups()
     {
         List<GroupData> rLst = new();
 
-        foreach (string groupName in trackList.GetGroupNameList())
+        foreach (string groupName in _trackList.GetGroupNameList())
         {
             ulong popularity = 0;
             List<Types.VTuberData> lstMembers = new();
 
-            foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
+            foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in DictRecord
                 .Where(p => p.Value.Nationality.Contains(NationalityFilter))
                 .Where(p => p.Value.GroupName == groupName)
                 .OrderByDescending(p => p, new VTuberRecordComparator.CombinedCount(LatestRecordTime)))
@@ -408,15 +412,15 @@ class DictionaryRecordToJsonStruct
         return rLst;
     }
 
-    public Dictionary<string, List<Types.VTuberData>> GroupMembers(TrackList trackList, DictionaryRecord dictRecord)
+    public Dictionary<string, List<Types.VTuberData>> GroupMembers()
     {
         Dictionary<string, List<Types.VTuberData>> rDict = new();
 
-        foreach (string groupName in trackList.GetGroupNameList())
+        foreach (string groupName in _trackList.GetGroupNameList())
         {
             List<Types.VTuberData> lstMembers = new();
 
-            foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in dictRecord
+            foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in DictRecord
                 .Where(p => p.Value.Nationality.Contains(NationalityFilter))
                 .Where(p => p.Value.GroupName == groupName)
                 .OrderByDescending(p => p, new VTuberRecordComparator.CombinedCount(LatestRecordTime)))
