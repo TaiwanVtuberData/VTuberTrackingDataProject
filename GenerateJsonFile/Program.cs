@@ -31,6 +31,8 @@ class Program
         FillRecord(ref dictRecord, trackList: trackList, recordDir: dataRepoPath, recentDays: 35);
         FillBasicData(ref dictRecord, trackList: trackList, basicDataDir: dataRepoPath, recentDays: 35);
 
+        DateTime now = DateTime.Now.ToUniversalTime();
+
         // Start output data
         ClearAndCreateOutputFolders();
 
@@ -140,7 +142,7 @@ class Program
                 nationality.Item2,
                 "trending-videos/no-duplicate.json");
 
-            LiveVideosListToJsonStruct liveVideosTransformer = new(nationality.Item1);
+            LiveVideosListToJsonStruct liveVideosTransformer = new(nationality.Item1, currentTime: now);
 
             WriteJson(
                 liveVideosTransformer.Get(liveVideos, dictRecord),
