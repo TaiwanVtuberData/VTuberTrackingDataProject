@@ -16,14 +16,25 @@ public class LiveVideosList : List<LiveVideoInformation>
         { "Thumbnail URL", 5 },
     };
 
-    public LiveVideosList(string csvFilePath, bool throwOnValidationFail)
+    public LiveVideosList()
+    {
+    }
+
+    public LiveVideosList(string csvFilePath, bool clearGarbage, bool throwOnValidationFail)
     {
         Validation<ValidationError, List<LiveVideoInformation>> loadResult = LoadAndValidate(csvFilePath);
 
         loadResult.Match(
             result =>
             {
-                this.AddRange(result);
+                if(clearGarbage)
+                {
+                    this.AddRange(ClearGarbage(result));
+                }
+                else
+                {
+                    this.AddRange(result);
+                }
             },
             error =>
             {
@@ -144,5 +155,23 @@ public class LiveVideosList : List<LiveVideoInformation>
     private static Validation<ValidationError, string> ValidateUrl(string rawUrl)
     {
         return rawUrl;
+    }
+
+    private static List<LiveVideoInformation> ClearGarbage(List<LiveVideoInformation> input)
+    {
+        return input
+            .Filter(e => !IsDeadLivestream(e))
+            .Filter(e => !IsScheduledLivestream(e))
+            .ToList();
+    }
+
+    private static bool IsDeadLivestream(LiveVideoInformation e)
+    {
+        return e.PublishDateTime == DateTime.UnixEpoch && e.VideoType == LiveVideoType.upcoming;
+    }
+
+    private static bool IsScheduledLivestream(LiveVideoInformation e)
+    {
+        return e.ThumbnailUrl == "";
     }
 }

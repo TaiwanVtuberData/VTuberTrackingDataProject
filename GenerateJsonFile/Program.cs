@@ -1,6 +1,7 @@
 ﻿using Common.Types;
 using Common.Utils;
 using GenerateJsonFile.Types;
+using GenerateJsonFile.Utils;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
@@ -24,7 +25,7 @@ class Program
         Dictionary<string, VTuberBasicData> dictBasicData = VTuberBasicData.ReadFromCsv(latestBasicDataFilePath);
 
         (string latestLivestreamsFilePath, _) = FileUtility.GetLatestRecord(dataRepoPath, "livestreams");
-        LiveVideosList liveVideos = new(latestLivestreamsFilePath, throwOnValidationFail: true);
+        LiveVideosList liveVideos = new(latestLivestreamsFilePath, clearGarbage: true, throwOnValidationFail: true);
 
         DictionaryRecord dictRecord = new(trackList, excluedList, dictBasicData);
         FillRecord(ref dictRecord, trackList: trackList, recordDir: dataRepoPath, recentDays: 35);
@@ -42,8 +43,8 @@ class Program
         {
             time = new UpdateTime()
             {
-                statisticUpdateTime = latestRecordTime.ToUniversalTime().ToString("o"),
-                VTuberDataUpdateTime = latestBasicDataTime.ToUniversalTime().ToString("o"),
+                statisticUpdateTime = MiscUtils.ToIso8601UtcString(latestRecordTime),
+                VTuberDataUpdateTime = MiscUtils.ToIso8601UtcString(latestBasicDataTime),
             },
         };
         WriteJson(updateTimeResponse, "update-time.json");
@@ -138,6 +139,13 @@ class Program
                 videoTransformer.Get(topVideoList, dictRecord, 100, allowDuplicate: false),
                 nationality.Item2,
                 "trending-videos/no-duplicate.json");
+
+            LiveVideosListToJsonStruct liveVideosTransformer = new(nationality.Item1);
+
+            WriteJson(
+                liveVideosTransformer.Get(liveVideos, dictRecord),
+                nationality.Item2,
+                "livestreams/all.json");
         }
     }
 
@@ -232,6 +240,14 @@ class Program
     {
         WriteJsonString(
             GetJsonString(new GroupDataResponse(groups: lstGroupData)),
+            nationality,
+            outputFilePath);
+    }
+
+    private static void WriteJson(List<LivestreamData> lstLivestream, string nationality, string outputFilePath)
+    {
+        WriteJsonString(
+            GetJsonString(new LivestreamDataResponse(livestreams: lstLivestream)),
             nationality,
             outputFilePath);
     }
