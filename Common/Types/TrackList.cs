@@ -221,7 +221,7 @@ public class TrackList
     private static Validation<ValidationError, VTuberData> Validate(string[] entryBlock, DateOnly? todayDate)
     {
         return (
-            ValidateId(entryBlock[csvHeaderIndexs["ID"]]),
+            VTuberId.Validate(entryBlock[csvHeaderIndexs["ID"]]),
             ValidateDisplayName(entryBlock[csvHeaderIndexs["Display Name"]]),
             ValidateAliasNames(entryBlock[csvHeaderIndexs["Alias Names"]]),
             ValidateYouTubeChannelId(entryBlock[csvHeaderIndexs["YouTube Channel ID"]]),
@@ -253,18 +253,6 @@ public class TrackList
                     nationality
                     )
                 );
-    }
-
-    private static Validation<ValidationError, string> ValidateId(string rawId)
-    {
-        if (rawId.Length != 32)
-        {
-            return new ValidationError($"ID should be a valid UUID with lowercase and no '-': {rawId}");
-        }
-        else
-        {
-            return rawId;
-        }
     }
 
     private static Validation<ValidationError, string> ValidateDisplayName(string rawName)

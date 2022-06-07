@@ -23,6 +23,9 @@ class Program
         (string latestBasicDataFilePath, DateTime latestBasicDataTime) = FileUtility.GetLatestRecord(dataRepoPath, "basic-data");
         Dictionary<string, VTuberBasicData> dictBasicData = VTuberBasicData.ReadFromCsv(latestBasicDataFilePath);
 
+        (string latestLivestreamsFilePath, _) = FileUtility.GetLatestRecord(dataRepoPath, "livestreams");
+        LiveVideosList liveVideos = new(latestLivestreamsFilePath, throwOnValidationFail: true);
+
         DictionaryRecord dictRecord = new(trackList, excluedList, dictBasicData);
         FillRecord(ref dictRecord, trackList: trackList, recordDir: dataRepoPath, recentDays: 35);
         FillBasicData(ref dictRecord, trackList: trackList, basicDataDir: dataRepoPath, recentDays: 35);
