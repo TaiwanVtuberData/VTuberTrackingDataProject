@@ -4,7 +4,7 @@ internal readonly record struct LivestreamData(
     string id,
     string name,
     string? imgUrl,
-    string title,
+    string? title,
     string videoUrl,
     string? thumbnailUrl,
     string? startTime);

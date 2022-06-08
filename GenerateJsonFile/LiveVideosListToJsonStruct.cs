@@ -14,7 +14,7 @@ internal class LiveVideosListToJsonStruct
         CurrentTime = currentTime;
     }
 
-    public List<LivestreamData> Get(LiveVideosList liveVideosList, DictionaryRecord dictRecord)
+    public List<LivestreamData> Get(LiveVideosList liveVideosList, DictionaryRecord dictRecord, bool noTitle)
     {
         List<LivestreamData> rLst = new();
 
@@ -31,7 +31,7 @@ internal class LiveVideosListToJsonStruct
                 id: record.Id,
                 name: record.DisplayName,
                 imgUrl: record.ImageUrl,
-                title: videoInfo.Title,
+                title: noTitle ? null : videoInfo.Title,
                 videoUrl: videoInfo.Url,
                 thumbnailUrl: MiscUtils.SetTwitchLivestreamThumbnailUrlSize(videoInfo.ThumbnailUrl, width: 178, height: 100),
                 // https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings#Roundtrip
