@@ -14,7 +14,7 @@ internal class LiveVideosListToJsonStruct
         CurrentTime = currentTime;
     }
 
-    public List<LivestreamData> Get(LiveVideosList liveVideosList, DictionaryRecord dictRecord, bool noTitle)
+    public List<LivestreamData> Get(LiveVideosList liveVideosList, List<DebutData> lstDebutData, DictionaryRecord dictRecord, bool noTitle)
     {
         List<LivestreamData> rLst = new();
 
@@ -34,19 +34,36 @@ internal class LiveVideosListToJsonStruct
                 title: noTitle ? null : videoInfo.Title,
                 videoUrl: videoInfo.Url,
                 thumbnailUrl: MiscUtils.SetTwitchLivestreamThumbnailUrlSize(videoInfo.ThumbnailUrl, width: 178, height: 100),
-                // https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings#Roundtrip
-                // use "o" specifier to get correct format 2009-06-15T13:45:30.0000000Z
                 startTime: videoInfo.PublishDateTime != DateTime.UnixEpoch ? MiscUtils.ToIso8601UtcString(videoInfo.PublishDateTime) : null
             );
-            ;
 
             rLst.Add(livestreamsData);
+        }
+
+        foreach (DebutData debutData in lstDebutData)
+        {
+            VTuberRecord record = dictRecord.GetRecordByYouTubeId(debutData.YouTubeId);
+
+            if (record.Nationality.Contains(NationalityFilter))
+            {
+                LivestreamData livestreamsData = new(
+                    id: record.Id,
+                    name: record.DisplayName,
+                    imgUrl: record.ImageUrl,
+                    title: null,
+                    videoUrl: $"https://www.youtube.com/watch?v={debutData.VideoId}",
+                    thumbnailUrl: null,
+                    startTime: MiscUtils.ToIso8601UtcString(debutData.StartTime)
+                    );
+
+                rLst.Add(livestreamsData);
+            }
         }
 
         return rLst;
     }
 
-    public List<LivestreamData> GetDebutToday(LiveVideosList liveVideosList, DictionaryRecord dictRecord, bool noTitle)
+    public List<LivestreamData> GetDebutToday(LiveVideosList liveVideosList, List<DebutData> lstDebutData, DictionaryRecord dictRecord, bool noTitle)
     {
         List<LivestreamData> rLst = new();
 
@@ -66,13 +83,30 @@ internal class LiveVideosListToJsonStruct
                 title: noTitle ? null : videoInfo.Title,
                 videoUrl: videoInfo.Url,
                 thumbnailUrl: MiscUtils.SetTwitchLivestreamThumbnailUrlSize(videoInfo.ThumbnailUrl, width: 178, height: 100),
-                // https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings#Roundtrip
-                // use "o" specifier to get correct format 2009-06-15T13:45:30.0000000Z
                 startTime: videoInfo.PublishDateTime != DateTime.UnixEpoch ? MiscUtils.ToIso8601UtcString(videoInfo.PublishDateTime) : null
             );
-            ;
 
             rLst.Add(livestreamsData);
+        }
+
+        foreach (DebutData debutData in lstDebutData)
+        {
+            VTuberRecord record = dictRecord.GetRecordByYouTubeId(debutData.YouTubeId);
+
+            if (record.Nationality.Contains(NationalityFilter))
+            {
+                LivestreamData livestreamsData = new(
+                    id: record.Id,
+                    name: record.DisplayName,
+                    imgUrl: record.ImageUrl,
+                    title: null,
+                    videoUrl: $"https://www.youtube.com/watch?v={debutData.VideoId}",
+                    thumbnailUrl: null,
+                    startTime: MiscUtils.ToIso8601UtcString(debutData.StartTime)
+                    );
+
+                rLst.Add(livestreamsData);
+            }
         }
 
         return rLst;

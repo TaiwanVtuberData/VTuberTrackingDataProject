@@ -153,6 +153,11 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
         }
     }
 
+    public VTuberRecord GetRecordByYouTubeId(string YouTubeId)
+    {
+        return this.Where(e => YouTubeId == e.Value.YouTube?.ChannelId).Select(e => e.Value).ToList()[0];
+    }
+
     public List<VTuberRecord> GetAboutToDebutList(DateOnly date)
     {
         DateTime currentDate = DateTime.Today;

@@ -14,7 +14,10 @@ class Program
     static void Main(string[] args)
     {
         string dataRepoPath = args.Length >= 1 ? args[0] : "/tw_vtuber";
-        OUTPUT_PATH = args.Length >= 2 ? args[1] : "/out/api/v2";
+        string debutRepoPath = args.Length >= 2 ? args[1] : "/tw_vtuber_debut";
+        OUTPUT_PATH = args.Length >= 3 ? args[2] : "/out/api/v2";
+
+        DateTime now = DateTime.Now.ToUniversalTime();
 
         (_, DateTime latestRecordTime) = FileUtility.GetLatestRecord(dataRepoPath, "record");
 
@@ -27,11 +30,12 @@ class Program
         (string latestLivestreamsFilePath, _) = FileUtility.GetLatestRecord(dataRepoPath, "livestreams");
         LiveVideosList liveVideos = new(latestLivestreamsFilePath, clearGarbage: true, throwOnValidationFail: true);
 
+        List<DebutData> lstDebutData = DebutData.ReadFromCsv(Path.Combine(debutRepoPath,$"{now.ToLocalTime():yyyy-MM-dd}.txt"));
+
         DictionaryRecord dictRecord = new(trackList, excluedList, dictBasicData);
         FillRecord(ref dictRecord, trackList: trackList, recordDir: dataRepoPath, recentDays: 35);
         FillBasicData(ref dictRecord, trackList: trackList, basicDataDir: dataRepoPath, recentDays: 35);
 
-        DateTime now = DateTime.Now.ToUniversalTime();
 
         // Start output data
         ClearAndCreateOutputFolders();
@@ -145,22 +149,22 @@ class Program
             LiveVideosListToJsonStruct liveVideosTransformer = new(nationality.Item1, currentTime: now);
 
             WriteJson(
-                liveVideosTransformer.Get(liveVideos, dictRecord, noTitle: false),
+                liveVideosTransformer.Get(liveVideos, lstDebutData, dictRecord, noTitle: false),
                 nationality.Item2,
                 "livestreams/all.json");
 
             WriteJson(
-                liveVideosTransformer.Get(liveVideos, dictRecord, noTitle: true),
+                liveVideosTransformer.Get(liveVideos, lstDebutData, dictRecord, noTitle: true),
                 nationality.Item2,
                 "livestreams/all-no-title.json");
 
             WriteJson(
-                liveVideosTransformer.GetDebutToday(liveVideos, dictRecord, noTitle: false),
+                liveVideosTransformer.GetDebutToday(liveVideos, lstDebutData, dictRecord, noTitle: false),
                 nationality.Item2,
                 "livestreams/debut.json");
 
             WriteJson(
-                liveVideosTransformer.GetDebutToday(liveVideos, dictRecord, noTitle: true),
+                liveVideosTransformer.GetDebutToday(liveVideos, lstDebutData, dictRecord, noTitle: true),
                 nationality.Item2,
                 "livestreams/debut-no-title.json");
         }
