@@ -153,10 +153,8 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
         }
     }
 
-    public List<VTuberRecord> GetAboutToDebutList(int beforeCurrentDay, int afterCurrentDay)
+    public List<VTuberRecord> GetAboutToDebutList(DateOnly date)
     {
-        beforeCurrentDay = -beforeCurrentDay;
-
         DateTime currentDate = DateTime.Today;
 
         List<VTuberRecord> rLst = new();
@@ -169,8 +167,8 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
                 continue;
             }
 
-            double days = (record.DebutDate.Value.ToDateTime(TimeOnly.MinValue) - currentDate).TotalDays;
-            if (beforeCurrentDay <= days && days <= afterCurrentDay)
+            double days = (record.DebutDate.Value.ToDateTime(TimeOnly.MinValue) - date.ToDateTime(TimeOnly.MinValue)).TotalDays;
+            if (days == 0.0)
             {
                 rLst.Add(record);
             }

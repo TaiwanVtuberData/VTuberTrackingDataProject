@@ -153,6 +153,16 @@ class Program
                 liveVideosTransformer.Get(liveVideos, dictRecord, noTitle: true),
                 nationality.Item2,
                 "livestreams/all-no-title.json");
+
+            WriteJson(
+                liveVideosTransformer.GetDebutToday(liveVideos, dictRecord, noTitle: false),
+                nationality.Item2,
+                "livestreams/debut.json");
+
+            WriteJson(
+                liveVideosTransformer.GetDebutToday(liveVideos, dictRecord, noTitle: true),
+                nationality.Item2,
+                "livestreams/debut-no-title.json");
         }
     }
 
