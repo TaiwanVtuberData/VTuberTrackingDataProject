@@ -176,7 +176,8 @@ public class Fetcher
                 foreach (Google.Apis.YouTube.v3.Data.Video video in videoListResponse.Items)
                 {
                     ulong? viewCount = video.Statistics.ViewCount;
-                    if (viewCount is not null)
+                    // if there is view count and the video is not (streaming or upcoming livestream)
+                    if (viewCount is not null && !LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent))
                     {
                         lstIdViewCount.Add(new Tuple<string, ulong>(video.Id, viewCount.Value));
                     }
