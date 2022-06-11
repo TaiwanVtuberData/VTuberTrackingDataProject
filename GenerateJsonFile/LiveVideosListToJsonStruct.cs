@@ -42,7 +42,12 @@ internal class LiveVideosListToJsonStruct
 
         foreach (DebutData debutData in lstDebutData)
         {
-            VTuberRecord record = dictRecord.GetRecordByYouTubeId(debutData.YouTubeId);
+            if(rLst.Where(e => e.videoUrl == debutData.VideoUrl).Any())
+            {
+                continue;
+            }
+
+            VTuberRecord record = dictRecord[debutData.Id];
 
             if (record.Nationality.Contains(NationalityFilter))
             {
@@ -51,8 +56,8 @@ internal class LiveVideosListToJsonStruct
                     name: record.DisplayName,
                     imgUrl: record.ImageUrl,
                     title: null,
-                    videoUrl: $"https://www.youtube.com/watch?v={debutData.VideoId}",
-                    thumbnailUrl: null,
+                    videoUrl: debutData.VideoUrl,
+                    thumbnailUrl: debutData.ThumbnailUrl,
                     startTime: MiscUtils.ToIso8601UtcString(debutData.StartTime)
                     );
 
@@ -91,7 +96,12 @@ internal class LiveVideosListToJsonStruct
 
         foreach (DebutData debutData in lstDebutData)
         {
-            VTuberRecord record = dictRecord.GetRecordByYouTubeId(debutData.YouTubeId);
+            if (rLst.Where(e => e.videoUrl == debutData.VideoUrl).Any())
+            {
+                continue;
+            }
+
+            VTuberRecord record = dictRecord[debutData.Id];
 
             if (record.Nationality.Contains(NationalityFilter))
             {
@@ -100,8 +110,8 @@ internal class LiveVideosListToJsonStruct
                     name: record.DisplayName,
                     imgUrl: record.ImageUrl,
                     title: null,
-                    videoUrl: $"https://www.youtube.com/watch?v={debutData.VideoId}",
-                    thumbnailUrl: null,
+                    videoUrl: debutData.VideoUrl,
+                    thumbnailUrl: debutData.ThumbnailUrl,
                     startTime: MiscUtils.ToIso8601UtcString(debutData.StartTime)
                     );
 

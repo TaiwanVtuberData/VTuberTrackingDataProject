@@ -30,7 +30,7 @@ class Program
         (string latestLivestreamsFilePath, _) = FileUtility.GetLatestRecord(dataRepoPath, "livestreams");
         LiveVideosList liveVideos = new(latestLivestreamsFilePath, clearGarbage: true, throwOnValidationFail: true);
 
-        List<DebutData> lstDebutData = DebutData.ReadFromCsv(Path.Combine(debutRepoPath,$"{now.ToLocalTime():yyyy-MM-dd}.txt"));
+        List<DebutData> lstDebutData = DebutData.ReadFromCsv(Path.Combine(debutRepoPath,$"{now.ToLocalTime():yyyy-MM-dd}.csv"));
 
         DictionaryRecord dictRecord = new(trackList, excluedList, dictBasicData);
         FillRecord(ref dictRecord, trackList: trackList, recordDir: dataRepoPath, recentDays: 35);

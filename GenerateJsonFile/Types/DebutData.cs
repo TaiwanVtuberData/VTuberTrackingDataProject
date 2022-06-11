@@ -2,7 +2,7 @@
 
 namespace GenerateJsonFile.Types;
 
-internal record DebutData(string YouTubeId, string VideoId, DateTime StartTime)
+internal record DebutData(string Id, string VideoUrl, string ThumbnailUrl, DateTime StartTime)
 {
     public static List<DebutData> ReadFromCsv(string csvFilePath)
     {
@@ -21,7 +21,7 @@ internal record DebutData(string YouTubeId, string VideoId, DateTime StartTime)
         // consume header
         string[]? headerBlock = reader.ReadFields();
 
-        if (headerBlock is null || headerBlock.Length != 3)
+        if (headerBlock is null || headerBlock.Length != 4)
             return new();
 
         List<DebutData> rLst = new();
@@ -35,7 +35,7 @@ internal record DebutData(string YouTubeId, string VideoId, DateTime StartTime)
                 return new();
             }
 
-            rLst.Add(new DebutData(YouTubeId: entryBlock[0], VideoId: entryBlock[1], StartTime: DateTime.Parse(entryBlock[2])));
+            rLst.Add(new DebutData(Id: entryBlock[0], VideoUrl: entryBlock[1], ThumbnailUrl: entryBlock[2], StartTime: DateTime.Parse(entryBlock[3])));
         }
 
         return rLst;
