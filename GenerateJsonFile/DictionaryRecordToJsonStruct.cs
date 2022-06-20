@@ -61,7 +61,7 @@ class DictionaryRecordToJsonStruct
 
         foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in DictRecord
             .Where(p => p.Value.Nationality.Contains(NationalityFilter))
-            .OrderByDescending(p => p, new VTuberRecordComparator.CombinedCount(LatestRecordTime))
+            .OrderByDescending(p => p, new VTuberRecordComparator.CombinedCount(LatestBasicDataTime))
             .Take(count ?? int.MaxValue))
         {
             string displayName = vtuberStatPair.Key;
@@ -370,7 +370,7 @@ class DictionaryRecordToJsonStruct
             foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in DictRecord
                 .Where(p => p.Value.Nationality.Contains(NationalityFilter))
                 .Where(p => p.Value.GroupName == groupName)
-                .OrderByDescending(p => p, new VTuberRecordComparator.CombinedCount(LatestRecordTime)))
+                .OrderByDescending(p => p, new VTuberRecordComparator.CombinedCount(LatestBasicDataTime)))
             {
                 string displayName = vtuberStatPair.Key;
                 VTuberRecord record = vtuberStatPair.Value;
@@ -423,7 +423,7 @@ class DictionaryRecordToJsonStruct
             foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in DictRecord
                 .Where(p => p.Value.Nationality.Contains(NationalityFilter))
                 .Where(p => p.Value.GroupName == groupName)
-                .OrderByDescending(p => p, new VTuberRecordComparator.CombinedCount(LatestRecordTime)))
+                .OrderByDescending(p => p, new VTuberRecordComparator.CombinedCount(LatestBasicDataTime)))
             {
                 string displayName = vtuberStatPair.Key;
                 VTuberRecord record = vtuberStatPair.Value;
