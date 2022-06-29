@@ -11,7 +11,8 @@ internal record VTuberFullData(
     string? group,
     string? nationality,
     string? debutDate,
-    string? graduateDate);
+    string? graduateDate,
+    List<VTuberLivestreamData> livestreams);
 
 readonly record struct SingleVTuberFullDataResponse(
     VTuberFullData VTuber);

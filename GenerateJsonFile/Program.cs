@@ -55,7 +55,7 @@ class Program
         };
         WriteJson(updateTimeResponse, "update-time.json");
 
-        List<VTuberFullData> lstAllVTuber = new DictionaryRecordToJsonStruct(trackList, dictRecord, DateTime.Today, latestRecordTime, latestBasicDataTime, "").AllWithFullData();
+        List<VTuberFullData> lstAllVTuber = new DictionaryRecordToJsonStruct(trackList, dictRecord, DateTime.Today, latestRecordTime, latestBasicDataTime, "").AllWithFullData(liveVideos);
         foreach (VTuberFullData vtuber in lstAllVTuber)
         {
             WriteJson(vtuber, $"vtubers/{vtuber.id}.json");
