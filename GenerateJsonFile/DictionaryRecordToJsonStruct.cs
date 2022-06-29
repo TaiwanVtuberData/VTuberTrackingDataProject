@@ -27,7 +27,7 @@ class DictionaryRecordToJsonStruct
         NationalityFilter = nationalityFilter;
     }
 
-    public List<VTuberFullData> AllWithFullData(LiveVideosList liveVideosList)
+    public List<VTuberFullData> AllWithFullData(LiveVideosList liveVideosList, List<DebutData> lstDebutData)
     {
         List<Types.VTuberFullData> rLst = new();
 
@@ -41,10 +41,30 @@ class DictionaryRecordToJsonStruct
                 .Select(e => new VTuberLivestreamData(
                     title: e.Title,
                     videoUrl: e.Url,
-                    thumbnailUrl: e.ThumbnailUrl,
-                    startTime: e.PublishDateTime.ToString(DATE_FORMAT)
+                    thumbnailUrl: MiscUtils.SetTwitchLivestreamThumbnailUrlSize(e.ThumbnailUrl, width: 178, height: 100),
+                    startTime: e.PublishDateTime != DateTime.UnixEpoch ? MiscUtils.ToIso8601UtcString(e.PublishDateTime) : null
                     )
                 ).ToList();
+
+            foreach (DebutData debutData in lstDebutData)
+            {
+                if (livestreams.Where(e => e.videoUrl == debutData.VideoUrl).Any())
+                {
+                    continue;
+                }
+
+                if (debutData.Id == record.Id)
+                {
+                    VTuberLivestreamData livestreamsData = new(
+                        title: null,
+                        videoUrl: debutData.VideoUrl,
+                        thumbnailUrl: debutData.ThumbnailUrl,
+                        startTime: MiscUtils.ToIso8601UtcString(debutData.StartTime)
+                        );
+
+                    livestreams.Add(livestreamsData);
+                }
+            }
 
             VTuberFullData vTuberData = new(
                 id: record.Id,
