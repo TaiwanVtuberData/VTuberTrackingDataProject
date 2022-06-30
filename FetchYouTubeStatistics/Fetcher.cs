@@ -8,11 +8,14 @@ public class Fetcher
 {
     public string ApiKey { get; set; }
     private readonly YouTubeService youtubeService;
+    private readonly DateTime CurrentTime;
 
-    public Fetcher(string ApiKey)
+    public Fetcher(string ApiKey, DateTime currentTime)
     {
         this.ApiKey = ApiKey;
         youtubeService = new YouTubeService(new BaseClientService.Initializer() { ApiKey = this.ApiKey });
+
+        CurrentTime = currentTime;
     }
 
     public (Dictionary<string, YouTubeStatistics>, TopVideosList, LiveVideosList) GetAll(List<string> lstChannelId)
@@ -166,7 +169,7 @@ public class Fetcher
             List<string> idRequestList = Generate50IdsStringList(dictIdTime.Keys.ToList());
 
             // The Tuple is video ID and video view count
-            List<Tuple<string, ulong>> lstIdViewCount = new();
+            List<Tuple<DateTime, string, ulong>> lstIdViewCount = new();
             foreach (string idRequestString in idRequestList)
             {
                 VideosResource.ListRequest videosListRequest = youtubeService.Videos.List("id,snippet,statistics,liveStreamingDetails");
@@ -177,10 +180,13 @@ public class Fetcher
                 foreach (Google.Apis.YouTube.v3.Data.Video video in videoListResponse.Items)
                 {
                     ulong? viewCount = video.Statistics.ViewCount;
+                    DateTime? publishTime = video.Snippet.PublishedAt;
                     // if there is view count and the video is not (streaming or upcoming livestream)
-                    if (viewCount is not null && !LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent))
+                    if (viewCount is not null
+                        && publishTime is not null
+                        && !LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent))
                     {
-                        lstIdViewCount.Add(new Tuple<string, ulong>(video.Id, viewCount.Value));
+                        lstIdViewCount.Add(new(publishTime.GetValueOrDefault(DateTime.UnixEpoch).ToUniversalTime(), video.Id, viewCount.Value));
                     }
 
                     topVideosList.Insert(new VideoInformation
@@ -213,19 +219,23 @@ public class Fetcher
             }
 
             ulong medianViews = 0;
+            ulong popularity = 0;
             ulong highestViews = 0;
             string highestViewedUrl = "";
             if (lstIdViewCount.Count != 0)
             {
                 medianViews = NumericUtility.GetMedian(lstIdViewCount);
-                Tuple<string, ulong> largest = NumericUtility.GetLargest(lstIdViewCount);
-                highestViews = largest.Item2;
-                highestViewedUrl = largest.Item1;
+                popularity = (ulong)NumericUtility.GetPopularity(lstIdViewCount, CurrentTime);
+                Tuple<DateTime, string, ulong> largest = NumericUtility.GetLargest(lstIdViewCount);
+                highestViews = largest.Item3;
+                highestViewedUrl = largest.Item2;
+
 
                 highestViewedUrl = $"https://www.youtube.com/watch?v={largest.Item1}";
             }
 
             dictIdStatistics[channelInfo.Id].RecentMedianViewCount = medianViews;
+            dictIdStatistics[channelInfo.Id].RecentPopularity = popularity;
             dictIdStatistics[channelInfo.Id].RecentHighestViewCount = highestViews;
             dictIdStatistics[channelInfo.Id].HighestViewedVideoURL = highestViewedUrl;
         }

@@ -1,29 +1,55 @@
 ﻿namespace Common.Utils;
 public class NumericUtility
 {
-    private static int CompareTupleSecondValue(Tuple<string, ulong> v1, Tuple<string, ulong> v2)
+    private static int CompareTupleThirdValue(Tuple<DateTime, string, ulong> v1, Tuple<DateTime, string, ulong> v2)
     {
-        return Comparer<ulong>.Default.Compare(v1.Item2, v2.Item2);
+        return Comparer<ulong>.Default.Compare(v1.Item3, v2.Item3);
     }
 
-    public static ulong GetMedian(List<Tuple<string, ulong>> list)
+    public static ulong GetMedian(List<Tuple<DateTime, string, ulong>> list)
     {
-        list.Sort(CompareTupleSecondValue);
+        List<Tuple<DateTime, string, ulong>> newList = new(list);
 
-        if (list.Count == 0)
+        newList.Sort(CompareTupleThirdValue);
+
+        if (newList.Count == 0)
             return 0;
 
-        if (list.Count == 1)
-            return list[0].Item2;
+        if (newList.Count == 1)
+            return list[0].Item3;
 
-        if (list.Count % 2 == 1)
-            return list[list.Count / 2].Item2;
+        if (newList.Count % 2 == 1)
+            return newList[newList.Count / 2].Item3;
         else
-            return (list[list.Count / 2 - 1].Item2 + list[list.Count / 2].Item2) / 2;
+            return (newList[newList.Count / 2 - 1].Item3 + newList[newList.Count / 2].Item3) / 2;
     }
 
-    public static Tuple<string, ulong> GetLargest(List<Tuple<string, ulong>> list)
+    public static Tuple<DateTime, string, ulong> GetLargest(List<Tuple<DateTime, string, ulong>> list)
     {
-        return list.MaxBy(e => e.Item2) ?? new Tuple<string, ulong>("", 0);
+        return list.MaxBy(e => e.Item3) ?? new Tuple<DateTime, string, ulong>(DateTime.UnixEpoch, "", 0);
+    }
+
+    public static decimal GetPopularity(List<Tuple<DateTime, string, ulong>> list, DateTime currentTime)
+    {
+        decimal popularity = list.Aggregate(0m, (acc, e) => acc + (e.Item3 * Get30DaysRatio(currentTime, e.Item1)));
+        decimal divider = list.Aggregate(0m, (acc, e) => acc + Get30DaysRatio(currentTime, e.Item1));
+
+        if (divider == 0m)
+            return 0m;
+        else
+            return popularity / divider;
+
+    }
+
+    // (decimal)TimeSpan.FromDays(30).TotalMilliseconds
+    private const decimal _30DaysMilliseconds = 2592000000;
+
+    private static decimal Get30DaysRatio(DateTime currentTime, DateTime targetTime)
+    {
+        decimal ratioMilliseconds = (decimal)(currentTime.ToUniversalTime() - targetTime.ToUniversalTime()).TotalMilliseconds;
+        if (ratioMilliseconds < 0m)
+            ratioMilliseconds = 0m;
+
+        return 1m - (ratioMilliseconds / _30DaysMilliseconds);
     }
 }

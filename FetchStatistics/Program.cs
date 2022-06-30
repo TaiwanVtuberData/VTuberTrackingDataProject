@@ -18,9 +18,13 @@ Console.WriteLine(trackListPath);
 Console.WriteLine(excludeListPath);
 Console.WriteLine(savePath);
 
-FetchYouTubeStatistics.Fetcher youtubeDataFetcher = new(FileUtility.GetSingleLineFromFile(YouTubeApiKeyPath));
-FetchTwitchStatistics.Fetcher twitchDataFetcher = new(FileUtility.GetSingleLineFromFile(TwitchClientIdPath),
-    FileUtility.GetSingleLineFromFile(TwitchSecretPath));
+DateTime currentTime = DateTime.UtcNow;
+
+FetchYouTubeStatistics.Fetcher youtubeDataFetcher = new(FileUtility.GetSingleLineFromFile(YouTubeApiKeyPath), currentTime);
+FetchTwitchStatistics.Fetcher twitchDataFetcher = new(
+    FileUtility.GetSingleLineFromFile(TwitchClientIdPath),
+    FileUtility.GetSingleLineFromFile(TwitchSecretPath),
+    currentTime);
 
 List<string> excluedList = FileUtility.GetListFromCsv(excludeListPath);
 TrackList trackList = new(csvFilePath: trackListPath, lstExcludeId: excluedList, throwOnValidationFail: true);

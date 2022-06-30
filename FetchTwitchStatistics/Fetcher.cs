@@ -7,18 +7,21 @@ namespace FetchTwitchStatistics;
 public class Fetcher
 {
     private readonly TwitchAPI api;
+    private readonly DateTime CurrentTime;
 
-    public Fetcher(string clientId, string secret)
+    public Fetcher(string clientId, string secret, DateTime currentTime)
     {
         api = new TwitchAPI();
         api.Settings.ClientId = clientId;
         api.Settings.Secret = secret;
+
+        CurrentTime = currentTime;
     }
 
     public bool GetAll(string userId, out TwitchStatistics statistics, out TopVideosList topVideoList, out LiveVideosList liveVideosList)
     {
         var (successStatistics, followerCount) = GetChannelStatistics(userId);
-        var (successRecentViewCount, medianViewCount, highestViewCount, highestViewdVideoID, topVideoList_) = GetChannelRecentViewStatistic(userId);
+        var (successRecentViewCount, medianViewCount, popularity, highestViewCount, highestViewdVideoID, topVideoList_) = GetChannelRecentViewStatistic(userId);
         LiveVideosList liveVideos = GetLiveVideosList(userId);
 
         if (successStatistics && successRecentViewCount)
@@ -26,6 +29,7 @@ public class Fetcher
             statistics = new TwitchStatistics
             {
                 RecentMedianViewCount = medianViewCount,
+                RecentPopularity = popularity,
                 RecentHighestViewCount = highestViewCount,
                 HighestViewedVideoURL = (highestViewdVideoID != "") ? $"https://www.twitch.tv/videos/{highestViewdVideoID}" : "",
             };
@@ -76,10 +80,10 @@ public class Fetcher
         return (true, (ulong)usersFollowsResponseResult.TotalFollows);
     }
 
-    private (bool Success, ulong MedianViewCount, ulong HighestViewCount, string HighestViewedVideoID, TopVideosList TopVideosList_)
+    private (bool Success, ulong MedianViewCount, ulong Popularity, ulong HighestViewCount, string HighestViewedVideoID, TopVideosList TopVideosList_)
         GetChannelRecentViewStatistic(string userId)
     {
-        List<Tuple<string, ulong>> viewCountList = new();
+        List<Tuple<DateTime, string, ulong>> viewCountList = new();
 
         string afterCursor = "";
         TopVideosList topVideosList = new();
@@ -114,7 +118,7 @@ public class Fetcher
 
             if (!hasResponse || videoResponseResult is null)
             {
-                return (false, 0, 0, "", new());
+                return (false, 0, 0, 0, "", new());
             }
 
             afterCursor = videoResponseResult.Pagination.Cursor;
@@ -125,14 +129,15 @@ public class Fetcher
                 ulong viewCount = (ulong)video.ViewCount;
                 DateTime publishTime = DateTime.Parse(video.PublishedAt);
 
-                if ((DateTime.UtcNow - publishTime) < TimeSpan.FromDays(30))
+                TimeSpan publishPastTime = CurrentTime - publishTime;
+                if (TimeSpan.Zero < publishPastTime && publishPastTime < TimeSpan.FromDays(30))
                 {
                     // there is currently no way to know which video is streaming
                     // 0 view count is observed to be a livestream
                     // FIXME: the value might not be 0 when livestreaming
                     if (viewCount != 0)
                     {
-                        viewCountList.Add(new Tuple<string, ulong>(videoId, viewCount));
+                        viewCountList.Add(new(publishTime, videoId, viewCount));
                     }
 
                     try
@@ -157,12 +162,13 @@ public class Fetcher
         if (viewCountList.Count <= 0)
         {
             // return true because it is a successful result
-            return (true, 0, 0, "", new());
+            return (true, 0, 0, 0, "", new());
         }
 
         ulong medianViews = NumericUtility.GetMedian(viewCountList);
-        Tuple<string, ulong> largest = NumericUtility.GetLargest(viewCountList);
-        return (true, medianViews, largest.Item2, largest.Item1, topVideosList);
+        Tuple<DateTime, string, ulong> largest = NumericUtility.GetLargest(viewCountList);
+        decimal popularity = NumericUtility.GetPopularity(viewCountList, CurrentTime);
+        return (true, medianViews, (ulong)popularity, largest.Item3, largest.Item2, topVideosList);
     }
 
     private LiveVideosList GetLiveVideosList(string userId)
