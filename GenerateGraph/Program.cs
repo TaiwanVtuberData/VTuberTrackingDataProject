@@ -72,13 +72,16 @@ static void WriteDateTimeStatistics(TrackList trackList, string recordDirectory,
                 "YouTube.SubscriberCount",
                 "YouTube.ViewCount",
                 "YouTube.RecentMedianViewCount",
+                "YouTube.RecentPopularity",
                 "YouTube.RecentHighestViewCount",
                 //"YouTube.SubscriberCountToMedianViewCount",
                 "Twitch.FollowerCount",
                 "Twitch.RecentMedianViewCount",
+                "Twitch.RecentPopularity",
                 "Twitch.RecentHighestViewCount",
                 "Twitch.FollowerCountToMedianViewCount",
                 "CombinedRecentMedianViewCount",
+                "CombinedPopularity",
             };
 
     foreach (string name in names)
