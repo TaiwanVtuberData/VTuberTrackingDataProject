@@ -93,9 +93,9 @@ public class Fetcher
 
             YouTubeStatistics statistics = new()
             {
-                SubscriberCount = subscriberCount.GetValueOrDefault(0),
                 ViewCount = viewCount.GetValueOrDefault(0),
             };
+            statistics.UpdateSubscriberCount(subscriberCount.GetValueOrDefault(0));
 
             rDict.Add(channelInfo.Id, statistics);
         }

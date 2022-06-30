@@ -20,6 +20,7 @@ public class VTuberRecord
             ulong SubscriberCount,
             ulong TotalViewCount,
             ulong RecentMedianViewCount,
+            ulong RecentPopularity,
             ulong HighestViewCount,
             string HighestViewedVideoId);
         private readonly Dictionary<DateTime, Record> DictRecord = new();
@@ -70,6 +71,7 @@ public class VTuberRecord
         public readonly record struct Record(
             ulong FollowerCount,
             ulong RecentMedianViewCount,
+            ulong RecentPopularity,
             ulong HighestViewCount,
             string HighestViewedVideoId);
         private readonly Dictionary<DateTime, Record> DictRecord = new();

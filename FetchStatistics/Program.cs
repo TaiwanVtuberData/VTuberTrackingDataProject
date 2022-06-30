@@ -124,10 +124,12 @@ static void WriteResult(List<VTuberStatistics> vtuberStatisticsList, DateTime cu
         "YouTube Subscriber Count," +
         "YouTube View Count," +
         "YouTube Recent Median View Count," +
+        "YouTube Recent Popularity," +
         "YouTube Recent Highest View Count," +
         "YouTube Recent Highest Viewed Video URL," +
         "Twitch Follower Count," +
         "Twitch Recent Median View Count," +
+        "Twitch Recent Popularity," +
         "Twitch Recent Highest View Count," +
         "Twitch Recent Highest Viewed Video URL\n");
     foreach (VTuberStatistics statistics in vtuberStatisticsList.OrderByDescending(p => p.YouTube.SubscriberCount))
@@ -141,6 +143,8 @@ static void WriteResult(List<VTuberStatistics> vtuberStatisticsList, DateTime cu
         recordFile.Write(',');
         recordFile.Write(statistics.YouTube.RecentMedianViewCount);
         recordFile.Write(',');
+        recordFile.Write(statistics.YouTube.RecentPopularity);
+        recordFile.Write(',');
         recordFile.Write(statistics.YouTube.RecentHighestViewCount);
         recordFile.Write(',');
         recordFile.Write(statistics.YouTube.HighestViewedVideoURL);
@@ -149,6 +153,8 @@ static void WriteResult(List<VTuberStatistics> vtuberStatisticsList, DateTime cu
         recordFile.Write(statistics.Twitch.FollowerCount);
         recordFile.Write(',');
         recordFile.Write(statistics.Twitch.RecentMedianViewCount);
+        recordFile.Write(',');
+        recordFile.Write(statistics.Twitch.RecentPopularity);
         recordFile.Write(',');
         recordFile.Write(statistics.Twitch.RecentHighestViewCount);
         recordFile.Write(',');

@@ -68,6 +68,7 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
                 SubscriberCount = vtuberStat.YouTube.SubscriberCount,
                 TotalViewCount = vtuberStat.YouTube.ViewCount,
                 RecentMedianViewCount = vtuberStat.YouTube.RecentMedianViewCount,
+                RecentPopularity = vtuberStat.YouTube.RecentPopularity,
                 HighestViewCount = vtuberStat.YouTube.RecentHighestViewCount,
                 HighestViewedVideoId = Utility.YouTubeVideoUrlToId(vtuberStat.YouTube.HighestViewedVideoURL),
             };
@@ -76,6 +77,7 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
             {
                 FollowerCount = vtuberStat.Twitch.FollowerCount,
                 RecentMedianViewCount = vtuberStat.Twitch.RecentMedianViewCount,
+                RecentPopularity = vtuberStat.Twitch.RecentPopularity,
                 HighestViewCount = vtuberStat.Twitch.RecentHighestViewCount,
                 HighestViewedVideoId = Utility.TwitchVideoUrlToId(vtuberStat.Twitch.HighestViewedVideoURL),
             };
@@ -160,8 +162,6 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
 
     public List<VTuberRecord> GetAboutToDebutList(DateOnly date)
     {
-        DateTime currentDate = DateTime.Today;
-
         List<VTuberRecord> rLst = new();
         foreach (KeyValuePair<string, VTuberRecord> pair in this)
         {
@@ -180,34 +180,6 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
         }
 
         return rLst;
-    }
-
-    public List<VTuberRecord> GetAboutToGraduateList()
-    {
-        DateTime currentDate = DateTime.Today;
-
-        List<VTuberRecord> rLst = new();
-        foreach (KeyValuePair<string, VTuberRecord> pair in this)
-        {
-            VTuberRecord record = pair.Value;
-
-            if (record.GraduationDate is null)
-            {
-                continue;
-            }
-
-            if (Math.Abs((record.GraduationDate.Value.ToDateTime(TimeOnly.MinValue) - currentDate).TotalDays) <= 30)
-            {
-                rLst.Add(record);
-            }
-        }
-
-        return rLst;
-    }
-
-    public VTuberRecord GetVtuberRecordByName(string name)
-    {
-        return this[name];
     }
 
     public enum GetGrowthResult

@@ -24,11 +24,12 @@ public class Fetcher
         {
             statistics = new TwitchStatistics
             {
-                FollowerCount = followerCount,
                 RecentMedianViewCount = medianViewCount,
                 RecentHighestViewCount = highestViewCount,
                 HighestViewedVideoURL = (highestViewdVideoID != "") ? $"https://www.twitch.tv/videos/{highestViewdVideoID}" : "",
             };
+            statistics.UpdateFollowerCount(followerCount);
+
             topVideoList = topVideoList_;
             liveVideosList = liveVideos;
             return true;
