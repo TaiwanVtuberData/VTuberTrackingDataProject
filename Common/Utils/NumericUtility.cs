@@ -24,6 +24,24 @@ public class NumericUtility
             return (newList[newList.Count / 2 - 1].Item3 + newList[newList.Count / 2].Item3) / 2;
     }
 
+    private static decimal GetMedian(List<decimal> list)
+    {
+        List<decimal> newList = new(list);
+
+        newList.Sort();
+
+        if (newList.Count == 0)
+            return 0;
+
+        if (newList.Count == 1)
+            return list[0];
+
+        if (newList.Count % 2 == 1)
+            return newList[newList.Count / 2];
+        else
+            return (newList[newList.Count / 2 - 1] + newList[newList.Count / 2]) / 2;
+    }
+
     public static Tuple<DateTime, string, ulong> GetLargest(List<Tuple<DateTime, string, ulong>> list)
     {
         return list.MaxBy(e => e.Item3) ?? new Tuple<DateTime, string, ulong>(DateTime.UnixEpoch, "", 0);
@@ -31,14 +49,12 @@ public class NumericUtility
 
     public static decimal GetPopularity(List<Tuple<DateTime, string, ulong>> list, DateTime currentTime)
     {
-        decimal popularity = list.Aggregate(0m, (acc, e) => acc + (e.Item3 * Get30DaysRatio(currentTime, e.Item1)));
-        decimal divider = list.Aggregate(0m, (acc, e) => acc + Get30DaysRatio(currentTime, e.Item1));
-
-        if (divider == 0m)
+        if (list.Count <= 0)
             return 0m;
-        else
-            return popularity / divider;
 
+        List<decimal> newList = list.Select(e => e.Item3 * Get30DaysRatio(currentTime, e.Item1)).ToList();
+
+        return GetMedian(newList);
     }
 
     // (decimal)TimeSpan.FromDays(30).TotalMilliseconds
