@@ -1,4 +1,5 @@
 ﻿using Common.Types;
+using Common.Utils;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 
@@ -216,12 +217,12 @@ public class Fetcher
             string highestViewedUrl = "";
             if (lstIdViewCount.Count != 0)
             {
-                medianViews = GetMedian(lstIdViewCount);
+                medianViews = NumericUtility.GetMedian(lstIdViewCount);
+                Tuple<string, ulong> largest = NumericUtility.GetLargest(lstIdViewCount);
+                highestViews = largest.Item2;
+                highestViewedUrl = largest.Item1;
 
-                lstIdViewCount.Sort(CompareTupleSecondValue);
-                Tuple<string, ulong> highestViewPair = lstIdViewCount.Last();
-                highestViews = highestViewPair.Item2;
-                highestViewedUrl = $"https://www.youtube.com/watch?v={highestViewPair.Item1}";
+                highestViewedUrl = $"https://www.youtube.com/watch?v={largest.Item1}";
             }
 
             dictIdStatistics[channelInfo.Id].RecentMedianViewCount = medianViews;
@@ -258,26 +259,5 @@ public class Fetcher
         }
 
         return ans;
-    }
-
-    private static ulong GetMedian(List<Tuple<string, ulong>> list)
-    {
-        list.Sort(CompareTupleSecondValue);
-
-        if (list.Count == 0)
-            return 0;
-
-        if (list.Count == 1)
-            return list[0].Item2;
-
-        if (list.Count % 2 == 1)
-            return list[list.Count / 2].Item2;
-        else
-            return (list[list.Count / 2 - 1].Item2 + list[list.Count / 2].Item2) / 2;
-    }
-
-    private static int CompareTupleSecondValue(Tuple<string, ulong> v1, Tuple<string, ulong> v2)
-    {
-        return Comparer<ulong>.Default.Compare(v1.Item2, v2.Item2);
     }
 }

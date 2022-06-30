@@ -1,4 +1,5 @@
 ﻿using Common.Types;
+using Common.Utils;
 using System.Xml;
 using TwitchLib.Api;
 
@@ -159,11 +160,9 @@ public class Fetcher
             return (true, 0, 0, "", new());
         }
 
-        ulong medianViews = GetMedian(viewCountList);
-
-        viewCountList.Sort(CompareTupleSecondValue);
-        Tuple<string, ulong> highestViewPair = viewCountList.Last();
-        return (true, medianViews, highestViewPair.Item2, highestViewPair.Item1, topVideosList);
+        ulong medianViews = NumericUtility.GetMedian(viewCountList);
+        Tuple<string, ulong> largest = NumericUtility.GetLargest(viewCountList);
+        return (true, medianViews, largest.Item2, largest.Item1, topVideosList);
     }
 
     private LiveVideosList GetLiveVideosList(string userId)
@@ -282,26 +281,5 @@ public class Fetcher
         }
 
         return rLst;
-    }
-
-    private static ulong GetMedian(List<Tuple<string, ulong>> list)
-    {
-        list.Sort(CompareTupleSecondValue);
-
-        if (list.Count == 0)
-            return 0;
-
-        if (list.Count == 1)
-            return list[0].Item2;
-
-        if (list.Count % 2 == 1)
-            return list[list.Count / 2].Item2;
-        else
-            return (list[list.Count / 2 - 1].Item2 + list[list.Count / 2].Item2) / 2;
-    }
-
-    private static int CompareTupleSecondValue(Tuple<string, ulong> v1, Tuple<string, ulong> v2)
-    {
-        return Comparer<ulong>.Default.Compare(v1.Item2, v2.Item2);
     }
 }
