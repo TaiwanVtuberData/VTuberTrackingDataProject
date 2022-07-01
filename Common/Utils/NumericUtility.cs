@@ -66,6 +66,11 @@ public class NumericUtility
         if (ratioMilliseconds < 0m)
             ratioMilliseconds = 0m;
 
-        return 1m - (ratioMilliseconds / _30DaysMilliseconds);
+        decimal ratio = 1m - (ratioMilliseconds / 2592000000);
+
+        if (ratio < 0m)
+            ratio = 0m;
+
+        return ratio;
     }
 }
