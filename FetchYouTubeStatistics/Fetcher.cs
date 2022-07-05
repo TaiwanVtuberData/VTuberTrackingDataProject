@@ -231,7 +231,7 @@ public class Fetcher
                 highestViewedUrl = largest.Item2;
 
 
-                highestViewedUrl = $"https://www.youtube.com/watch?v={largest.Item1}";
+                highestViewedUrl = $"https://www.youtube.com/watch?v={largest.Item2}";
             }
 
             dictIdStatistics[channelInfo.Id].RecentMedianViewCount = medianViews;
