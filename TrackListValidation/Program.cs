@@ -8,19 +8,17 @@ Validation<ValidationError, TrackList> trackListResult = TrackList.LoadAndValida
 Console.WriteLine($"Validating track list: {tracklistPath}");
 
 trackListResult.Match(
-    trackList =>
-    {
-        Console.WriteLine($"Validation successful");
-        Console.WriteLine($"Total entries: {trackList.GetCount()}");
+    trackList => {
+      Console.WriteLine($"Validation successful");
+      Console.WriteLine($"Total entries: {trackList.GetCount()}");
 
-        Environment.Exit(0);
+      Environment.Exit(0);
     },
-    errors =>
-    {
-        Console.WriteLine($"Validation failed");
-        Console.WriteLine($"Errors:");
-        Console.WriteLine(errors.Aggregate("", (a, b) => a + "\n" + b));
+    errors => {
+      Console.WriteLine($"Validation failed");
+      Console.WriteLine($"Errors:");
+      Console.WriteLine(errors.Aggregate("", (a, b) => a + "\n" + b));
 
-        Environment.Exit(1);
+      Environment.Exit(1);
     }
     );

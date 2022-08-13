@@ -4,12 +4,11 @@ using System.Text.Json.Serialization;
 namespace GenerateJsonFile.Types;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-internal enum Activity
-{
-    [EnumMember(Value = "preparing")]
-    preparing,
-    [EnumMember(Value = "active")]
-    active,
-    [EnumMember(Value = "graduate")]
-    graduate,
+internal enum Activity {
+  [EnumMember(Value = "preparing")]
+  preparing,
+  [EnumMember(Value = "active")]
+  active,
+  [EnumMember(Value = "graduate")]
+  graduate,
 }
