@@ -35,7 +35,7 @@ class DictionaryRecordToJsonStruct
         {
             VTuberRecord record = vtuberStatPair.Value;
 
-            List<VTuberLivestreamData> livestreams = 
+            List<VTuberLivestreamData> livestreams =
                 liveVideosList
                 .Where(e => e.Id == record.Id)
                 .Select(e => new VTuberLivestreamData(
@@ -131,14 +131,14 @@ class DictionaryRecordToJsonStruct
                 continue;
             }
 
-            DictionaryRecord.GetGrowthResult _7DaysResult = DictRecord.GetYouTubeSubscriberCountGrowth(id, days: 7, daysLimit: 1, out long _7DaysGrowth, out decimal _7DaysGrowthRate);
-            DictionaryRecord.GetGrowthResult _30DaysResult = DictRecord.GetYouTubeSubscriberCountGrowth(id, days: 30, daysLimit: 7, out long _30DaysGrowth, out decimal _30DaysGrowthRate);
+            DictionaryRecord.GrowthResult _7DaysResult = DictRecord.GetYouTubeSubscriberCountGrowth(id, days: 7, daysLimit: 1);
+            DictionaryRecord.GrowthResult _30DaysResult = DictRecord.GetYouTubeSubscriberCountGrowth(id, days: 30, daysLimit: 7);
 
             YouTubeGrowthData growthData = new(
                 id: record.YouTube.ChannelId,
                 subscriber: dataTransform.ToYouTubeSubscriber(record.YouTube),
-                _7DaysGrowth: new GrowthData(diff: _7DaysGrowth, recordType: GetGrowthResultToString(_7DaysResult)),
-                _30DaysGrowth: new GrowthData(diff: _30DaysGrowth, recordType: GetGrowthResultToString(_30DaysResult)),
+                _7DaysGrowth: new GrowthData(diff: _7DaysResult.Growth, recordType: GetGrowthResultToString(_7DaysResult.GrowthType)),
+                _30DaysGrowth: new GrowthData(diff: _30DaysResult.Growth, recordType: GetGrowthResultToString(_30DaysResult.GrowthType)),
                 Nationality: record.Nationality);
 
             dictGrowth.Add(id, growthData);
@@ -227,14 +227,14 @@ class DictionaryRecordToJsonStruct
                 continue;
             }
 
-            DictionaryRecord.GetGrowthResult _7DaysResult = DictRecord.GetYouTubeViewCountGrowth(id, days: 7, daysLimit: 1, out decimal _7DaysGrowth, out decimal _7DaysGrowthRate);
-            DictionaryRecord.GetGrowthResult _30DaysResult = DictRecord.GetYouTubeViewCountGrowth(id, days: 30, daysLimit: 7, out decimal _30DaysGrowth, out decimal _30DaysGrowthRate);
+            DictionaryRecord.GrowthResult _7DaysResult = DictRecord.GetYouTubeViewCountGrowth(id, days: 7, daysLimit: 1);
+            DictionaryRecord.GrowthResult _30DaysResult = DictRecord.GetYouTubeViewCountGrowth(id, days: 30, daysLimit: 7);
 
             YouTubeViewCountGrowthData growthData = new(
                 id: record.YouTube.ChannelId,
                 totalViewCount: dataTransform.ToYouTubeTotalViewCount(record.YouTube),
-                _7DaysGrowth: new GrowthData(diff: _7DaysGrowth, recordType: GetGrowthResultToString(_7DaysResult)),
-                _30DaysGrowth: new GrowthData(diff: _30DaysGrowth, recordType: GetGrowthResultToString(_30DaysResult)),
+                _7DaysGrowth: new GrowthData(diff: _7DaysResult.Growth, recordType: GetGrowthResultToString(_7DaysResult.GrowthType)),
+                _30DaysGrowth: new GrowthData(diff: _30DaysResult.Growth, recordType: GetGrowthResultToString(_30DaysResult.GrowthType)),
                 Nationality: record.Nationality
             );
 
@@ -500,12 +500,12 @@ class DictionaryRecordToJsonStruct
         };
     }
 
-    private static GrowthRecordType GetGrowthResultToString(DictionaryRecord.GetGrowthResult getGrowthResult)
+    private static GrowthRecordType GetGrowthResultToString(DictionaryRecord.GrowthType growthType)
     {
-        return getGrowthResult switch
+        return growthType switch
         {
-            DictionaryRecord.GetGrowthResult.Found => GrowthRecordType.full,
-            DictionaryRecord.GetGrowthResult.NotExact => GrowthRecordType.partial,
+            DictionaryRecord.GrowthType.Found => GrowthRecordType.full,
+            DictionaryRecord.GrowthType.NotExact => GrowthRecordType.partial,
             _ => GrowthRecordType.none,
         };
     }

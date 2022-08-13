@@ -182,32 +182,32 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
         return rLst;
     }
 
-    public enum GetGrowthResult
+    public enum GrowthType
     {
         Found,
         NotExact,
         NotFound,
     }
-    public GetGrowthResult GetYouTubeSubscriberCountGrowth(string id, int days, int daysLimit, out long rGrowth, out decimal rGrowthRate)
+
+    public readonly record struct GrowthResult(
+        GrowthType GrowthType = GrowthType.NotFound,
+        decimal Growth = 0,
+        decimal GrowthRate = 0
+        );
+
+
+    public GrowthResult GetYouTubeSubscriberCountGrowth(string id, int days, int daysLimit)
     {
         // at least one(1) day interval
         daysLimit = Math.Max(1, daysLimit);
 
         VTuberRecord.YouTubeData? youTubeData = this[id].YouTube;
         if (youTubeData == null)
-        {
-            rGrowth = 0;
-            rGrowthRate = 0;
-            return GetGrowthResult.NotFound;
-        }
+            return new GrowthResult();
 
         Dictionary<DateTime, VTuberRecord.YouTubeData.BasicData>.KeyCollection lstDateTime = youTubeData.GetBasicDataDateTimes();
         if (lstDateTime.Count <= 0)
-        {
-            rGrowth = 0;
-            rGrowthRate = 0;
-            return GetGrowthResult.NotFound;
-        }
+            return new GrowthResult();
 
         DateTime latestDateTime = lstDateTime.Max();
         DateTime earlestDateTime = lstDateTime.Min();
@@ -218,17 +218,15 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
         ulong targetSubscriberCount = targetBasicData.HasValue ? targetBasicData.Value.SubscriberCount : 0;
         // previously hidden subscriber count doesn't count as growth
         if (targetSubscriberCount == 0)
-        {
-            rGrowth = 0;
-            rGrowthRate = 0;
-            return GetGrowthResult.NotFound;
-        }
+            return new GrowthResult();
 
         VTuberRecord.YouTubeData.BasicData? currentBasicData = youTubeData.GetBasicData(latestDateTime);
         ulong currentSubscriberCount = currentBasicData.HasValue ? currentBasicData.Value.SubscriberCount : 0;
 
-        rGrowth = (long)currentSubscriberCount - (long)targetSubscriberCount;
+        // return result
+        long rGrowth = (long)currentSubscriberCount - (long)targetSubscriberCount;
 
+        decimal rGrowthRate;
         if (currentSubscriberCount != 0)
             rGrowthRate = (decimal)rGrowth / currentSubscriberCount;
         else
@@ -237,40 +235,30 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
         TimeSpan foundTimeDifference = (foundDateTime - targetDateTime).Duration();
         if (foundTimeDifference < new TimeSpan(days: 1, hours: 0, minutes: 0, seconds: 0))
         {
-            return GetGrowthResult.Found;
+            return new GrowthResult(GrowthType.Found, rGrowth, rGrowthRate);
         }
         else if (foundTimeDifference < new TimeSpan(days: (days - daysLimit), hours: 0, minutes: 0, seconds: 0))
         {
-            return GetGrowthResult.NotExact;
+            return new GrowthResult(GrowthType.NotExact, rGrowth, rGrowthRate);
         }
         else
         {
-            rGrowth = 0;
-            rGrowthRate = 0;
-            return GetGrowthResult.NotFound;
+            return new GrowthResult();
         }
     }
 
-    public GetGrowthResult GetYouTubeViewCountGrowth(string id, int days, int daysLimit, out decimal rGrowth, out decimal rGrowthRate)
+    public GrowthResult GetYouTubeViewCountGrowth(string id, int days, int daysLimit)
     {
         // at least one(1) day interval
         daysLimit = Math.Max(1, daysLimit);
 
         VTuberRecord.YouTubeData? youTubeData = this[id].YouTube;
         if (youTubeData == null)
-        {
-            rGrowth = 0;
-            rGrowthRate = 0;
-            return GetGrowthResult.NotFound;
-        }
+            return new GrowthResult();
 
         Dictionary<DateTime, VTuberRecord.YouTubeData.BasicData>.KeyCollection lstDateTime = youTubeData.GetBasicDataDateTimes();
         if (lstDateTime.Count <= 0)
-        {
-            rGrowth = 0;
-            rGrowthRate = 0;
-            return GetGrowthResult.NotFound;
-        }
+            return new GrowthResult();
 
         DateTime latestDateTime = lstDateTime.Max();
         DateTime earlestDateTime = lstDateTime.Min();
@@ -280,34 +268,32 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
         VTuberRecord.YouTubeData.BasicData? targetBasicData = youTubeData.GetBasicData(foundDateTime);
         ulong targetTotalViewCount = targetBasicData.HasValue ? targetBasicData.Value.TotalViewCount : 0;
         if (targetTotalViewCount == 0)
-        {
-            rGrowth = 0;
-            rGrowthRate = 0;
-            return GetGrowthResult.NotFound;
-        }
+            return new GrowthResult();
 
         VTuberRecord.YouTubeData.BasicData? currentBasicData = youTubeData.GetBasicData(latestDateTime);
         ulong currentTotalViewCount = currentBasicData.HasValue ? currentBasicData.Value.TotalViewCount : 0;
 
-        rGrowth = (decimal)currentTotalViewCount - (decimal)targetTotalViewCount;
+        // return result
+        decimal rGrowth = currentTotalViewCount - targetTotalViewCount;
 
+        decimal rGrowthRate;
         if (currentTotalViewCount != 0)
-            rGrowthRate = (decimal)rGrowth / currentTotalViewCount;
+            rGrowthRate = rGrowth / currentTotalViewCount;
         else
             rGrowthRate = 0m;
 
         TimeSpan foundTimeDifference = (foundDateTime - targetDateTime).Duration();
         if (foundTimeDifference < new TimeSpan(days: 1, hours: 0, minutes: 0, seconds: 0))
         {
-            return GetGrowthResult.Found;
+            return new GrowthResult(GrowthType.Found, rGrowth, rGrowthRate);
         }
         else if (foundTimeDifference < new TimeSpan(days: (days - daysLimit), hours: 0, minutes: 0, seconds: 0))
         {
-            return GetGrowthResult.NotExact;
+            return new GrowthResult(GrowthType.NotExact, rGrowth, rGrowthRate);
         }
         else
         {
-            return GetGrowthResult.NotFound;
+            return new GrowthResult();
         }
     }
 }
