@@ -227,12 +227,12 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
     DateTime foundDateTime = lstDateTime.Aggregate((x, y) => (x - targetDateTime).Duration() < (y - targetDateTime).Duration() ? x : y);
 
     VTuberRecord.YouTubeData.BasicData? targetBasicData = youTubeData.GetBasicData(foundDateTime);
-    ulong targetTotalViewCount = targetBasicData.HasValue ? targetBasicData.Value.TotalViewCount : 0;
+    decimal targetTotalViewCount = targetBasicData.HasValue ? targetBasicData.Value.TotalViewCount : 0;
     if (targetTotalViewCount == 0)
       return new GrowthResult();
 
     VTuberRecord.YouTubeData.BasicData? currentBasicData = youTubeData.GetBasicData(latestDateTime);
-    ulong currentTotalViewCount = currentBasicData.HasValue ? currentBasicData.Value.TotalViewCount : 0;
+    decimal currentTotalViewCount = currentBasicData.HasValue ? currentBasicData.Value.TotalViewCount : 0;
 
     // return result
     decimal rGrowth = currentTotalViewCount - targetTotalViewCount;
