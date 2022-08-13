@@ -245,6 +245,8 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord>
         }
         else
         {
+            rGrowth = 0;
+            rGrowthRate = 0;
             return GetGrowthResult.NotFound;
         }
     }
