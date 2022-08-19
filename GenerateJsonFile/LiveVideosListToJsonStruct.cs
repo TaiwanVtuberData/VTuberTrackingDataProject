@@ -41,6 +41,10 @@ internal class LiveVideosListToJsonStruct {
         continue;
       }
 
+      if(!dictRecord.ContainsKey(debutData.Id)) {
+        continue;
+      }
+
       VTuberRecord record = dictRecord[debutData.Id];
 
       if (record.Nationality.Contains(NationalityFilter)) {
@@ -87,6 +91,10 @@ internal class LiveVideosListToJsonStruct {
 
     foreach (DebutData debutData in lstDebutData) {
       if (rLst.Where(e => e.videoUrl == debutData.VideoUrl).Any()) {
+        continue;
+      }
+
+      if (!dictRecord.ContainsKey(debutData.Id)) {
         continue;
       }
 
