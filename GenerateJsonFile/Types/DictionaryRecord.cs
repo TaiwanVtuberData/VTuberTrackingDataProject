@@ -157,11 +157,11 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
     NotFound,
   }
 
-  public readonly record struct GrowthResult(
-      GrowthType GrowthType = GrowthType.NotFound,
-      decimal Growth = 0,
-      decimal GrowthRate = 0
-      );
+  public class GrowthResult {
+    public GrowthType GrowthType { get; init; } = GrowthType.NotFound;
+    public decimal Growth { get; init; } = 0;
+    public decimal GrowthRate { get; init; } = 0;
+  }
 
 
   public GrowthResult GetYouTubeSubscriberCountGrowth(string id, int days, int daysLimit) {
@@ -201,9 +201,9 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
 
     TimeSpan foundTimeDifference = (foundDateTime - targetDateTime).Duration();
     if (foundTimeDifference < new TimeSpan(days: 1, hours: 0, minutes: 0, seconds: 0)) {
-      return new GrowthResult(GrowthType.Found, rGrowth, rGrowthRate);
+      return new GrowthResult { GrowthType = GrowthType.Found, Growth = rGrowth, GrowthRate = rGrowthRate };
     } else if (foundTimeDifference < new TimeSpan(days: (days - daysLimit), hours: 0, minutes: 0, seconds: 0)) {
-      return new GrowthResult(GrowthType.NotExact, rGrowth, rGrowthRate);
+      return new GrowthResult { GrowthType = GrowthType.NotExact, Growth = rGrowth, GrowthRate = rGrowthRate };
     } else {
       return new GrowthResult();
     }
@@ -245,9 +245,9 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
 
     TimeSpan foundTimeDifference = (foundDateTime - targetDateTime).Duration();
     if (foundTimeDifference < new TimeSpan(days: 1, hours: 0, minutes: 0, seconds: 0)) {
-      return new GrowthResult(GrowthType.Found, rGrowth, rGrowthRate);
+      return new GrowthResult { GrowthType = GrowthType.Found, Growth = rGrowth, GrowthRate = rGrowthRate };
     } else if (foundTimeDifference < new TimeSpan(days: (days - daysLimit), hours: 0, minutes: 0, seconds: 0)) {
-      return new GrowthResult(GrowthType.NotExact, rGrowth, rGrowthRate);
+      return new GrowthResult { GrowthType = GrowthType.NotExact, Growth = rGrowth, GrowthRate = rGrowthRate };
     } else {
       return new GrowthResult();
     }
