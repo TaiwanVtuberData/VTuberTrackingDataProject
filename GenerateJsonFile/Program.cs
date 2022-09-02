@@ -270,7 +270,7 @@ class Program {
 
   private static void FillRecord(ref DictionaryRecord dictRecord, TrackList trackList, string recordDir, int recentDays) {
     List<Tuple<FileInfo, DateTime>> csvFileList = FileUtility.GetFileInfoDateTimeList(
-        directory: recordDir,
+        parentDirectory: recordDir,
         prefix: "record",
         recentDays: recentDays);
 
@@ -286,7 +286,7 @@ class Program {
 
   private static void FillBasicData(ref DictionaryRecord dictRecord, TrackList trackList, string basicDataDir, int recentDays) {
     List<Tuple<FileInfo, DateTime>> csvFileList = FileUtility.GetFileInfoDateTimeList(
-        directory: basicDataDir,
+        parentDirectory: basicDataDir,
         prefix: "basic-data",
         recentDays: recentDays);
 

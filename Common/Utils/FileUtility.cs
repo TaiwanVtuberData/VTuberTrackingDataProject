@@ -5,7 +5,81 @@ using System.Text.RegularExpressions;
 
 namespace Common.Utils;
 public class FileUtility {
-  public static List<Tuple<FileInfo, DateTime>> GetFileInfoDateTimeList(string directory, string prefix, int recentDays) {
+  public static List<Tuple<FileInfo, DateTime>> GetFileInfoDateTimeList(string parentDirectory, string prefix, int recentDays) {
+
+    List<string> dierctoryList = FilterYearOfMonthOfInterest(Directory.GetDirectories(parentDirectory), recentDays);
+
+    List<Tuple<FileInfo, DateTime>> fileInfoDateTimeList = dierctoryList
+      .Map(directory => GetFileInfoDateTimeListNotRecursive(directory, prefix))
+      // this can flatten list somehow???
+      .SelectMany(e => e)
+      .ToList();
+
+    DateTime latestDateTime = fileInfoDateTimeList.Max(e => e.Item2);
+
+    if (recentDays > 0) {
+      // add 3 hours buffer
+      TimeSpan recentDaysBuffer = new(days: recentDays, hours: 3, minutes: 0, seconds: 0);
+      fileInfoDateTimeList.RemoveAll(s => (latestDateTime - s.Item2).Duration() > recentDaysBuffer);
+    }
+
+    return fileInfoDateTimeList;
+  }
+
+  // filter a list of year/month with recentDays so that only the
+  // most recent month in the list minus recentDays is preserved
+  // Example:
+  // yearMonthList [2022-05, 2022-06, 2022-07]
+  // recentDays: 35
+  // Output: [2022-06, 2022-07]
+  private static List<string> FilterYearOfMonthOfInterest(IEnumerable<string> directories, int recentDays) {
+    // format: 2022-09
+    string pattern = $"^[0-9][0-9][0-9][0-9]-[0-9][0-9]$";
+    Regex regex = new(pattern);
+
+    // first item: xxx/2022-01, second item 2022-01
+    List<Tuple<string, string>> filtertedList = directories
+      .Map(
+      e => new Tuple<string, string>(e, new DirectoryInfo(e).Name)
+      )
+      .Filter(directoryTuple =>
+       regex.IsMatch(directoryTuple.Item2)
+    ).ToList();
+
+    // year/month string is sortable
+    string? latestMonthString = filtertedList.Max(e => e.Item2);
+    if (latestMonthString is null) {
+      return new List<string>();
+    }
+
+    DateTime latestTime = GetLastMomentOfMonth(
+      DateTime.ParseExact(latestMonthString, @"yyyy-MM", CultureInfo.InvariantCulture)
+      );
+
+    // add one more day just to be sure
+    DateTime targetTime = latestTime.AddDays(-(recentDays + 1));
+    string targetMonthString = targetTime.ToString(@"yyyy-MM");
+
+    // only reserve striing that is greater or equal to targetMonthString
+    return filtertedList
+      .Filter(e => e.Item2.CompareTo(targetMonthString) >= 0)
+      .Map(e => e.Item1)
+      .ToList();
+  }
+
+  private static DateTime GetLastMomentOfMonth(DateTime dateTime) =>
+    new DateTime(
+      year: dateTime.Year,
+      month: dateTime.Month,
+      day: DateTime.DaysInMonth(dateTime.Year, dateTime.Month),
+      hour: 23,
+      minute: 59,
+      second: 59,
+      millisecond: 999,
+      kind: DateTimeKind.Local
+      );
+
+  private static List<Tuple<FileInfo, DateTime>> GetFileInfoDateTimeListNotRecursive(string directory, string prefix) {
     List<Tuple<FileInfo, DateTime>> fileInfoDateTimeList = new();
 
     // format: record_2021-02-21-21-52-13.csv
@@ -32,12 +106,6 @@ public class FileUtility {
       }
 
       fileInfoDateTimeList.Add(new Tuple<FileInfo, DateTime>(fileInfo, parsedDateTime));
-    }
-
-    if (recentDays > 0) {
-      // add 3 hours buffer
-      TimeSpan recentDaysBuffer = new(days: recentDays, hours: 3, minutes: 0, seconds: 0);
-      fileInfoDateTimeList.RemoveAll(s => (latestDateTime - s.Item2).Duration() > recentDaysBuffer);
     }
 
     return fileInfoDateTimeList;

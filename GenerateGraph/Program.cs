@@ -33,7 +33,7 @@ static string GetCsvDirectory(string filePath) {
 // ignore recentDays if it's lower than 0
 static void WriteDateTimeStatistics(TrackList trackList, string recordDirectory, int recentDays, bool byGroup, string writePrefix) {
   List<Tuple<FileInfo, DateTime>> csvFileList = FileUtility.GetFileInfoDateTimeList(
-      directory: recordDirectory,
+      parentDirectory: recordDirectory,
       prefix: "record",
       recentDays: recentDays);
 
