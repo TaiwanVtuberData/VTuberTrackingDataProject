@@ -89,7 +89,7 @@ internal class DataTransform {
     ulong popularity = record.HasValue ? record.Value.RecentMedianViewCount : 0;
 
     return new TwitchPopularityData(
-        id: input.ChannelId,
+        id: input.ChannelName,
         follower: ToTwitchCountType(input.hasValidRecord, follower),
         popularity: popularity);
 
