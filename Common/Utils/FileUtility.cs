@@ -57,7 +57,7 @@ public class FileUtility {
       );
 
     // add one more day just to be sure
-    DateTime targetTime = latestTime.AddDays(-(recentDays + 1));
+    DateTime targetTime = latestTime.AddMonths(-1).AddDays(-(recentDays + 1));
     string targetMonthString = targetTime.ToString(@"yyyy-MM");
 
     // only reserve striing that is greater or equal to targetMonthString
