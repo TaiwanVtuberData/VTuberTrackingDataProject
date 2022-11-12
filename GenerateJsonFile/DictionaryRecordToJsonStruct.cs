@@ -99,8 +99,8 @@ class DictionaryRecordToJsonStruct {
           Twitch: dataTransform.ToTwitchData(record.Twitch),
           popularVideo: dataTransform.GetPopularVideo(record),
           group: record.GroupName,
-          nationality: record.Nationality)
-      ;
+          nationality: record.Nationality
+          );
 
       rLst.Add(vTuberData);
     }
