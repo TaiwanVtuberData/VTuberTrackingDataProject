@@ -84,16 +84,16 @@ public class TrackList {
             lstData => {
                 return CheckFieldsDuplicate(lstData).Match<Validation<ValidationError, TrackList>>(
                     validatedLstData => {
-                          Dictionary<string, VTuberData> dictLoaded =
-                          validatedLstData.ToDictionary(
-                              t => t.Id,
-                              t => t);
+                        Dictionary<string, VTuberData> dictLoaded =
+                        validatedLstData.ToDictionary(
+                            t => t.Id,
+                            t => t);
 
-                          return new TrackList(dictLoaded);
-                      },
+                        return new TrackList(dictLoaded);
+                    },
                     errors => {
-                          return errors;
-                      }
+                        return errors;
+                    }
                     );
             },
             errors => {
@@ -184,7 +184,7 @@ public class TrackList {
     }
 
     private static Validation<ValidationError, VTuberData> Validate(string[] entryBlock, DateOnly? todayDate) {
-        return (
+        Validation<ValidationError, VTuberData> result = (
             VTuberId.Validate(entryBlock[csvHeaderIndexs["ID"]]),
             ValidateDisplayName(entryBlock[csvHeaderIndexs["Display Name"]]),
             ValidateAliasNames(entryBlock[csvHeaderIndexs["Alias Names"]]),
@@ -217,6 +217,10 @@ public class TrackList {
                     nationality
                     )
                 );
+
+        return result.MapFail(
+            error => new ValidationError($"Error occured when processing data: {string.Join(',', entryBlock)}. Reason: {error.Value}")
+            );
     }
 
     private static Validation<ValidationError, string> ValidateDisplayName(string rawName) {
