@@ -2,9 +2,11 @@
 using Common.Utils;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
+using log4net;
 
 namespace FetchYouTubeStatistics;
 public class Fetcher {
+    private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
     public string ApiKey { get; set; }
     private readonly YouTubeService youtubeService;
     private readonly DateTime CurrentTime;
@@ -52,9 +54,17 @@ public class Fetcher {
         IList<Google.Apis.YouTube.v3.Data.Channel>? responseItems = null;
         bool hasResponse = false;
         // try for three times
-        for (int i = 0; i < 3; i++) {
-            Google.Apis.YouTube.v3.Data.ChannelListResponse channelsListResponse = channelsListRequest.Execute();
-            responseItems = channelsListResponse.Items;
+        int RETRY_TIME = 50;
+        TimeSpan RETRY_DELAY = new(hours: 0, minutes: 0, seconds: 10);
+        for (int i = 0; i < RETRY_TIME; i++) {
+            try {
+                Google.Apis.YouTube.v3.Data.ChannelListResponse channelsListResponse = channelsListRequest.Execute();
+                responseItems = channelsListResponse.Items;
+            } catch (Exception e) {
+                log.Warn($"Failed to execute channelsListRequest.Execute(). {i} tries. Retry after {RETRY_DELAY.TotalSeconds} seconds");
+                log.Warn(e.Message, e);
+                Task.Delay(RETRY_DELAY);
+            }
 
             if (responseItems is null) {
                 continue;

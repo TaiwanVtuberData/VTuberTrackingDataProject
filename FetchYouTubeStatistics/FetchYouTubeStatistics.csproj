@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.60.0.2945" />
+    <PackageReference Include="log4net" Version="2.0.15" />
   </ItemGroup>
 
   <ItemGroup>
