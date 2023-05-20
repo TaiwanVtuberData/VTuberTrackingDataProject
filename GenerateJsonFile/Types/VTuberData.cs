@@ -9,7 +9,8 @@ internal readonly record struct VTuberData(
     TwitchData? Twitch,
     VideoInfo? popularVideo,
     string? group,
-    string? nationality);
+    string? nationality,
+    string? debutDate);
 
 internal readonly record struct VTuberDataResponse(
     List<VTuberData> VTubers);

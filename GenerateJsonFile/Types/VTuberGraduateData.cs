@@ -10,6 +10,7 @@ internal readonly record struct VTuberGraduateData(
     VideoInfo? popularVideo,
     string? group,
     string? nationality,
+    string? debutDate,
     string graduateDate);
 
 internal readonly record struct VTuberGraduateDataResponse(
