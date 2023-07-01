@@ -6,12 +6,12 @@ using log4net;
 
 namespace FetchYouTubeStatistics;
 public class Fetcher {
-    private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+    private static readonly ILog log = LogManager.GetLogger(typeof(Fetcher));
     public string ApiKey { get; set; }
     private readonly YouTubeService youtubeService;
-    private readonly DateTime CurrentTime;
+    private readonly DateTimeOffset CurrentTime;
 
-    public Fetcher(string ApiKey, DateTime currentTime) {
+    public Fetcher(string ApiKey, DateTimeOffset currentTime) {
         this.ApiKey = ApiKey;
         youtubeService = new YouTubeService(new BaseClientService.Initializer() { ApiKey = this.ApiKey });
 
@@ -22,7 +22,7 @@ public class Fetcher {
         List<Google.Apis.YouTube.v3.Data.Channel> lstChannelInfo = GetChannelInfoList(lstChannelId);
 
         Dictionary<string, YouTubeStatistics> rDict = GetChannelStatistics(lstChannelInfo);
-        TopVideosList rVideoList = new(videoCount: 1000);
+        TopVideosList rVideoList = new();
         LiveVideosList rLiveVideoList = new();
 
         GetChannelRecentViewStatistic(lstChannelInfo, ref rDict, ref rVideoList, ref rLiveVideoList);
@@ -104,8 +104,8 @@ public class Fetcher {
         return rDict;
     }
 
-    private Dictionary<string, DateTime> GetChannelRecentVideoList(Google.Apis.YouTube.v3.Data.Channel channelInfo) {
-        Dictionary<string, DateTime> dictIdTime = new();
+    private Dictionary<string, DateTimeOffset> GetChannelRecentVideoList(Google.Apis.YouTube.v3.Data.Channel channelInfo) {
+        Dictionary<string, DateTimeOffset> dictIdTime = new();
 
         string uploadsListId = channelInfo.ContentDetails.RelatedPlaylists.Uploads;
         string nextPageToken = "";
@@ -125,14 +125,14 @@ public class Fetcher {
             }
 
             foreach (Google.Apis.YouTube.v3.Data.PlaylistItem playlistItem in playlistItemsListResponse.Items) {
-                DateTime? videoPublishTime = playlistItem.Snippet.PublishedAt;
+                DateTimeOffset? videoPublishTime = playlistItem.Snippet.PublishedAtDateTimeOffset;
                 string videoPrivacyStatus = playlistItem.Status.PrivacyStatus;
                 string videoId = playlistItem.Snippet.ResourceId.VideoId;
 
                 // only add video id if its publish time is within 30 days
                 if (videoPublishTime is not null) {
-                    DateTime publishTime = videoPublishTime.Value;
-                    if ((DateTime.UtcNow - publishTime) < TimeSpan.FromDays(30)) {
+                    DateTimeOffset publishTime = videoPublishTime.Value;
+                    if ((DateTimeOffset.UtcNow - publishTime) < TimeSpan.FromDays(30)) {
                         dictIdTime.Add(videoId, videoPublishTime.Value);
                     }
                 }
@@ -150,13 +150,13 @@ public class Fetcher {
         ref TopVideosList topVideosList,
         ref LiveVideosList liveVideosList) {
         foreach (Google.Apis.YouTube.v3.Data.Channel channelInfo in lstChannelInfo) {
-            Dictionary<string, DateTime> dictIdTime = GetChannelRecentVideoList(channelInfo);
+            Dictionary<string, DateTimeOffset> dictIdTime = GetChannelRecentVideoList(channelInfo);
 
             // When querying multipie video statistics, only 50 videos at a time is allowed
             List<string> idRequestList = Generate50IdsStringList(dictIdTime.Keys.ToList());
 
             // The Tuple is video ID and video view count
-            List<Tuple<DateTime, string, ulong>> lstIdViewCount = new();
+            List<Tuple<DateTimeOffset, string, ulong>> lstIdViewCount = new();
             foreach (string idRequestString in idRequestList) {
                 VideosResource.ListRequest videosListRequest = youtubeService.Videos.List("id,snippet,statistics,liveStreamingDetails");
                 videosListRequest.Id = idRequestString;
@@ -165,12 +165,12 @@ public class Fetcher {
 
                 foreach (Google.Apis.YouTube.v3.Data.Video video in videoListResponse.Items) {
                     ulong? viewCount = video.Statistics.ViewCount;
-                    DateTime? publishTime = video.Snippet.PublishedAt;
+                    DateTimeOffset? publishTime = video.Snippet.PublishedAtDateTimeOffset;
                     // if there is view count and the video is not (streaming or upcoming livestream)
                     if (viewCount is not null
                         && publishTime is not null
                         && !LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent)) {
-                        lstIdViewCount.Add(new(publishTime.GetValueOrDefault(DateTime.UnixEpoch).ToUniversalTime(), video.Id, viewCount.Value));
+                        lstIdViewCount.Add(new(publishTime.GetValueOrDefault(DateTimeOffset.UnixEpoch), video.Id, viewCount.Value));
                     }
 
                     topVideosList.Insert(new VideoInformation {
@@ -178,14 +178,14 @@ public class Fetcher {
                         Url = $"https://www.youtube.com/watch?v={video.Id}",
                         Title = video.Snippet.Title,
                         ThumbnailUrl = video.Snippet.Thumbnails.Medium.Url,
-                        PublishDateTime = video.Snippet.PublishedAt.GetValueOrDefault(DateTime.UnixEpoch).ToUniversalTime(),
+                        PublishDateTime = video.Snippet.PublishedAtDateTimeOffset.GetValueOrDefault(DateTimeOffset.UnixEpoch),
                         ViewCount = viewCount.GetValueOrDefault(),
                     });
 
                     if (LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent)) {
-                        DateTime startTime =
-                            (video.LiveStreamingDetails.ActualStartTime ?? video.LiveStreamingDetails.ScheduledStartTime.GetValueOrDefault(DateTime.UnixEpoch))
-                            .ToUniversalTime();
+                        DateTimeOffset startTime =
+                            (video.LiveStreamingDetails.ActualStartTimeDateTimeOffset ??
+                            video.LiveStreamingDetails.ScheduledStartTimeDateTimeOffset.GetValueOrDefault(DateTimeOffset.UnixEpoch));
 
                         liveVideosList.Add(new LiveVideoInformation {
                             Id = channelInfo.Id,
@@ -205,8 +205,8 @@ public class Fetcher {
             string highestViewedUrl = "";
             if (lstIdViewCount.Count != 0) {
                 medianViews = NumericUtility.GetMedian(lstIdViewCount);
-                popularity = (ulong)NumericUtility.GetPopularity(lstIdViewCount, CurrentTime);
-                Tuple<DateTime, string, ulong> largest = NumericUtility.GetLargest(lstIdViewCount);
+                popularity = (ulong)NumericUtility.GetPopularity(lstIdViewCount, CurrentTime.UtcDateTime);
+                Tuple<DateTimeOffset, string, ulong> largest = NumericUtility.GetLargest(lstIdViewCount);
                 highestViews = largest.Item3;
                 highestViewedUrl = largest.Item2;
 
