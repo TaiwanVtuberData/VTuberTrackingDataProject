@@ -150,5 +150,4 @@ public class LiveVideosList : List<LiveVideoInformation> {
 
         return this;
     }
-
 }
