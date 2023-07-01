@@ -6,13 +6,21 @@ using log4net;
 ILog log = LogManager.GetLogger("");
 
 try {
+    mainProcess();
+} catch (Exception e) {
+    log.Error("Unhandled exception");
+    log.Error(e.Message, e);
+}
+
+void mainProcess() {
     string[] defaultArgs = new string[] {
         "./DATA/YOUTUBE_API_KEY",
         "./DATA/TWITCH_CLIENT_ID",
         "./DATA/TWITCH_SECRET",
         "./DATA/TW_VTUBER_TRACK_LIST.csv",
         "./DATA/EXCLUDE_LIST.csv",
-        "."
+        ".",
+        FetchType.All.ToString(),
     };
 
     // this code block is only used to print read args
@@ -23,6 +31,7 @@ try {
         string trackListPath = args.Length >= 4 ? args[3] : defaultArgs[3];
         string excludeListPath = args.Length >= 5 ? args[4] : defaultArgs[4];
         string savePath = args.Length >= 6 ? args[5] : defaultArgs[5];
+        string fetchType = args.Length >= 7 ? args[6] : defaultArgs[6];
 
         log.Info("Configuration:");
         log.Info($"youTubeApiKeyPath: {youTubeApiKeyPath}");
@@ -31,11 +40,12 @@ try {
         log.Info($"trackListPath: {trackListPath}");
         log.Info($"excludeListPath: {excludeListPath}");
         log.Info($"savePath: {savePath}");
+        log.Info($"fetchType: {fetchType}");
     }
 
     // initialize constant values
     Config CONFIG = new(filePaths: args, defaultArgs: defaultArgs);
-    DateTime CURRENT_TIME = DateTime.UtcNow;
+    DateTimeOffset CURRENT_TIME = DateTimeOffset.Now;
 
     // create statistics fetcher
     FetchYouTubeStatistics.Fetcher youtubeDataFetcher = new(CONFIG.youTubeApiKey, CURRENT_TIME);
@@ -43,6 +53,34 @@ try {
 
     TrackList trackList = createTrackList(CONFIG.excludeListPath, CONFIG.trackListPath);
 
+    switch (CONFIG.fetchType) {
+        case FetchType.All:
+            fetchAllAndWrite(youtubeDataFetcher, twitchDataFetcher, trackList, CONFIG.savePath, CURRENT_TIME);
+            break;
+        case FetchType.TwitchLiveStreamOnly:
+            fetchTwitchLiveStreamsAndWrite(twitchDataFetcher, trackList, CONFIG.savePath, CURRENT_TIME);
+            break;
+    }
+
+
+    log.Info("End program");
+}
+
+TrackList createTrackList(string excludeListPath, string trackListPath) {
+    List<string> excluedList = FileUtility.GetListFromCsv(excludeListPath);
+    log.Info($"excluedList: {string.Join(",", excluedList)}");
+    TrackList trackList = new(csvFilePath: trackListPath, lstExcludeId: excluedList, throwOnValidationFail: true);
+    log.Info($"trackList.GetCount(): {trackList.GetCount()}");
+
+    return trackList;
+}
+
+void fetchAllAndWrite(
+    FetchYouTubeStatistics.Fetcher youtubeDataFetcher,
+    FetchTwitchStatistics.Fetcher twitchDataFetcher,
+    TrackList trackList,
+    string savePath,
+    DateTimeOffset currentTime) {
     log.Info("Start getting all YouTube statistics");
     (Dictionary<VTuberId, YouTubeStatistics> dictIdYouTubeStatistics, TopVideosList youTubeTopVideosList, LiveVideosList youTubeLiveVideosList) =
         fetchYouTubeStatistics(youtubeDataFetcher, trackList);
@@ -58,22 +96,23 @@ try {
     LiveVideosList liveVideosList = youTubeLiveVideosList.Insert(twitchLiveVideosList);
 
     log.Info("Start writing files");
-    writeFiles(lstStatistics, topVideosList, liveVideosList, CONFIG.savePath, CURRENT_TIME);
+    writeFiles(lstStatistics, topVideosList, liveVideosList, savePath, currentTime);
     log.Info("End writing files");
-
-    log.Info("End program");
-} catch (Exception e) {
-    log.Error("Unhandled exception");
-    log.Error(e.Message, e);
 }
 
-TrackList createTrackList(string excludeListPath, string trackListPath) {
-    List<string> excluedList = FileUtility.GetListFromCsv(excludeListPath);
-    log.Info($"excluedList: {string.Join(",", excluedList)}");
-    TrackList trackList = new(csvFilePath: trackListPath, lstExcludeId: excluedList, throwOnValidationFail: true);
-    log.Info($"trackList.GetCount(): {trackList.GetCount()}");
+void fetchTwitchLiveStreamsAndWrite(
+    FetchTwitchStatistics.Fetcher twitchDataFetcher,
+    TrackList trackList,
+    string savePath,
+    DateTimeOffset currentTime) {
+    log.Info("Start getting Twitch statistics");
+    (Dictionary<VTuberId, TwitchStatistics> dictIdTwitchStatistics, TopVideosList twitchTopVideosList, LiveVideosList twitchLiveVideosList) =
+        fetchTwitchStatistics(twitchDataFetcher, trackList);
+    log.Info("End getting Twitch statistics");
 
-    return trackList;
+    log.Info("Start writing files");
+    WriteFiles.WriteLiveVideosListResult(twitchLiveVideosList, currentTime, savePath, fileNamePrefix: "twitch-livestreams");
+    log.Info("End writing files");
 }
 
 (Dictionary<VTuberId, YouTubeStatistics>, TopVideosList, LiveVideosList) fetchYouTubeStatistics(FetchYouTubeStatistics.Fetcher youtubeDataFetcher, TrackList trackList) {
@@ -183,11 +222,9 @@ List<VTuberStatistics> mergeStatistics(Dictionary<VTuberId, YouTubeStatistics> d
     return rLst;
 }
 
-void writeFiles(List<VTuberStatistics> lstStatistics, TopVideosList topVideoList, LiveVideosList liveVideosList, string savePath, DateTime currentTime) {
-    // save date as UTC+8 (Taiwan time zone)
-    DateTime currentDateTimeUtcPlus8 = currentTime.AddHours(8);
-    log.Info($"currentDateTimeUtcPlus8: {currentDateTimeUtcPlus8}");
-    WriteFiles.WriteResult(lstStatistics, currentDateTimeUtcPlus8, savePath);
-    WriteFiles.WriteTopVideosListResult(topVideoList, currentDateTimeUtcPlus8, savePath);
-    WriteFiles.WriteLiveVideosListResult(liveVideosList, currentDateTimeUtcPlus8, savePath);
+void writeFiles(List<VTuberStatistics> lstStatistics, TopVideosList topVideoList, LiveVideosList liveVideosList, string savePath, DateTimeOffset currentTime) {
+    log.Info($"currentTime: {currentTime}");
+    WriteFiles.WriteResult(lstStatistics, currentTime, savePath);
+    WriteFiles.WriteTopVideosListResult(topVideoList, currentTime, savePath);
+    WriteFiles.WriteLiveVideosListResult(liveVideosList, currentTime, savePath);
 }

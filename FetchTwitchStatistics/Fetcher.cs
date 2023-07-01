@@ -8,9 +8,9 @@ public class Fetcher {
     public record Credential(string clientId, string secret);
 
     private readonly TwitchAPI api;
-    private readonly DateTime CurrentTime;
+    private readonly DateTimeOffset CurrentTime;
 
-    public Fetcher(Credential credential, DateTime currentTime) {
+    public Fetcher(Credential credential, DateTimeOffset currentTime) {
         api = new TwitchAPI();
         api.Settings.ClientId = credential.clientId;
         api.Settings.Secret = credential.secret;
@@ -141,7 +141,7 @@ public class Fetcher {
 
         ulong medianViews = NumericUtility.GetMedian(viewCountList);
         Tuple<DateTime, string, ulong> largest = NumericUtility.GetLargest(viewCountList);
-        decimal popularity = NumericUtility.GetPopularity(viewCountList, CurrentTime);
+        decimal popularity = NumericUtility.GetPopularity(viewCountList, CurrentTime.UtcDateTime);
         return (true, medianViews, (ulong)popularity, largest.Item3, largest.Item2, topVideosList);
     }
 

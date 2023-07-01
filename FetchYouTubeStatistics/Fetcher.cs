@@ -6,12 +6,12 @@ using log4net;
 
 namespace FetchYouTubeStatistics;
 public class Fetcher {
-    private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+    private static readonly ILog log = LogManager.GetLogger(typeof(Fetcher));
     public string ApiKey { get; set; }
     private readonly YouTubeService youtubeService;
-    private readonly DateTime CurrentTime;
+    private readonly DateTimeOffset CurrentTime;
 
-    public Fetcher(string ApiKey, DateTime currentTime) {
+    public Fetcher(string ApiKey, DateTimeOffset currentTime) {
         this.ApiKey = ApiKey;
         youtubeService = new YouTubeService(new BaseClientService.Initializer() { ApiKey = this.ApiKey });
 
@@ -205,7 +205,7 @@ public class Fetcher {
             string highestViewedUrl = "";
             if (lstIdViewCount.Count != 0) {
                 medianViews = NumericUtility.GetMedian(lstIdViewCount);
-                popularity = (ulong)NumericUtility.GetPopularity(lstIdViewCount, CurrentTime);
+                popularity = (ulong)NumericUtility.GetPopularity(lstIdViewCount, CurrentTime.UtcDateTime);
                 Tuple<DateTime, string, ulong> largest = NumericUtility.GetLargest(lstIdViewCount);
                 highestViews = largest.Item3;
                 highestViewedUrl = largest.Item2;

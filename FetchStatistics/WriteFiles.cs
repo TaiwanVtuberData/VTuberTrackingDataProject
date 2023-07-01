@@ -7,12 +7,12 @@ namespace FetchStatistics;
 internal class WriteFiles {
     private static readonly ILog log = LogManager.GetLogger(typeof(WriteFiles));
 
-    public static void WriteResult(List<VTuberStatistics> vtuberStatisticsList, DateTime currentDateTime, string savePath) {
+    public static void WriteResult(List<VTuberStatistics> vtuberStatisticsList, DateTimeOffset currentTime, string savePath) {
         // create monthly directory first
-        string fileDir = $"{savePath}/{currentDateTime:yyyy-MM}";
+        string fileDir = $"{savePath}/{currentTime:yyyy-MM}";
         Directory.CreateDirectory(fileDir);
 
-        string filePath = $"{fileDir}/record_{currentDateTime:yyyy-MM-dd-HH-mm-ss}.csv";
+        string filePath = $"{fileDir}/record_{currentTime:yyyy-MM-dd-HH-mm-ss}.csv";
         log.Info($"Write statistics to : {filePath}");
         using StreamWriter recordFile = new(filePath);
         recordFile.Write(
@@ -60,12 +60,12 @@ internal class WriteFiles {
         recordFile.Close();
     }
 
-    public static void WriteTopVideosListResult(TopVideosList topVideoList, DateTime currentDateTime, string savePath) {
+    public static void WriteTopVideosListResult(TopVideosList topVideoList, DateTimeOffset currentTime, string savePath) {
         // create monthly directory first
-        string fileDir = $"{savePath}/{currentDateTime:yyyy-MM}";
+        string fileDir = $"{savePath}/{currentTime:yyyy-MM}";
         Directory.CreateDirectory(fileDir);
 
-        string filePath = $"{fileDir}/top-videos_{currentDateTime:yyyy-MM-dd-HH-mm-ss}.csv";
+        string filePath = $"{fileDir}/top-videos_{currentTime:yyyy-MM-dd-HH-mm-ss}.csv";
         log.Info($"Write top videos list to : {filePath}");
         using StreamWriter writer = new(filePath);
         using CsvWriter csv = new(writer, CultureInfo.InvariantCulture);
@@ -79,12 +79,12 @@ internal class WriteFiles {
         }
     }
 
-    public static void WriteLiveVideosListResult(LiveVideosList liveVideos, DateTime currentDateTime, string savePath) {
+    public static void WriteLiveVideosListResult(LiveVideosList liveVideos, DateTimeOffset currentTime, string savePath, string fileNamePrefix = "livestreams") {
         // create monthly directory first
-        string fileDir = $"{savePath}/{currentDateTime:yyyy-MM}";
+        string fileDir = $"{savePath}/{currentTime:yyyy-MM}";
         Directory.CreateDirectory(fileDir);
 
-        string filePath = $"{fileDir}/livestreams_{currentDateTime:yyyy-MM-dd-HH-mm-ss}.csv";
+        string filePath = $"{fileDir}/{fileNamePrefix}_{currentTime:yyyy-MM-dd-HH-mm-ss}.csv";
         log.Info($"Write live videos list to : {filePath}");
         using StreamWriter writer = new(filePath);
         using CsvWriter csv = new(writer, CultureInfo.InvariantCulture);
