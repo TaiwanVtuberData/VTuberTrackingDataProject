@@ -1,4 +1,4 @@
-﻿using Common.Types;
+using Common.Types;
 using Common.Utils;
 using GenerateJsonFile.Types;
 using GenerateJsonFile.Utils;
