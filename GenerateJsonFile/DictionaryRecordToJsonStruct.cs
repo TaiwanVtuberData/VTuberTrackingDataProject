@@ -38,7 +38,9 @@ class DictionaryRecordToJsonStruct {
                     thumbnailUrl: MiscUtils.SetTwitchLivestreamThumbnailUrlSize(e.ThumbnailUrl, width: 178, height: 100),
                     startTime: e.PublishDateTime != DateTime.UnixEpoch ? MiscUtils.ToIso8601UtcString(e.PublishDateTime) : null
                     )
-                ).ToList();
+                )
+                .OrderBy(e => e.startTime)
+                .ToList();
 
             foreach (DebutData debutData in lstDebutData) {
                 if (livestreams.Where(e => e.videoUrl == debutData.VideoUrl).Any()) {
