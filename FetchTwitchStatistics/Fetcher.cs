@@ -71,7 +71,7 @@ public class Fetcher {
 
     private (bool Success, ulong MedianViewCount, ulong Popularity, ulong HighestViewCount, string HighestViewedVideoID, TopVideosList TopVideosList_)
         GetChannelRecentViewStatistic(string userId) {
-        List<Tuple<DateTime, string, ulong>> viewCountList = new();
+        List<Tuple<DateTimeOffset, string, ulong>> viewCountList = new();
 
         string afterCursor = "";
         TopVideosList topVideosList = new();
@@ -108,7 +108,7 @@ public class Fetcher {
             foreach (TwitchLib.Api.Helix.Models.Videos.GetVideos.Video video in videoResponseResult.Videos) {
                 string videoId = video.Id;
                 ulong viewCount = (ulong)video.ViewCount;
-                DateTime publishTime = DateTime.Parse(video.PublishedAt);
+                DateTimeOffset publishTime = DateTimeOffset.Parse(video.PublishedAt);
 
                 TimeSpan publishPastTime = CurrentTime - publishTime;
                 if (TimeSpan.Zero < publishPastTime && publishPastTime < TimeSpan.FromDays(30)) {
@@ -140,7 +140,7 @@ public class Fetcher {
         }
 
         ulong medianViews = NumericUtility.GetMedian(viewCountList);
-        Tuple<DateTime, string, ulong> largest = NumericUtility.GetLargest(viewCountList);
+        Tuple<DateTimeOffset, string, ulong> largest = NumericUtility.GetLargest(viewCountList);
         decimal popularity = NumericUtility.GetPopularity(viewCountList, CurrentTime.UtcDateTime);
         return (true, medianViews, (ulong)popularity, largest.Item3, largest.Item2, topVideosList);
     }
