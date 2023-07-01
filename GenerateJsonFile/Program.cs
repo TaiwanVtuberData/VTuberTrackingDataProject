@@ -1,4 +1,4 @@
-﻿using Common.Types;
+using Common.Types;
 using Common.Utils;
 using GenerateJsonFile.Types;
 using GenerateJsonFile.Utils;
@@ -25,8 +25,17 @@ class Program {
         (string latestBasicDataFilePath, DateTime latestBasicDataTime) = FileUtility.GetLatestRecord(dataRepoPath, "basic-data");
         Dictionary<string, VTuberBasicData> dictBasicData = VTuberBasicData.ReadFromCsv(latestBasicDataFilePath);
 
-        (string latestLivestreamsFilePath, _) = FileUtility.GetLatestRecord(dataRepoPath, "livestreams");
+        (string latestLivestreamsFilePath, DateTime latestLivestreamsDateTime) = FileUtility.GetLatestRecord(dataRepoPath, "livestreams");
         LiveVideosList liveVideos = new(latestLivestreamsFilePath, clearGarbage: true, throwOnValidationFail: true);
+
+        (string latestTwitchLivetreamsFilePath, DateTime latestTwitchLivestreamsDateTime) = FileUtility.GetLatestRecord(dataRepoPath, "twitch-livestreams");
+        LiveVideosList twitchLiveVideos = new(latestTwitchLivetreamsFilePath, clearGarbage: true, throwOnValidationFail: true);
+
+        // if latestTwitchLivestreamsDateTime is after latestLivestreamsDateTime
+        // then clear Twitch Livestreams in liveVideos and insert newest twitchLiveVideos
+        if (latestTwitchLivestreamsDateTime > latestLivestreamsDateTime) {
+            liveVideos = ClearTwitchLiveVideos(liveVideos).Insert(twitchLiveVideos);
+        }
 
         List<DebutData> lstDebutData = DebutData.ReadFromCsv(Path.Combine(debutRepoPath, $"{now.ToLocalTime():yyyy-MM-dd}.csv"));
 
@@ -44,13 +53,14 @@ class Program {
 
         UpdateTimeResponse updateTimeResponse = new() {
             time = new UpdateTime() {
-                statisticUpdateTime = MiscUtils.ToIso8601UtcString(latestRecordTime),
+                statisticUpdateTime = MiscUtils.ToIso8601UtcString(latestTwitchLivestreamsDateTime),
                 VTuberDataUpdateTime = MiscUtils.ToIso8601UtcString(latestBasicDataTime),
             },
         };
         WriteJson(updateTimeResponse, "update-time.json");
 
-        List<VTuberFullData> lstAllVTuber = new DictionaryRecordToJsonStruct(trackList, dictRecord, DateTime.Today, latestRecordTime, latestBasicDataTime, "").AllWithFullData(liveVideos, lstDebutData);
+        List<VTuberFullData> lstAllVTuber = new DictionaryRecordToJsonStruct(trackList, dictRecord, DateTime.Today, latestRecordTime, latestBasicDataTime, "")
+            .AllWithFullData(liveVideos, lstDebutData);
         foreach (VTuberFullData vtuber in lstAllVTuber) {
             WriteJson(vtuber, $"vtubers/{vtuber.id}.json");
         }
@@ -297,5 +307,9 @@ class Program {
                 dictRecord.AppendBasicData(fileInfoDateTime.Item2, dictBasicData);
             }
         }
+    }
+
+    private static LiveVideosList ClearTwitchLiveVideos(LiveVideosList liveVideosList) {
+        return new LiveVideosList().Insert(liveVideosList.Filter(e => !e.Url.StartsWith("https://www.twitch.tv/")).ToList());
     }
 }
