@@ -22,7 +22,7 @@ public class Fetcher {
         List<Google.Apis.YouTube.v3.Data.Channel> lstChannelInfo = GetChannelInfoList(lstChannelId);
 
         Dictionary<string, YouTubeStatistics> rDict = GetChannelStatistics(lstChannelInfo);
-        TopVideosList rVideoList = new(videoCount: 1000);
+        TopVideosList rVideoList = new();
         LiveVideosList rLiveVideoList = new();
 
         GetChannelRecentViewStatistic(lstChannelInfo, ref rDict, ref rVideoList, ref rLiveVideoList);
