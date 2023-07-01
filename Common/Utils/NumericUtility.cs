@@ -59,7 +59,7 @@ public class NumericUtility {
         if (ratioMilliseconds < 0m)
             ratioMilliseconds = 0m;
 
-        decimal ratio = 1m - (ratioMilliseconds / 2592000000);
+        decimal ratio = 1m - (ratioMilliseconds / _30DaysMilliseconds);
 
         if (ratio < 0m)
             ratio = 0m;
