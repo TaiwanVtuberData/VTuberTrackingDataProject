@@ -44,33 +44,8 @@ try {
     TrackList trackList = createTrackList(CONFIG.excludeListPath, CONFIG.trackListPath);
 
     log.Info("Start getting all YouTube statistics");
-    List<string> lstYouTubeChannelId = trackList.GetYouTubeChannelIdList();
-    log.Info($"Channel count: {lstYouTubeChannelId.Count}");
-
-    Dictionary<string, YouTubeStatistics> dictIdYouTubeStatistics;
-    TopVideosList topVideoList;
-    LiveVideosList liveVideosList;
-    (dictIdYouTubeStatistics, topVideoList, liveVideosList) = youtubeDataFetcher.GetAll(lstYouTubeChannelId);
-
-    foreach (VideoInformation videoInfo in topVideoList) {
-        try {
-            videoInfo.Id = trackList.GetIdByYouTubeChannelId(videoInfo.Id);
-        } catch (Exception e) {
-            log.Error($"Error while converting topVideoList");
-            log.Error($"GetIdByYouTubeChannelId with input {videoInfo.Id}");
-            log.Error(e.Message, e);
-        }
-    }
-
-    foreach (LiveVideoInformation videoInfo in liveVideosList) {
-        try {
-            videoInfo.Id = trackList.GetIdByYouTubeChannelId(videoInfo.Id);
-        } catch (Exception e) {
-            log.Error($"Error while converting liveVideosList");
-            log.Error($"GetIdByYouTubeChannelId with input {videoInfo.Id}");
-            log.Error(e.Message, e);
-        }
-    }
+    (Dictionary<VTuberId, YouTubeStatistics> dictIdYouTubeStatistics, TopVideosList topVideosList, LiveVideosList liveVideosList) =
+        fetchYouTubeStatistics(youtubeDataFetcher, trackList);
     log.Info("End getting all YouTube statistics");
 
     log.Info("Start getting Twitch statistics");
@@ -95,7 +70,7 @@ try {
                 log.Error(e.Message, e);
             }
 
-            topVideoList.Insert(videoInfo);
+            topVideosList.Insert(videoInfo);
         }
 
         foreach (LiveVideoInformation videoInfo in twitchLiveVideosList) {
@@ -110,21 +85,14 @@ try {
             liveVideosList.Add(videoInfo);
         }
 
-        YouTubeStatistics youtubeStatistics = new();
-        string YouTubeChannelId = trackList.GetYouTubeChannelId(vtuber.Id);
-        if (dictIdYouTubeStatistics.ContainsKey(YouTubeChannelId)) {
-            youtubeStatistics = dictIdYouTubeStatistics[YouTubeChannelId];
-        }
-        lstStatistics.Add(new VTuberStatistics(vtuber.Id, youtubeStatistics, twitchStatistics));
+        lstStatistics.Add(new VTuberStatistics(vtuber.Id, dictIdYouTubeStatistics[new VTuberId(vtuber.Id)], twitchStatistics));
     }
     log.Info("End getting Twitch statistics");
 
-    // save date as UTC+8 (Taiwan time zone)
-    DateTime currentDateTimeUtcPlus8 = CURRENT_TIME.AddHours(8);
-    log.Info($"currentDateTimeUtcPlus8: {currentDateTimeUtcPlus8}");
-    WriteFiles.WriteResult(lstStatistics, currentDateTimeUtcPlus8, CONFIG.savePath);
-    WriteFiles.WriteTopVideosListResult(topVideoList, currentDateTimeUtcPlus8, CONFIG.savePath);
-    WriteFiles.WriteLiveVideosListResult(liveVideosList, currentDateTimeUtcPlus8, CONFIG.savePath);
+    log.Info("Start writing files");
+    writeFiles(lstStatistics, topVideosList, liveVideosList, CONFIG.savePath, CURRENT_TIME);
+    log.Info("End writing files");
+
     log.Info("End program");
 } catch (Exception e) {
     log.Error("Unhandled exception");
@@ -138,4 +106,57 @@ TrackList createTrackList(string excludeListPath, string trackListPath) {
     log.Info($"trackList.GetCount(): {trackList.GetCount()}");
 
     return trackList;
+}
+
+(Dictionary<VTuberId, YouTubeStatistics>, TopVideosList, LiveVideosList) fetchYouTubeStatistics(FetchYouTubeStatistics.Fetcher youtubeDataFetcher, TrackList trackList) {
+    List<string> lstYouTubeChannelId = trackList.GetYouTubeChannelIdList();
+    log.Info($"Channel count: {lstYouTubeChannelId.Count}");
+
+    Dictionary<string, YouTubeStatistics> dictIdYouTubeStatistics;
+    TopVideosList rVideosList;
+    LiveVideosList rLiveVideosList;
+    (dictIdYouTubeStatistics, rVideosList, rLiveVideosList) = youtubeDataFetcher.GetAll(lstYouTubeChannelId);
+
+    foreach (VideoInformation videoInfo in rVideosList) {
+        try {
+            videoInfo.Id = trackList.GetIdByYouTubeChannelId(videoInfo.Id);
+        } catch (Exception e) {
+            log.Error($"Error while converting rVideoList");
+            log.Error($"GetIdByYouTubeChannelId with input {videoInfo.Id}");
+            log.Error(e.Message, e);
+        }
+    }
+
+    foreach (LiveVideoInformation videoInfo in rLiveVideosList) {
+        try {
+            videoInfo.Id = trackList.GetIdByYouTubeChannelId(videoInfo.Id);
+        } catch (Exception e) {
+            log.Error($"Error while converting liveVideosList");
+            log.Error($"GetIdByYouTubeChannelId with input {videoInfo.Id}");
+            log.Error(e.Message, e);
+        }
+    }
+
+    Dictionary<VTuberId, YouTubeStatistics> rDict = new();
+    foreach (KeyValuePair<string, YouTubeStatistics> keyValue in dictIdYouTubeStatistics) {
+        try {
+            VTuberId vTuberId = new(trackList.GetIdByYouTubeChannelId(keyValue.Key));
+            rDict.Add(vTuberId, keyValue.Value);
+        } catch (Exception e) {
+            log.Error($"Error while converting rDict");
+            log.Error($"GetIdByYouTubeChannelId with input {keyValue.Key}");
+            log.Error(e.Message, e);
+        }
+    }
+
+    return (rDict, rVideosList, rLiveVideosList);
+}
+
+void writeFiles(List<VTuberStatistics> lstStatistics, TopVideosList topVideoList, LiveVideosList liveVideosList, string savePath, DateTime currentTime) {
+    // save date as UTC+8 (Taiwan time zone)
+    DateTime currentDateTimeUtcPlus8 = currentTime.AddHours(8);
+    log.Info($"currentDateTimeUtcPlus8: {currentDateTimeUtcPlus8}");
+    WriteFiles.WriteResult(lstStatistics, currentDateTimeUtcPlus8, savePath);
+    WriteFiles.WriteTopVideosListResult(topVideoList, currentDateTimeUtcPlus8, savePath);
+    WriteFiles.WriteLiveVideosListResult(liveVideosList, currentDateTimeUtcPlus8, savePath);
 }
