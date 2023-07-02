@@ -15,8 +15,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />
-    <ProjectReference Include="..\FetchTwitchStatistics\FetchTwitchStatistics.csproj" />
-    <ProjectReference Include="..\FetchYouTubeStatistics\FetchYouTubeStatistics.csproj" />
+    <ProjectReference Include="..\FetchTwitchRecord\FetchTwitchRecord.csproj" />
+    <ProjectReference Include="..\FetchYouTubeRecord\FetchYouTubeRecord.csproj" />
   </ItemGroup>
 
   <ItemGroup>

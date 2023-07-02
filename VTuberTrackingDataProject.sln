@@ -7,11 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrackListValidation", "TrackListValidation\TrackListValidation.csproj", "{085D24B0-0939-41F2-8CB1-2409DDF59882}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FetchStatistics", "FetchStatistics\FetchStatistics.csproj", "{7EB2DA10-7F4D-447C-AAA0-116590B2CFB8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FetchRecord", "FetchRecord\FetchRecord.csproj", "{7EB2DA10-7F4D-447C-AAA0-116590B2CFB8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FetchYouTubeStatistics", "FetchYouTubeStatistics\FetchYouTubeStatistics.csproj", "{C742856D-480C-4FEB-ADF9-CD094EAB36EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FetchYouTubeRecord", "FetchYouTubeRecord\FetchYouTubeRecord.csproj", "{C742856D-480C-4FEB-ADF9-CD094EAB36EC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FetchTwitchStatistics", "FetchTwitchStatistics\FetchTwitchStatistics.csproj", "{54D7A0CD-1CAB-407F-BDCB-A0E8FD37BD7A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FetchTwitchRecord", "FetchTwitchRecord\FetchTwitchRecord.csproj", "{54D7A0CD-1CAB-407F-BDCB-A0E8FD37BD7A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FetchBasicData", "FetchBasicData\FetchBasicData.csproj", "{95B2027A-6A9A-4787-8F15-B7941096960C}"
 EndProject

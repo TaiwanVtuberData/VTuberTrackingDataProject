@@ -15,11 +15,11 @@ Used to validate track list in https://github.com/TaiwanVtuberData/TaiwanVtuberT
 
 Get basic data such as https://github.com/TaiwanVtuberData/TaiwanVtuberTrackingData/blob/master/2022-04/basic-data_2022-04-14-09-56-24.csv .
 
-### FetchStatistics
+### FetchRecord
 
 Get channel video view count such as https://github.com/TaiwanVtuberData/TaiwanVtuberTrackingData/blob/master/2022-04/record_2022-04-14-05-39-30.csv .
 
-It uses FetchYouTubeStatistics and FetchTwitchStatistics.
+It uses FetchYouTubeRecord and FetchTwitchRecord.
 
 ### GenerateJsonFile
 
