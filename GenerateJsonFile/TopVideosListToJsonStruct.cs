@@ -48,18 +48,16 @@ class TopVideosListToJsonStruct {
             .Take(count)) {
             VTuberRecord record = dictRecord[videoInfo.Id];
 
-            VideoPopularityData videoData = new() {
-                id = record.Id,
-                name = record.DisplayName,
-                imgUrl = record.ImageUrl,
-                title = videoInfo.Title,
-                videoUrl = videoInfo.Url,
-                thumbnailUrl = MiscUtils.SetTwitchThumbnailUrlSize(videoInfo.ThumbnailUrl, width: 320, height: 180),
-                viewCount = videoInfo.ViewCount,
-                // https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings#Roundtrip
-                // use "o" specifier to get correct format 2009-06-15T13:45:30.0000000Z
-                uploadTime = MiscUtils.ToIso8601UtcString(videoInfo.PublishDateTime),
-            };
+            VideoPopularityData videoData = new(
+                id: record.Id,
+                name: record.DisplayName,
+                imgUrl: record.ImageUrl,
+                title: videoInfo.Title,
+                videoUrl: videoInfo.Url,
+                thumbnailUrl: MiscUtils.SetTwitchThumbnailUrlSize(videoInfo.ThumbnailUrl, width: 320, height: 180),
+                viewCount: videoInfo.ViewCount,
+                uploadTime: MiscUtils.ToIso8601UtcString(videoInfo.PublishDateTime)
+            );
 
             rLst.Add(videoData);
         }

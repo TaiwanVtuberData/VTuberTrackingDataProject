@@ -51,12 +51,12 @@ class Program {
             latestBasicDataTime = latestRecordTime;
         }
 
-        UpdateTimeResponse updateTimeResponse = new() {
-            time = new UpdateTime() {
-                statisticUpdateTime = MiscUtils.ToIso8601UtcString(latestTwitchLivestreamsDateTime),
-                VTuberDataUpdateTime = MiscUtils.ToIso8601UtcString(latestBasicDataTime),
-            },
-        };
+        UpdateTimeResponse updateTimeResponse = new(
+            time: new UpdateTime(
+                statisticUpdateTime: MiscUtils.ToIso8601UtcString(latestTwitchLivestreamsDateTime),
+                VTuberDataUpdateTime: MiscUtils.ToIso8601UtcString(latestBasicDataTime)
+            )
+        );
         WriteJson(updateTimeResponse, "update-time.json");
 
         List<VTuberFullData> lstAllVTuber = new DictionaryRecordToJsonStruct(trackList, dictRecord, DateTime.Today, latestRecordTime, latestBasicDataTime, "")

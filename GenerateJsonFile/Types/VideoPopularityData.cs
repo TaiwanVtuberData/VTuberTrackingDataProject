@@ -1,6 +1,6 @@
 ﻿namespace GenerateJsonFile.Types;
 
-internal readonly record struct VideoPopularityData(
+internal record VideoPopularityData(
     string id,
     string name,
     string? imgUrl,
@@ -10,5 +10,5 @@ internal readonly record struct VideoPopularityData(
     ulong viewCount,
     string uploadTime);
 
-internal readonly record struct VideoPopularityDataResponse(
+internal record VideoPopularityDataResponse(
     List<VideoPopularityData> videos);

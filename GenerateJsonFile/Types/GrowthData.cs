@@ -1,6 +1,6 @@
 ﻿namespace GenerateJsonFile.Types;
 
-internal readonly record struct GrowthData(
+internal record GrowthData(
     decimal diff,
     GrowthRecordType recordType
     );

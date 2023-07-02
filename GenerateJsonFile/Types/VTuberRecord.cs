@@ -14,7 +14,7 @@ public class VTuberRecord {
         public string ChannelId { get; set; } = "";
         public bool hasValidRecord = false;
 
-        public readonly record struct Record(
+        public record Record(
             ulong SubscriberCount,
             ulong TotalViewCount,
             ulong RecentTotalMedianViewCount,
@@ -25,7 +25,7 @@ public class VTuberRecord {
             string HighestViewedVideoId);
         private readonly Dictionary<DateTime, Record> DictRecord = new();
 
-        public readonly record struct BasicData(
+        public record BasicData(
             ulong SubscriberCount,
             ulong TotalViewCount);
         private readonly Dictionary<DateTime, BasicData> DictBasicData = new();
@@ -62,7 +62,7 @@ public class VTuberRecord {
         public string ChannelId { get; set; } = "";
         public string ChannelName { get; set; } = "";
         public bool hasValidRecord = false;
-        public readonly record struct Record(
+        public record Record(
             ulong FollowerCount,
             ulong RecentMedianViewCount,
             ulong RecentPopularity,
@@ -70,7 +70,7 @@ public class VTuberRecord {
             string HighestViewedVideoId);
         private readonly Dictionary<DateTime, Record> DictRecord = new();
 
-        public readonly record struct BasicData(
+        public record BasicData(
             ulong FollowerCount);
         private readonly Dictionary<DateTime, BasicData> DictBasicData = new();
 

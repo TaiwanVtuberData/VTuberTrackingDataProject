@@ -53,24 +53,24 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
 
             VTuberStatistics vtuberStat = vtuberStatPair.Value;
 
-            VTuberRecord.YouTubeData.Record youTubeRecord = new() {
-                SubscriberCount = vtuberStat.YouTube.Basic.SubscriberCount,
-                TotalViewCount = vtuberStat.YouTube.Basic.ViewCount,
-                RecentTotalMedianViewCount = vtuberStat.YouTube.Recent.Total.MedialViewCount,
-                RecentLiveStreamMedianViewCount = vtuberStat.YouTube.Recent.LiveStream.MedialViewCount,
-                RecentVideoMedianViewCount = vtuberStat.YouTube.Recent.Video.MedialViewCount,
-                RecentPopularity = vtuberStat.YouTube.Recent.Total.Popularity,
-                HighestViewCount = vtuberStat.YouTube.Recent.Total.HighestViewCount,
-                HighestViewedVideoId = Utility.YouTubeVideoUrlToId(vtuberStat.YouTube.Recent.Total.HighestViewdUrl),
-            };
+            VTuberRecord.YouTubeData.Record youTubeRecord = new(
+                SubscriberCount: vtuberStat.YouTube.Basic.SubscriberCount,
+                TotalViewCount: vtuberStat.YouTube.Basic.ViewCount,
+                RecentTotalMedianViewCount: vtuberStat.YouTube.Recent.Total.MedialViewCount,
+                RecentLiveStreamMedianViewCount: vtuberStat.YouTube.Recent.LiveStream.MedialViewCount,
+                RecentVideoMedianViewCount: vtuberStat.YouTube.Recent.Video.MedialViewCount,
+                RecentPopularity: vtuberStat.YouTube.Recent.Total.Popularity,
+                HighestViewCount: vtuberStat.YouTube.Recent.Total.HighestViewCount,
+                HighestViewedVideoId: Utility.YouTubeVideoUrlToId(vtuberStat.YouTube.Recent.Total.HighestViewdUrl)
+            );
 
-            VTuberRecord.TwitchData.Record twitchRecord = new() {
-                FollowerCount = vtuberStat.Twitch.FollowerCount,
-                RecentMedianViewCount = vtuberStat.Twitch.RecentMedianViewCount,
-                RecentPopularity = vtuberStat.Twitch.RecentPopularity,
-                HighestViewCount = vtuberStat.Twitch.RecentHighestViewCount,
-                HighestViewedVideoId = Utility.TwitchVideoUrlToId(vtuberStat.Twitch.HighestViewedVideoURL),
-            };
+            VTuberRecord.TwitchData.Record twitchRecord = new(
+                FollowerCount: vtuberStat.Twitch.FollowerCount,
+                RecentMedianViewCount: vtuberStat.Twitch.RecentMedianViewCount,
+                RecentPopularity: vtuberStat.Twitch.RecentPopularity,
+                HighestViewCount: vtuberStat.Twitch.RecentHighestViewCount,
+                HighestViewedVideoId: Utility.TwitchVideoUrlToId(vtuberStat.Twitch.HighestViewedVideoURL)
+            );
 
             this[id].YouTube?.AddRecord(recordDateTime, youTubeRecord);
             this[id].Twitch?.AddRecord(recordDateTime, twitchRecord);
@@ -86,18 +86,18 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
             VTuberStatistics vtuberData = vtuberStatPair.Value;
 
             if (this[id].YouTube != null) {
-                VTuberRecord.YouTubeData.BasicData YTData = new() {
-                    SubscriberCount = vtuberData.YouTube.Basic.SubscriberCount,
-                    TotalViewCount = vtuberData.YouTube.Basic.ViewCount,
-                };
+                VTuberRecord.YouTubeData.BasicData YTData = new(
+                    SubscriberCount: vtuberData.YouTube.Basic.SubscriberCount,
+                    TotalViewCount: vtuberData.YouTube.Basic.ViewCount
+                );
 
                 this[id].YouTube?.AddBasicData(recordDateTime, YTData);
             }
 
             if (this[id].Twitch != null) {
-                VTuberRecord.TwitchData.BasicData twitchData = new() {
-                    FollowerCount = vtuberData.Twitch.FollowerCount,
-                };
+                VTuberRecord.TwitchData.BasicData twitchData = new(
+                    FollowerCount: vtuberData.Twitch.FollowerCount
+                );
 
                 this[id].Twitch?.AddBasicData(recordDateTime, twitchData);
             }
@@ -113,18 +113,18 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
             VTuberBasicData vtuberData = vtuberDataPair.Value;
 
             if (vtuberData.YouTube.HasValue) {
-                VTuberRecord.YouTubeData.BasicData YTData = new() {
-                    SubscriberCount = vtuberData.YouTube.Value.SubscriberCount ?? 0,
-                    TotalViewCount = vtuberData.YouTube.Value.ViewCount ?? 0,
-                };
+                VTuberRecord.YouTubeData.BasicData YTData = new(
+                    SubscriberCount: vtuberData.YouTube.Value.SubscriberCount ?? 0,
+                    TotalViewCount: vtuberData.YouTube.Value.ViewCount ?? 0
+                );
 
                 this[id].YouTube?.AddBasicData(recordDateTime, YTData);
             }
 
             if (vtuberData.Twitch.HasValue) {
-                VTuberRecord.TwitchData.BasicData twitchData = new() {
-                    FollowerCount = vtuberData.Twitch.Value.FollowerCount,
-                };
+                VTuberRecord.TwitchData.BasicData twitchData = new(
+                    FollowerCount: vtuberData.Twitch.Value.FollowerCount
+                );
 
                 this[id].Twitch?.AddBasicData(recordDateTime, twitchData);
             }
@@ -184,13 +184,13 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
         DateTime foundDateTime = lstDateTime.Aggregate((x, y) => (x - targetDateTime).Duration() < (y - targetDateTime).Duration() ? x : y);
 
         VTuberRecord.YouTubeData.BasicData? targetBasicData = youTubeData.GetBasicData(foundDateTime);
-        ulong targetSubscriberCount = targetBasicData.HasValue ? targetBasicData.Value.SubscriberCount : 0;
+        ulong targetSubscriberCount = targetBasicData?.SubscriberCount ?? 0;
         // previously hidden subscriber count doesn't count as growth
         if (targetSubscriberCount == 0)
             return new GrowthResult();
 
         VTuberRecord.YouTubeData.BasicData? currentBasicData = youTubeData.GetBasicData(latestDateTime);
-        ulong currentSubscriberCount = currentBasicData.HasValue ? currentBasicData.Value.SubscriberCount : 0;
+        ulong currentSubscriberCount = currentBasicData?.SubscriberCount ?? 0;
 
         // return result
         long rGrowth = (long)currentSubscriberCount - (long)targetSubscriberCount;
@@ -229,12 +229,12 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
         DateTime foundDateTime = lstDateTime.Aggregate((x, y) => (x - targetDateTime).Duration() < (y - targetDateTime).Duration() ? x : y);
 
         VTuberRecord.YouTubeData.BasicData? targetBasicData = youTubeData.GetBasicData(foundDateTime);
-        decimal targetTotalViewCount = targetBasicData.HasValue ? targetBasicData.Value.TotalViewCount : 0;
+        decimal targetTotalViewCount = targetBasicData?.TotalViewCount ?? 0;
         if (targetTotalViewCount == 0)
             return new GrowthResult();
 
         VTuberRecord.YouTubeData.BasicData? currentBasicData = youTubeData.GetBasicData(latestDateTime);
-        decimal currentTotalViewCount = currentBasicData.HasValue ? currentBasicData.Value.TotalViewCount : 0;
+        decimal currentTotalViewCount = currentBasicData?.TotalViewCount ?? 0;
 
         // return result
         decimal rGrowth = currentTotalViewCount - targetTotalViewCount;
