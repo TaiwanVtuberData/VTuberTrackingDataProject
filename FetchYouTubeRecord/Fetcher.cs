@@ -172,7 +172,9 @@ public class Fetcher {
             ImmutableList<IdRequstString> lstIdRequest = Generate50IdsStringList(dictVideoIdAndTime.Keys.Map(e => e.Value).ToImmutableList());
 
             // The Tuple is video ID and video view count
-            List<Tuple<DateTimeOffset, YouTubeVideoId, ulong>> lstIdViewCount = new();
+            List<Tuple<DateTimeOffset, YouTubeVideoId, ulong>> lstTotalViewCount = new();
+            List<Tuple<DateTimeOffset, YouTubeVideoId, ulong>> lstLiveStreamViewCount = new();
+            List<Tuple<DateTimeOffset, YouTubeVideoId, ulong>> lstVideoViewCount = new();
             foreach (IdRequstString idRequst in lstIdRequest) {
                 VideosResource.ListRequest videosListRequest = youtubeService.Videos.List("id,snippet,statistics,liveStreamingDetails");
                 videosListRequest.Id = idRequst.Value;
@@ -186,7 +188,14 @@ public class Fetcher {
                     if (viewCount is not null
                         && publishTime is not null
                         && !LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent)) {
-                        lstIdViewCount.Add(new(publishTime.GetValueOrDefault(DateTimeOffset.UnixEpoch), new YouTubeVideoId(video.Id), viewCount.Value));
+                        lstTotalViewCount.Add(new(publishTime ?? DateTimeOffset.UnixEpoch, new YouTubeVideoId(video.Id), viewCount.Value));
+
+                        bool isLiveStream = video.LiveStreamingDetails is not null;
+                        if (isLiveStream) {
+                            lstLiveStreamViewCount.Add(new(publishTime ?? DateTimeOffset.UnixEpoch, new YouTubeVideoId(video.Id), viewCount.Value));
+                        } else {
+                            lstVideoViewCount.Add(new(publishTime ?? DateTimeOffset.UnixEpoch, new YouTubeVideoId(video.Id), viewCount.Value));
+                        }
                     }
 
                     rTopVideosList.Insert(new VideoInformation {
@@ -194,14 +203,14 @@ public class Fetcher {
                         Url = $"https://www.youtube.com/watch?v={video.Id}",
                         Title = video.Snippet.Title,
                         ThumbnailUrl = video.Snippet.Thumbnails.Medium.Url,
-                        PublishDateTime = video.Snippet.PublishedAtDateTimeOffset.GetValueOrDefault(DateTimeOffset.UnixEpoch),
-                        ViewCount = viewCount.GetValueOrDefault(),
+                        PublishDateTime = video.Snippet.PublishedAtDateTimeOffset ?? DateTimeOffset.UnixEpoch,
+                        ViewCount = viewCount ?? 0,
                     });
 
                     if (LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent)) {
                         DateTimeOffset startTime =
                             (video.LiveStreamingDetails.ActualStartTimeDateTimeOffset ??
-                            video.LiveStreamingDetails.ScheduledStartTimeDateTimeOffset.GetValueOrDefault(DateTimeOffset.UnixEpoch));
+                            video.LiveStreamingDetails.ScheduledStartTimeDateTimeOffset ?? DateTimeOffset.UnixEpoch);
 
                         rLiveVideosList.Add(new LiveVideoInformation {
                             Id = channelInfo.Id,
@@ -215,9 +224,9 @@ public class Fetcher {
                 }
             }
 
-            YouTubeRecord.RecentRecord recentTotalRecord = CreateRecentRecord(lstIdViewCount.ToImmutableList(), CurrentTime);
-            YouTubeRecord.RecentRecord recentLiveStreamRecord = CreateRecentRecord(lstIdViewCount.ToImmutableList(), CurrentTime);
-            YouTubeRecord.RecentRecord recentVideoRecord = CreateRecentRecord(lstIdViewCount.ToImmutableList(), CurrentTime);
+            YouTubeRecord.RecentRecord recentTotalRecord = CreateRecentRecord(lstTotalViewCount.ToImmutableList(), CurrentTime);
+            YouTubeRecord.RecentRecord recentLiveStreamRecord = CreateRecentRecord(lstLiveStreamViewCount.ToImmutableList(), CurrentTime);
+            YouTubeRecord.RecentRecord recentVideoRecord = CreateRecentRecord(lstVideoViewCount.ToImmutableList(), CurrentTime);
 
             rDict.Add(channelId, new YouTubeRecord.RecentRecordTuple(
                 Total: recentTotalRecord,
