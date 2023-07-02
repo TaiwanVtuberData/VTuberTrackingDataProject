@@ -172,7 +172,7 @@ public class Fetcher {
             ImmutableList<IdRequstString> lstIdRequest = Generate50IdsStringList(dictVideoIdAndTime.Keys.Map(e => e.Value).ToImmutableList());
 
             // The Tuple is video ID and video view count
-            List<Tuple<DateTimeOffset, string, ulong>> lstIdViewCount = new();
+            List<Tuple<DateTimeOffset, YouTubeVideoId, ulong>> lstIdViewCount = new();
             foreach (IdRequstString idRequst in lstIdRequest) {
                 VideosResource.ListRequest videosListRequest = youtubeService.Videos.List("id,snippet,statistics,liveStreamingDetails");
                 videosListRequest.Id = idRequst.Value;
@@ -186,7 +186,7 @@ public class Fetcher {
                     if (viewCount is not null
                         && publishTime is not null
                         && !LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent)) {
-                        lstIdViewCount.Add(new(publishTime.GetValueOrDefault(DateTimeOffset.UnixEpoch), video.Id, viewCount.Value));
+                        lstIdViewCount.Add(new(publishTime.GetValueOrDefault(DateTimeOffset.UnixEpoch), new YouTubeVideoId(video.Id), viewCount.Value));
                     }
 
                     rTopVideosList.Insert(new VideoInformation {
@@ -215,24 +215,9 @@ public class Fetcher {
                 }
             }
 
-            ulong medianViews = 0;
-            ulong popularity = 0;
-            ulong highestViews = 0;
-            string highestViewedUrl = "";
-            if (lstIdViewCount.Count != 0) {
-                medianViews = NumericUtility.GetMedian(lstIdViewCount);
-                popularity = (ulong)NumericUtility.GetPopularity(lstIdViewCount, CurrentTime.UtcDateTime);
-                Tuple<DateTimeOffset, string, ulong> largest = NumericUtility.GetLargest(lstIdViewCount);
-                highestViews = largest.Item3;
-                highestViewedUrl = largest.Item2;
-
-
-                highestViewedUrl = $"https://www.youtube.com/watch?v={largest.Item2}";
-            }
-
-            YouTubeRecord.RecentRecord recentTotalRecord = new(medianViews, popularity, highestViews, highestViewedUrl);
-            YouTubeRecord.RecentRecord recentLiveStreamRecord = new(medianViews, popularity, highestViews, highestViewedUrl);
-            YouTubeRecord.RecentRecord recentVideoRecord = new(medianViews, popularity, highestViews, highestViewedUrl);
+            YouTubeRecord.RecentRecord recentTotalRecord = CreateRecentRecord(lstIdViewCount.ToImmutableList(), CurrentTime);
+            YouTubeRecord.RecentRecord recentLiveStreamRecord = CreateRecentRecord(lstIdViewCount.ToImmutableList(), CurrentTime);
+            YouTubeRecord.RecentRecord recentVideoRecord = CreateRecentRecord(lstIdViewCount.ToImmutableList(), CurrentTime);
 
             rDict.Add(channelId, new YouTubeRecord.RecentRecordTuple(
                 Total: recentTotalRecord,
@@ -247,6 +232,28 @@ public class Fetcher {
             TopVideosList: rTopVideosList,
             rLiveVideosList
             );
+    }
+
+    private static YouTubeRecord.RecentRecord CreateRecentRecord(
+        IImmutableList<Tuple<DateTimeOffset, YouTubeVideoId, ulong>> lstIdViewCount,
+        DateTimeOffset currentTime) {
+        ulong medianViews = 0;
+        ulong popularity = 0;
+        ulong highestViews = 0;
+        string highestViewedUrl = "";
+        if (lstIdViewCount.Count != 0) {
+            ImmutableList<Tuple<DateTimeOffset, string, ulong>> lstIdViewCountTemp = lstIdViewCount.Map(e =>
+                new Tuple<DateTimeOffset, string, ulong>(e.Item1, e.Item2.Value, e.Item3)
+                ).ToImmutableList();
+
+            medianViews = NumericUtility.GetMedian(lstIdViewCountTemp);
+            popularity = (ulong)NumericUtility.GetPopularity(lstIdViewCountTemp, currentTime.UtcDateTime);
+            Tuple<DateTimeOffset, string, ulong> largest = NumericUtility.GetLargest(lstIdViewCountTemp);
+            highestViews = largest.Item3;
+            highestViewedUrl = $"https://www.youtube.com/watch?v={largest.Item2}";
+        }
+
+        return new(medianViews, popularity, highestViews, highestViewedUrl);
     }
 
     private static ImmutableList<IdRequstString> Generate50IdsStringList(IImmutableList<string> KeyList) {

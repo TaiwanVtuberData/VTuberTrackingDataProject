@@ -1,5 +1,6 @@
 ﻿using Common.Types;
 using Common.Utils;
+using System.Collections.Immutable;
 using System.Xml;
 using TwitchLib.Api;
 
@@ -139,9 +140,11 @@ public class Fetcher {
             return (true, 0, 0, 0, "", new());
         }
 
-        ulong medianViews = NumericUtility.GetMedian(viewCountList);
-        Tuple<DateTimeOffset, string, ulong> largest = NumericUtility.GetLargest(viewCountList);
-        decimal popularity = NumericUtility.GetPopularity(viewCountList, CurrentTime.UtcDateTime);
+        ImmutableList<Tuple<DateTimeOffset, string, ulong>> immutableList = viewCountList.ToImmutableList();
+
+        ulong medianViews = NumericUtility.GetMedian(immutableList);
+        Tuple<DateTimeOffset, string, ulong> largest = NumericUtility.GetLargest(immutableList);
+        decimal popularity = NumericUtility.GetPopularity(immutableList, CurrentTime.UtcDateTime);
         return (true, medianViews, (ulong)popularity, largest.Item3, largest.Item2, topVideosList);
     }
 
