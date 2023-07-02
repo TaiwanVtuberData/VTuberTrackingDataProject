@@ -59,19 +59,28 @@ static void WriteDateTimeStatistics(TrackList trackList, string recordDirectory,
     statisticsTable.FillEmptyValueByInterpolation();
 
     string[] names = {
-                "YouTube.SubscriberCount",
-                "YouTube.ViewCount",
-                "YouTube.RecentMedianViewCount",
-                "YouTube.RecentPopularity",
-                "YouTube.RecentHighestViewCount",
-                //"YouTube.SubscriberCountToMedianViewCount",
+                "YouTube.Basic.SubscriberCount",
+                "YouTube.Basic.ViewCount",
+                "YouTube.Recent.Total.MedianViewCount",
+                "YouTube.Recent.Total.Popularity",
+                "YouTube.Recent.Total.HighestViewCount",
+                "YouTube.Recent.Livestream.MedianViewCount",
+                "YouTube.Recent.Livestream.Popularity",
+                "YouTube.Recent.Livestream.HighestViewCount",
+                "YouTube.Recent.Video.MedianViewCount",
+                "YouTube.Recent.Video.Popularity",
+                "YouTube.Recent.Video.HighestViewCount",
                 "Twitch.FollowerCount",
                 "Twitch.RecentMedianViewCount",
                 "Twitch.RecentPopularity",
                 "Twitch.RecentHighestViewCount",
                 "Twitch.FollowerCountToMedianViewCount",
-                "CombinedRecentMedianViewCount",
-                "CombinedPopularity",
+                "CombinedRecentTotalStatistics.MedianViewCount",
+                "CombinedRecentTotalStatistics.Popularity",
+                "CombinedRecentLivestreamStatistics.MedianViewCount",
+                "CombinedRecentLivestreamStatistics.Popularity",
+                "CombinedRecentVideoStatistics.MedianViewCount",
+                "CombinedRecentVideoStatistics.Popularity",
             };
 
     foreach (string name in names) {
@@ -79,7 +88,12 @@ static void WriteDateTimeStatistics(TrackList trackList, string recordDirectory,
     }
 
     string[] namesConstriant = {
-                "YouTube.SubscriberCountToMedianViewCount",
+                "YouTube.SubscriberCountTo.Total.MedianViewCount",
+                "YouTube.SubscriberCountTo.Total.Popularity",
+                "YouTube.SubscriberCountTo.Livestream.MedianViewCount",
+                "YouTube.SubscriberCountTo.Livestream.Popularity",
+                "YouTube.SubscriberCountTo.Video.MedianViewCount",
+                "YouTube.SubscriberCountTo.Video.Popularity",
             };
 
     foreach (string name in namesConstriant) {
