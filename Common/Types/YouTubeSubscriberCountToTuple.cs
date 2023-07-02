@@ -4,7 +4,7 @@ namespace Common.Types;
 
 public record YouTubeSubscriberCountToTuple(
     SubscriberCountTo Total,
-    SubscriberCountTo LiveStream,
+    SubscriberCountTo Livestream,
     SubscriberCountTo Video
     ) {
     public record SubscriberCountTo(

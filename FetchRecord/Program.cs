@@ -18,7 +18,7 @@ YouTubeRecord DEFAULT_YOUTUBE_RECORD = new(
             HighestViewCount: 0,
             HighestViewdUrl: ""
             ),
-        LiveStream: new(
+        Livestream: new(
             MedialViewCount: 0,
             Popularity: 0,
             HighestViewCount: 0,
@@ -85,8 +85,8 @@ void mainProcess() {
         case FetchType.All:
             fetchAllAndWrite(youtubeDataFetcher, twitchDataFetcher, trackList, CONFIG.SavePath, CURRENT_TIME);
             break;
-        case FetchType.TwitchLiveStreamOnly:
-            fetchTwitchLiveStreamsAndWrite(twitchDataFetcher, trackList, CONFIG.SavePath, CURRENT_TIME);
+        case FetchType.TwitchLivestreamOnly:
+            fetchTwitchLivestreamsAndWrite(twitchDataFetcher, trackList, CONFIG.SavePath, CURRENT_TIME);
             break;
     }
 
@@ -128,7 +128,7 @@ void fetchAllAndWrite(
     log.Info("End writing files");
 }
 
-void fetchTwitchLiveStreamsAndWrite(
+void fetchTwitchLivestreamsAndWrite(
     FetchTwitchStatistics.Fetcher twitchDataFetcher,
     TrackList trackList,
     string savePath,

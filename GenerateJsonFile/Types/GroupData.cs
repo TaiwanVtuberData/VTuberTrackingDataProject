@@ -4,7 +4,7 @@ internal record GroupData(
     string id,
     string name,
     ulong popularity,
-    ulong liveStreamPopularity,
+    ulong livestreamPopularity,
     ulong videoPopularity,
     List<VTuberData> members
     );

@@ -18,7 +18,7 @@ public class VTuberRecord {
             ulong SubscriberCount,
             ulong TotalViewCount,
             ulong RecentTotalMedianViewCount,
-            ulong RecentLiveStreamMedianViewCount,
+            ulong RecentLivestreamMedianViewCount,
             ulong RecentVideoMedianViewCount,
             ulong RecentPopularity,
             ulong HighestViewCount,

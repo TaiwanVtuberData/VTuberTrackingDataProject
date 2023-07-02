@@ -16,13 +16,13 @@ public record YouTubeStatistics(BasicRecord Basic, RecentRecordTuple Recent, You
         if (subscriberCount == 0) {
             return new(
                 Total: new(MedianViewCount: 0, Popularity: 0),
-                LiveStream: new(MedianViewCount: 0, Popularity: 0),
+                Livestream: new(MedianViewCount: 0, Popularity: 0),
                 Video: new(MedianViewCount: 0, Popularity: 0)
                 );
         } else {
             return new(
                 Total: CreateSubscriberCountTo(subscriberCount, recordTuple.Total),
-                LiveStream: CreateSubscriberCountTo(subscriberCount, recordTuple.LiveStream),
+                Livestream: CreateSubscriberCountTo(subscriberCount, recordTuple.Livestream),
                 Video: CreateSubscriberCountTo(subscriberCount, recordTuple.Video)
                 );
         }

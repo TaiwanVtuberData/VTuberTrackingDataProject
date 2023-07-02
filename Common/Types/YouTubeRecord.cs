@@ -13,7 +13,7 @@ public record YouTubeRecord(
 
     public record RecentRecordTuple(
         RecentRecord Total,
-        RecentRecord LiveStream,
+        RecentRecord Livestream,
         RecentRecord Video
     );
 

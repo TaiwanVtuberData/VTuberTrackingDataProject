@@ -57,7 +57,7 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
                 SubscriberCount: vtuberStat.YouTube.Basic.SubscriberCount,
                 TotalViewCount: vtuberStat.YouTube.Basic.ViewCount,
                 RecentTotalMedianViewCount: vtuberStat.YouTube.Recent.Total.MedialViewCount,
-                RecentLiveStreamMedianViewCount: vtuberStat.YouTube.Recent.LiveStream.MedialViewCount,
+                RecentLivestreamMedianViewCount: vtuberStat.YouTube.Recent.Livestream.MedialViewCount,
                 RecentVideoMedianViewCount: vtuberStat.YouTube.Recent.Video.MedialViewCount,
                 RecentPopularity: vtuberStat.YouTube.Recent.Total.Popularity,
                 HighestViewCount: vtuberStat.YouTube.Recent.Total.HighestViewCount,

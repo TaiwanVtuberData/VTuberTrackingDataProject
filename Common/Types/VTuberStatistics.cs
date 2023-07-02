@@ -57,7 +57,7 @@ public class VTuberStatistics {
                 HighestViewCount: 0,
                 HighestViewdUrl: ""
                 ),
-            LiveStream: new(
+            Livestream: new(
                 MedialViewCount: 0,
                 Popularity: 0,
                 HighestViewCount: 0,
@@ -72,7 +72,7 @@ public class VTuberStatistics {
             ),
         SubscriberCountTo: new(
             Total: new(MedianViewCount: 0, Popularity: 0),
-            LiveStream: new(MedianViewCount: 0, Popularity: 0),
+            Livestream: new(MedianViewCount: 0, Popularity: 0),
             Video: new(MedianViewCount: 0, Popularity: 0)
             )
     );
@@ -82,7 +82,7 @@ public class VTuberStatistics {
         MedianViewCount: 0,
         Popularity: 0
         );
-    public CommonStatistics CombinedRecentLiveStreamStatistics { get; private set; } = new(
+    public CommonStatistics CombinedRecentLivestreamStatistics { get; private set; } = new(
         MedianViewCount: 0,
         Popularity: 0
         );
@@ -160,7 +160,7 @@ public class VTuberStatistics {
                                 HighestViewCount: ulong.Parse(stringBlocks[4]),
                                 HighestViewdUrl: ""
                                 ),
-                            LiveStream: new(
+                            Livestream: new(
                                 MedialViewCount: 0,
                                 Popularity: 0,
                                 HighestViewCount: 0,
@@ -194,7 +194,7 @@ public class VTuberStatistics {
                                 HighestViewCount: ulong.Parse(stringBlocks[4]),
                                 HighestViewdUrl: stringBlocks[5]
                                 ),
-                            LiveStream: new(
+                            Livestream: new(
                                 MedialViewCount: 0,
                                 Popularity: 0,
                                 HighestViewCount: 0,
@@ -227,7 +227,7 @@ public class VTuberStatistics {
                                 HighestViewCount: ulong.Parse(stringBlocks[4]),
                                 HighestViewdUrl: stringBlocks[5]
                                 ),
-                            LiveStream: new(
+                            Livestream: new(
                                 MedialViewCount: 0,
                                 Popularity: 0,
                                 HighestViewCount: 0,
@@ -268,7 +268,7 @@ public class VTuberStatistics {
                                 HighestViewCount: ulong.Parse(stringBlocks[5]),
                                 HighestViewdUrl: stringBlocks[6]
                                 ),
-                            LiveStream: new(
+                            Livestream: new(
                                 MedialViewCount: 0,
                                 Popularity: 0,
                                 HighestViewCount: 0,
@@ -297,7 +297,7 @@ public class VTuberStatistics {
                     // (V5)VTuber ID,
                     // YouTube Subscriber Count,YouTube View Count,
                     // YouTube Recent Total Median View Count,YouTube Recent Total Popularity,YouTube Recent Total Highest View Count,YouTube Recent Total Highest Viewed URL,
-                    // YouTube Recent Live Stream Median View Count,YouTube Recent Live Stream Popularity,YouTube Recent Live Stream Highest View Count,YouTube Recent Live Stream Highest Viewed URL,
+                    // YouTube Recent Livestream Median View Count,YouTube Recent Livestream Popularity,YouTube Recent Livestream Highest View Count,YouTube Recent Livestream Highest Viewed URL,
                     // YouTube Recent Video Median View Count,YouTube Recent Video Popularity,YouTube Recent Video Highest View Count,YouTube Recent Video Highest Viewed URL,
                     // Twitch Follower Count,Twitch Recent Median View Count,Twitch Recent Popularity,Twitch Recent Highest View Count,Twitch Recent Highest Viewed URL
                     YouTubeRecord youTubeRecord = new(
@@ -312,7 +312,7 @@ public class VTuberStatistics {
                                 HighestViewCount: ulong.Parse(stringBlocks[5]),
                                 HighestViewdUrl: stringBlocks[6]
                                 ),
-                            LiveStream: new(
+                            Livestream: new(
                                 MedialViewCount: ulong.Parse(stringBlocks[7]),
                                 Popularity: ulong.Parse(stringBlocks[8]),
                                 HighestViewCount: ulong.Parse(stringBlocks[9]),
@@ -351,7 +351,7 @@ public class VTuberStatistics {
                     ),
                 Recent: new(
                     Total: CombineRecentRecord(statistics.Recent.Total, record.Recent.Total),
-                    LiveStream: CombineRecentRecord(statistics.Recent.LiveStream, record.Recent.LiveStream),
+                    Livestream: CombineRecentRecord(statistics.Recent.Livestream, record.Recent.Livestream),
                     Video: CombineRecentRecord(statistics.Recent.Video, record.Recent.Video)
                     )
                 );
@@ -369,7 +369,7 @@ public class VTuberStatistics {
                     ),
                 Recent: new(
                     Total: CombineRecentRecord(preRatio, preStat.Recent.Total, postStat.Recent.Total),
-                    LiveStream: CombineRecentRecord(preRatio, preStat.Recent.LiveStream, postStat.Recent.LiveStream),
+                    Livestream: CombineRecentRecord(preRatio, preStat.Recent.Livestream, postStat.Recent.Livestream),
                     Video: CombineRecentRecord(preRatio, preStat.Recent.Video, postStat.Recent.Video)
                     )
                 );
@@ -418,9 +418,9 @@ public class VTuberStatistics {
             Popularity: this.YouTube.Recent.Total.Popularity + this.Twitch.RecentPopularity
             );
 
-        this.CombinedRecentLiveStreamStatistics = new(
-            MedianViewCount: this.YouTube.Recent.LiveStream.MedialViewCount + this.Twitch.RecentMedianViewCount,
-            Popularity: this.YouTube.Recent.LiveStream.Popularity + this.Twitch.RecentPopularity
+        this.CombinedRecentLivestreamStatistics = new(
+            MedianViewCount: this.YouTube.Recent.Livestream.MedialViewCount + this.Twitch.RecentMedianViewCount,
+            Popularity: this.YouTube.Recent.Livestream.Popularity + this.Twitch.RecentPopularity
             );
 
         this.CombinedRecentVideoStatistics = new(

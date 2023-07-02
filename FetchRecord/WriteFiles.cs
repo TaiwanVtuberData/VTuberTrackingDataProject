@@ -24,10 +24,10 @@ internal class WriteFiles {
             "YouTube Recent Total Popularity," +
             "YouTube Recent Total Highest View Count," +
             "YouTube Recent Total Highest Viewed URL," +
-            "YouTube Recent Live Stream Median View Count," +
-            "YouTube Recent Live Stream Popularity," +
-            "YouTube Recent Live Stream Highest View Count," +
-            "YouTube Recent Live Stream Highest Viewed URL," +
+            "YouTube Recent Livestream Median View Count," +
+            "YouTube Recent Livestream Popularity," +
+            "YouTube Recent Livestream Highest View Count," +
+            "YouTube Recent Livestream Highest Viewed URL," +
             "YouTube Recent Video Median View Count," +
             "YouTube Recent Video Popularity," +
             "YouTube Recent Video Highest View Count," +
@@ -53,13 +53,13 @@ internal class WriteFiles {
             recordFile.Write(',');
             recordFile.Write(record.YouTube.Recent.Total.HighestViewdUrl);
             recordFile.Write(',');
-            recordFile.Write(record.YouTube.Recent.LiveStream.MedialViewCount);
+            recordFile.Write(record.YouTube.Recent.Livestream.MedialViewCount);
             recordFile.Write(',');
-            recordFile.Write(record.YouTube.Recent.LiveStream.Popularity);
+            recordFile.Write(record.YouTube.Recent.Livestream.Popularity);
             recordFile.Write(',');
-            recordFile.Write(record.YouTube.Recent.LiveStream.HighestViewCount);
+            recordFile.Write(record.YouTube.Recent.Livestream.HighestViewCount);
             recordFile.Write(',');
-            recordFile.Write(record.YouTube.Recent.LiveStream.HighestViewdUrl);
+            recordFile.Write(record.YouTube.Recent.Livestream.HighestViewdUrl);
             recordFile.Write(',');
             recordFile.Write(record.YouTube.Recent.Video.MedialViewCount);
             recordFile.Write(',');

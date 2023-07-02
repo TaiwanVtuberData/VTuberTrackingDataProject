@@ -369,7 +369,7 @@ class DictionaryRecordToJsonStruct {
 
         foreach (string groupName in _trackList.GetGroupNameList()) {
             ulong totalPopularity = 0;
-            ulong liveStreamPopularity = 0;
+            ulong livestreamPopularity = 0;
             ulong videoPopularity = 0;
             List<Types.VTuberData> lstMembers = new();
 
@@ -384,7 +384,7 @@ class DictionaryRecordToJsonStruct {
                     continue;
 
                 totalPopularity += dataTransform.ToCombinedTotalPopularity(record);
-                liveStreamPopularity += dataTransform.ToCombinedLiveStreamPopulairty(record);
+                livestreamPopularity += dataTransform.ToCombinedLivestreamPopulairty(record);
                 videoPopularity += dataTransform.ToCombinedVideoPopulairty(record);
 
                 Types.VTuberData vTuberData = new(
@@ -410,7 +410,7 @@ class DictionaryRecordToJsonStruct {
                 id: groupName,
                 name: groupName,
                 popularity: totalPopularity,
-                liveStreamPopularity: liveStreamPopularity,
+                livestreamPopularity: livestreamPopularity,
                 videoPopularity: videoPopularity,
                 members: lstMembers
                 );

@@ -4,7 +4,7 @@ internal record YouTubePopularityData(
     string id,
     BaseCountType subscriber,
     ulong popularity,
-    ulong liveStreamPopularity,
+    ulong livestreamPopularity,
     ulong videoPopularity)
     : YouTubeData(
         id: id,

@@ -31,14 +31,14 @@ internal class DataTransform {
 
         VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
         ulong totalPopularity = record?.RecentTotalMedianViewCount ?? 0;
-        ulong liveStreamPopularity = record?.RecentLiveStreamMedianViewCount ?? 0;
+        ulong livestreamPopularity = record?.RecentLivestreamMedianViewCount ?? 0;
         ulong videoPopularity = record?.RecentVideoMedianViewCount ?? 0;
 
         return new YouTubePopularityData(
             id: input.ChannelId,
             subscriber: ToYouTubeCountType(input.hasValidRecord, sub),
             popularity: totalPopularity,
-            liveStreamPopularity: liveStreamPopularity,
+            livestreamPopularity: livestreamPopularity,
             videoPopularity: videoPopularity);
     }
 
@@ -51,13 +51,13 @@ internal class DataTransform {
         return record?.RecentTotalMedianViewCount ?? 0;
     }
 
-    public ulong ToYouTubeLiveStreamPopularity(VTuberRecord.YouTubeData? input) {
+    public ulong ToYouTubeLivestreamPopularity(VTuberRecord.YouTubeData? input) {
         if (input == null)
             return 0;
 
         VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
 
-        return record?.RecentLiveStreamMedianViewCount ?? 0;
+        return record?.RecentLivestreamMedianViewCount ?? 0;
     }
 
     public ulong ToYouTubeVideoPopularity(VTuberRecord.YouTubeData? input) {
@@ -133,11 +133,11 @@ internal class DataTransform {
         return ToYouTubeTotalPopularity(input.YouTube) + ToTwitchPopularity(input.Twitch);
     }
 
-    public ulong ToCombinedLiveStreamPopulairty(VTuberRecord? input) {
+    public ulong ToCombinedLivestreamPopulairty(VTuberRecord? input) {
         if (input == null)
             return 0;
 
-        return ToYouTubeLiveStreamPopularity(input.YouTube) + ToTwitchPopularity(input.Twitch);
+        return ToYouTubeLivestreamPopularity(input.YouTube) + ToTwitchPopularity(input.Twitch);
     }
 
     public ulong ToCombinedVideoPopulairty(VTuberRecord? input) {

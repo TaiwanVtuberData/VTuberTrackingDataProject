@@ -172,7 +172,7 @@ public class Fetcher {
 
             // The Tuple is video ID and video view count
             List<Tuple<DateTimeOffset, YouTubeVideoId, ulong>> lstTotalViewCount = new();
-            List<Tuple<DateTimeOffset, YouTubeVideoId, ulong>> lstLiveStreamViewCount = new();
+            List<Tuple<DateTimeOffset, YouTubeVideoId, ulong>> lstLivestreamViewCount = new();
             List<Tuple<DateTimeOffset, YouTubeVideoId, ulong>> lstVideoViewCount = new();
             foreach (IdRequstString idRequst in lstIdRequest) {
                 VideosResource.ListRequest videosListRequest = youtubeService.Videos.List("id,snippet,statistics,liveStreamingDetails");
@@ -189,9 +189,9 @@ public class Fetcher {
                         && !LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent)) {
                         lstTotalViewCount.Add(new(publishTime ?? DateTimeOffset.UnixEpoch, new YouTubeVideoId(video.Id), viewCount.Value));
 
-                        bool isLiveStream = video.LiveStreamingDetails is not null;
-                        if (isLiveStream) {
-                            lstLiveStreamViewCount.Add(new(publishTime ?? DateTimeOffset.UnixEpoch, new YouTubeVideoId(video.Id), viewCount.Value));
+                        bool isLivestream = video.LiveStreamingDetails is not null;
+                        if (isLivestream) {
+                            lstLivestreamViewCount.Add(new(publishTime ?? DateTimeOffset.UnixEpoch, new YouTubeVideoId(video.Id), viewCount.Value));
                         } else {
                             lstVideoViewCount.Add(new(publishTime ?? DateTimeOffset.UnixEpoch, new YouTubeVideoId(video.Id), viewCount.Value));
                         }
@@ -208,8 +208,9 @@ public class Fetcher {
 
                     if (LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent)) {
                         DateTimeOffset startTime =
-                            (video.LiveStreamingDetails.ActualStartTimeDateTimeOffset ??
-                            video.LiveStreamingDetails.ScheduledStartTimeDateTimeOffset ?? DateTimeOffset.UnixEpoch);
+                            (video.LiveStreamingDetails?.ActualStartTimeDateTimeOffset
+                            ?? video.LiveStreamingDetails?.ScheduledStartTimeDateTimeOffset
+                            ?? DateTimeOffset.UnixEpoch);
 
                         rLiveVideosList.Add(new LiveVideoInformation {
                             Id = channelInfo.Id,
@@ -224,12 +225,12 @@ public class Fetcher {
             }
 
             YouTubeRecord.RecentRecord recentTotalRecord = CreateRecentRecord(lstTotalViewCount.ToImmutableList(), CurrentTime);
-            YouTubeRecord.RecentRecord recentLiveStreamRecord = CreateRecentRecord(lstLiveStreamViewCount.ToImmutableList(), CurrentTime);
+            YouTubeRecord.RecentRecord recentLivestreamRecord = CreateRecentRecord(lstLivestreamViewCount.ToImmutableList(), CurrentTime);
             YouTubeRecord.RecentRecord recentVideoRecord = CreateRecentRecord(lstVideoViewCount.ToImmutableList(), CurrentTime);
 
             rDict.Add(channelId, new YouTubeRecord.RecentRecordTuple(
                 Total: recentTotalRecord,
-                LiveStream: recentLiveStreamRecord,
+                Livestream: recentLivestreamRecord,
                 Video: recentVideoRecord
                 )
                 );
