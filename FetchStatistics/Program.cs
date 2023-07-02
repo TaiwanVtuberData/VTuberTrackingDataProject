@@ -2,8 +2,23 @@
 using Common.Utils;
 using FetchStatistics;
 using log4net;
+using System.Collections.Immutable;
 
 ILog log = LogManager.GetLogger("");
+
+YouTubeRecord DEFAULT_YOUTUBE_RECORD = new(
+    Basic: new YouTubeRecord.BasicRecord(
+        ChannelId: new YouTubeChannelId(""),
+        SubscriberCount: 0,
+        ViewCount: 0
+        ),
+    RecentTotal: new YouTubeRecord.RecentRecord(
+        MedialViewCount: 0,
+        Popularity: 0,
+        HighestViewCount: 0,
+        HighestViewdUrl: ""
+        )
+    );
 
 try {
     mainProcess();
@@ -47,18 +62,18 @@ void mainProcess() {
     Config CONFIG = new(filePaths: args, defaultArgs: defaultArgs);
     DateTimeOffset CURRENT_TIME = DateTimeOffset.Now;
 
-    // create statistics fetcher
-    FetchYouTubeStatistics.Fetcher youtubeDataFetcher = new(CONFIG.youTubeApiKey, CURRENT_TIME);
-    FetchTwitchStatistics.Fetcher twitchDataFetcher = new(CONFIG.twitchCrenditial, CURRENT_TIME);
+    // create record fetcher
+    FetchYouTubeStatistics.Fetcher youtubeDataFetcher = new(CONFIG.YouTubeApiKey, CURRENT_TIME);
+    FetchTwitchStatistics.Fetcher twitchDataFetcher = new(CONFIG.TwitchCrenditial, CURRENT_TIME);
 
-    TrackList trackList = createTrackList(CONFIG.excludeListPath, CONFIG.trackListPath);
+    TrackList trackList = createTrackList(CONFIG.ExcludeListPath, CONFIG.TrackListPath);
 
-    switch (CONFIG.fetchType) {
+    switch (CONFIG.FetchType) {
         case FetchType.All:
-            fetchAllAndWrite(youtubeDataFetcher, twitchDataFetcher, trackList, CONFIG.savePath, CURRENT_TIME);
+            fetchAllAndWrite(youtubeDataFetcher, twitchDataFetcher, trackList, CONFIG.SavePath, CURRENT_TIME);
             break;
         case FetchType.TwitchLiveStreamOnly:
-            fetchTwitchLiveStreamsAndWrite(twitchDataFetcher, trackList, CONFIG.savePath, CURRENT_TIME);
+            fetchTwitchLiveStreamsAndWrite(twitchDataFetcher, trackList, CONFIG.SavePath, CURRENT_TIME);
             break;
     }
 
@@ -81,22 +96,22 @@ void fetchAllAndWrite(
     TrackList trackList,
     string savePath,
     DateTimeOffset currentTime) {
-    log.Info("Start getting all YouTube statistics");
-    (Dictionary<VTuberId, YouTubeStatistics> dictIdYouTubeStatistics, TopVideosList youTubeTopVideosList, LiveVideosList youTubeLiveVideosList) =
-        fetchYouTubeStatistics(youtubeDataFetcher, trackList);
-    log.Info("End getting all YouTube statistics");
+    log.Info("Start getting all YouTube record");
+    (ImmutableDictionary<VTuberId, YouTubeRecord> dictYouTubeRecord, TopVideosList youTubeTopVideosList, LiveVideosList youTubeLiveVideosList) =
+        fetchYouTubeRecord(youtubeDataFetcher, trackList);
+    log.Info("End getting all YouTube record");
 
-    log.Info("Start getting Twitch statistics");
-    (Dictionary<VTuberId, TwitchStatistics> dictIdTwitchStatistics, TopVideosList twitchTopVideosList, LiveVideosList twitchLiveVideosList) =
-        fetchTwitchStatistics(twitchDataFetcher, trackList);
-    log.Info("End getting Twitch statistics");
+    log.Info("Start getting Twitch record");
+    (Dictionary<VTuberId, TwitchStatistics> dictTwitchRecord, TopVideosList twitchTopVideosList, LiveVideosList twitchLiveVideosList) =
+        fetchTwitchRecord(twitchDataFetcher, trackList);
+    log.Info("End getting Twitch record");
 
-    List<VTuberStatistics> lstStatistics = mergeStatistics(dictIdYouTubeStatistics, dictIdTwitchStatistics);
+    ImmutableList<VTuberRecord> lstRecord = mergeRecord(dictYouTubeRecord, dictTwitchRecord.ToImmutableDictionary());
     TopVideosList topVideosList = youTubeTopVideosList.Insert(twitchTopVideosList.GetSortedList());
     LiveVideosList liveVideosList = youTubeLiveVideosList.Insert(twitchLiveVideosList);
 
     log.Info("Start writing files");
-    writeFiles(lstStatistics, topVideosList, liveVideosList, savePath, currentTime);
+    writeFiles(lstRecord, topVideosList, liveVideosList, savePath, currentTime);
     log.Info("End writing files");
 }
 
@@ -105,30 +120,35 @@ void fetchTwitchLiveStreamsAndWrite(
     TrackList trackList,
     string savePath,
     DateTimeOffset currentTime) {
-    log.Info("Start getting Twitch statistics");
-    (Dictionary<VTuberId, TwitchStatistics> dictIdTwitchStatistics, TopVideosList twitchTopVideosList, LiveVideosList twitchLiveVideosList) =
-        fetchTwitchStatistics(twitchDataFetcher, trackList);
-    log.Info("End getting Twitch statistics");
+    log.Info("Start getting Twitch record");
+    (Dictionary<VTuberId, TwitchStatistics> dictTwitchRecord, TopVideosList twitchTopVideosList, LiveVideosList twitchLiveVideosList) =
+        fetchTwitchRecord(twitchDataFetcher, trackList);
+    log.Info("End getting Twitch record");
 
     log.Info("Start writing files");
     WriteFiles.WriteLiveVideosListResult(twitchLiveVideosList, currentTime, savePath, fileNamePrefix: "twitch-livestreams");
     log.Info("End writing files");
 }
 
-(Dictionary<VTuberId, YouTubeStatistics>, TopVideosList, LiveVideosList) fetchYouTubeStatistics(FetchYouTubeStatistics.Fetcher youtubeDataFetcher, TrackList trackList) {
-    List<string> lstYouTubeChannelId = trackList.GetYouTubeChannelIdList();
+(ImmutableDictionary<VTuberId, YouTubeRecord>, TopVideosList, LiveVideosList) fetchYouTubeRecord(
+    FetchYouTubeStatistics.Fetcher youtubeDataFetcher, TrackList trackList) {
+    ImmutableList<YouTubeChannelId> lstYouTubeChannelId = trackList.GetYouTubeChannelIdList().Map(e => new YouTubeChannelId(e)).ToImmutableList();
     log.Info($"Channel count: {lstYouTubeChannelId.Count}");
 
-    Dictionary<VTuberId, YouTubeStatistics> rDict = new();
+    Dictionary<VTuberId, YouTubeRecord> rDict = new();
     TopVideosList rVideosList;
     LiveVideosList rLiveVideosList;
 
-    (Dictionary<string, YouTubeStatistics> dictIdYouTubeStatistics, rVideosList, rLiveVideosList) = youtubeDataFetcher.GetAll(lstYouTubeChannelId);
+    (ImmutableDictionary<YouTubeChannelId, YouTubeRecord> dictYouTubeRecord, rVideosList, rLiveVideosList) =
+        youtubeDataFetcher.GetAll(lstYouTubeChannelId);
 
-    foreach (KeyValuePair<string, YouTubeStatistics> keyValue in dictIdYouTubeStatistics) {
+    foreach (KeyValuePair<YouTubeChannelId, YouTubeRecord> keyValue in dictYouTubeRecord) {
+        YouTubeChannelId youTubeChannelId = keyValue.Key;
+        YouTubeRecord youTubeRecord = keyValue.Value;
+
         try {
-            VTuberId vTuberId = new(trackList.GetIdByYouTubeChannelId(keyValue.Key));
-            rDict.Add(vTuberId, keyValue.Value);
+            VTuberId vTuberId = new(trackList.GetIdByYouTubeChannelId(youTubeChannelId.Value));
+            rDict.Add(vTuberId, youTubeRecord);
         } catch (Exception e) {
             log.Error($"Error while converting rDict");
             log.Error($"GetIdByYouTubeChannelId with input {keyValue.Key}");
@@ -156,10 +176,10 @@ void fetchTwitchLiveStreamsAndWrite(
         }
     }
 
-    return (rDict, rVideosList, rLiveVideosList);
+    return (rDict.ToImmutableDictionary(), rVideosList, rLiveVideosList);
 }
 
-(Dictionary<VTuberId, TwitchStatistics>, TopVideosList, LiveVideosList) fetchTwitchStatistics(FetchTwitchStatistics.Fetcher twitchDataFetcher, TrackList trackList) {
+(Dictionary<VTuberId, TwitchStatistics>, TopVideosList, LiveVideosList) fetchTwitchRecord(FetchTwitchStatistics.Fetcher twitchDataFetcher, TrackList trackList) {
     Dictionary<VTuberId, TwitchStatistics> rDict = new();
     TopVideosList rVideosList = new();
     LiveVideosList rLiveVideosList = new();
@@ -168,16 +188,16 @@ void fetchTwitchLiveStreamsAndWrite(
         log.Info("Display Name: " + vtuber.DisplayName);
         log.Info("Twitch Channel ID: " + vtuber.TwitchChannelId);
 
-        TwitchStatistics twitchStatistics = new();
+        TwitchStatistics twitchRecord = new();
         TopVideosList twitchTopVideoList = new();
         LiveVideosList twitchLiveVideosList = new();
         if (!string.IsNullOrEmpty(vtuber.TwitchChannelId)) {
-            bool successful = twitchDataFetcher.GetAll(vtuber.TwitchChannelId, out twitchStatistics, out twitchTopVideoList, out twitchLiveVideosList);
+            bool successful = twitchDataFetcher.GetAll(vtuber.TwitchChannelId, out twitchRecord, out twitchTopVideoList, out twitchLiveVideosList);
 
             if (!successful) { continue; }
         }
 
-        rDict.Add(new VTuberId(vtuber.Id), twitchStatistics);
+        rDict.Add(new VTuberId(vtuber.Id), twitchRecord);
 
         foreach (VideoInformation videoInfo in twitchTopVideoList) {
             try {
@@ -207,24 +227,26 @@ void fetchTwitchLiveStreamsAndWrite(
     return (rDict, rVideosList, rLiveVideosList);
 }
 
-List<VTuberStatistics> mergeStatistics(Dictionary<VTuberId, YouTubeStatistics> dictIdYouTubeStatistics, Dictionary<VTuberId, TwitchStatistics> dictIdTwitchStatistics) {
-    HashSet<VTuberId> unionKeySet = dictIdYouTubeStatistics.Keys.ToHashSet();
-    unionKeySet.UnionWith(dictIdTwitchStatistics.Keys.ToHashSet());
+ImmutableList<VTuberRecord> mergeRecord(
+    IImmutableDictionary<VTuberId, YouTubeRecord> dictYouTubeRecord,
+    IImmutableDictionary<VTuberId, TwitchStatistics> dictTwitchRecord) {
+    HashSet<VTuberId> unionKeySet = dictYouTubeRecord.Keys.ToHashSet();
+    unionKeySet.UnionWith(dictTwitchRecord.Keys.ToHashSet());
 
-    List<VTuberStatistics> rLst = new(unionKeySet.Count);
+    List<VTuberRecord> rLst = new(unionKeySet.Count);
     foreach (VTuberId vTuberId in unionKeySet) {
-        YouTubeStatistics youTubeStatistics = dictIdYouTubeStatistics.GetValueOrDefault(key: vTuberId, defaultValue: new YouTubeStatistics());
-        TwitchStatistics twitchStatistics = dictIdTwitchStatistics.GetValueOrDefault(key: vTuberId, defaultValue: new TwitchStatistics());
+        YouTubeRecord youTubeRecord = dictYouTubeRecord.GetValueOrDefault(key: vTuberId, defaultValue: DEFAULT_YOUTUBE_RECORD);
+        TwitchStatistics twitchRecord = dictTwitchRecord.GetValueOrDefault(key: vTuberId, defaultValue: new TwitchStatistics());
 
-        rLst.Add(new VTuberStatistics(vTuberId.value, youTubeStatistics, twitchStatistics));
+        rLst.Add(new VTuberRecord(vTuberId, youTubeRecord, twitchRecord));
     }
 
-    return rLst;
+    return rLst.ToImmutableList();
 }
 
-void writeFiles(List<VTuberStatistics> lstStatistics, TopVideosList topVideoList, LiveVideosList liveVideosList, string savePath, DateTimeOffset currentTime) {
+void writeFiles(ImmutableList<VTuberRecord> lstRecord, TopVideosList topVideoList, LiveVideosList liveVideosList, string savePath, DateTimeOffset currentTime) {
     log.Info($"currentTime: {currentTime}");
-    WriteFiles.WriteResult(lstStatistics, currentTime, savePath);
+    WriteFiles.WriteResult(lstRecord, currentTime, savePath);
     WriteFiles.WriteTopVideosListResult(topVideoList, currentTime, savePath);
     WriteFiles.WriteLiveVideosListResult(liveVideosList, currentTime, savePath);
 }

@@ -5,15 +5,15 @@ using TwitchLib.Api;
 
 namespace FetchTwitchStatistics;
 public class Fetcher {
-    public record Credential(string clientId, string secret);
+    public record Credential(string ClientId, string Secret);
 
     private readonly TwitchAPI api;
     private readonly DateTimeOffset CurrentTime;
 
     public Fetcher(Credential credential, DateTimeOffset currentTime) {
         api = new TwitchAPI();
-        api.Settings.ClientId = credential.clientId;
-        api.Settings.Secret = credential.secret;
+        api.Settings.ClientId = credential.ClientId;
+        api.Settings.Secret = credential.Secret;
 
         CurrentTime = currentTime;
     }

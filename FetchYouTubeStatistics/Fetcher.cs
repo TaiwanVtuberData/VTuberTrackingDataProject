@@ -3,6 +3,7 @@ using Common.Utils;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using log4net;
+using System.Collections.Immutable;
 
 namespace FetchYouTubeStatistics;
 public class Fetcher {
@@ -18,42 +19,68 @@ public class Fetcher {
         CurrentTime = currentTime;
     }
 
-    public (Dictionary<string, YouTubeStatistics>, TopVideosList, LiveVideosList) GetAll(List<string> lstChannelId) {
-        List<Google.Apis.YouTube.v3.Data.Channel> lstChannelInfo = GetChannelInfoList(lstChannelId);
+    public (ImmutableDictionary<YouTubeChannelId, YouTubeRecord>, TopVideosList, LiveVideosList) GetAll(IImmutableList<YouTubeChannelId> lstChannelId) {
+        ImmutableDictionary<YouTubeChannelId, Google.Apis.YouTube.v3.Data.Channel> dictChannelInfo = GetChannelInfoList(lstChannelId);
 
-        Dictionary<string, YouTubeStatistics> rDict = GetChannelStatistics(lstChannelInfo);
-        TopVideosList rVideoList = new();
-        LiveVideosList rLiveVideoList = new();
+        ImmutableDictionary<YouTubeChannelId, YouTubeRecord.BasicRecord> dictBasicRecord = GetChannelBasicRecord(dictChannelInfo);
 
-        GetChannelRecentViewStatistic(lstChannelInfo, ref rDict, ref rVideoList, ref rLiveVideoList);
+        (ImmutableDictionary<YouTubeChannelId, YouTubeRecord.RecentRecord> dictRecentRecord, TopVideosList rVideoList, LiveVideosList rLiveVideoList) =
+            GetChannelRecentViewStatistic(dictChannelInfo);
+
+        ImmutableDictionary<YouTubeChannelId, YouTubeRecord> rDict = CreateYouTubeRecord(dictBasicRecord, dictRecentRecord);
 
         return (rDict, rVideoList, rLiveVideoList);
     }
 
-    private List<Google.Apis.YouTube.v3.Data.Channel> GetChannelInfoList(List<string> lstChannelId) {
-        List<Google.Apis.YouTube.v3.Data.Channel> rLst = new(lstChannelId.Count);
+    private static ImmutableDictionary<YouTubeChannelId, YouTubeRecord> CreateYouTubeRecord(
+        IImmutableDictionary<YouTubeChannelId, YouTubeRecord.BasicRecord> dictBasicRecord,
+        IImmutableDictionary<YouTubeChannelId, YouTubeRecord.RecentRecord> dictRecentRecord) {
+        Dictionary<YouTubeChannelId, YouTubeRecord> rDict = new(dictBasicRecord.Count);
 
-        // When querying multipie channel statistics, only 50 videos at a time is allowed
-        List<string> lstIdRequest = Generate50IdsStringList(lstChannelId);
+        foreach (KeyValuePair<YouTubeChannelId, YouTubeRecord.BasicRecord> keyValuePair in dictBasicRecord) {
+            YouTubeChannelId channelId = keyValuePair.Key;
+            YouTubeRecord.BasicRecord basicRecord = keyValuePair.Value;
+            YouTubeRecord.RecentRecord? recentRecord;
+            dictRecentRecord.TryGetValue(channelId, out recentRecord);
 
-        foreach (string idRequest in lstIdRequest) {
-            IList<Google.Apis.YouTube.v3.Data.Channel>? lstChannelInfo = GetChannelStatisticsResponse(idRequest);
+            if (recentRecord is null) {
+                continue;
+            }
 
-            if (lstChannelInfo is not null)
-                rLst.AddRange(lstChannelInfo);
+            rDict.Add(channelId, new YouTubeRecord(basicRecord, recentRecord));
         }
 
-        return rLst;
+        return rDict.ToImmutableDictionary();
     }
 
-    private IList<Google.Apis.YouTube.v3.Data.Channel>? GetChannelStatisticsResponse(string idRequestString) {
+    private ImmutableDictionary<YouTubeChannelId, Google.Apis.YouTube.v3.Data.Channel> GetChannelInfoList(IImmutableList<YouTubeChannelId> lstChannelId) {
+        Dictionary<YouTubeChannelId, Google.Apis.YouTube.v3.Data.Channel> rDict = new(lstChannelId.Count);
+
+        // When querying multipie channel statistics, only 50 videos at a time is allowed
+        ImmutableList<IdRequstString> lstIdRequest = Generate50IdsStringList(lstChannelId.Map(e => e.Value).ToImmutableList());
+
+        foreach (IdRequstString idRequest in lstIdRequest) {
+            ImmutableList<Google.Apis.YouTube.v3.Data.Channel>? lstChannelInfo = GetChannelStatisticsResponse(idRequest);
+
+            if (lstChannelInfo is null) {
+                continue;
+            }
+
+            foreach (Google.Apis.YouTube.v3.Data.Channel channelInfo in lstChannelInfo) {
+                rDict.TryAdd(new YouTubeChannelId(channelInfo.Id), channelInfo);
+            }
+        }
+
+        return rDict.ToImmutableDictionary();
+    }
+
+    private ImmutableList<Google.Apis.YouTube.v3.Data.Channel>? GetChannelStatisticsResponse(IdRequstString idRequestString) {
         ChannelsResource.ListRequest channelsListRequest = youtubeService.Channels.List("statistics, contentDetails");
-        channelsListRequest.Id = idRequestString;
+        channelsListRequest.Id = idRequestString.Value;
         channelsListRequest.MaxResults = 50;
 
         IList<Google.Apis.YouTube.v3.Data.Channel>? responseItems = null;
         bool hasResponse = false;
-        // try for three times
         int RETRY_TIME = 50;
         TimeSpan RETRY_DELAY = new(hours: 0, minutes: 0, seconds: 10);
         for (int i = 0; i < RETRY_TIME; i++) {
@@ -78,34 +105,22 @@ public class Fetcher {
             return null;
         }
 
-        return responseItems;
+        return responseItems?.ToImmutableList();
     }
 
-    private static Dictionary<string, YouTubeStatistics> GetChannelStatistics(List<Google.Apis.YouTube.v3.Data.Channel> lstChannelInfo) {
-        Dictionary<string, YouTubeStatistics> rDict = new(lstChannelInfo.Count);
+    private static ImmutableDictionary<YouTubeChannelId, YouTubeRecord.BasicRecord> GetChannelBasicRecord(
+        IImmutableDictionary<YouTubeChannelId, Google.Apis.YouTube.v3.Data.Channel> dictChannelInfo
+        ) => dictChannelInfo.ToImmutableDictionary(
+            keyValuePair => keyValuePair.Key,
+            keyValuePair => new YouTubeRecord.BasicRecord(
+                ChannelId: keyValuePair.Key,
+                SubscriberCount: keyValuePair.Value.Statistics.SubscriberCount ?? 0,
+                ViewCount: keyValuePair.Value.Statistics.ViewCount ?? 0
+                )
+            );
 
-        foreach (Google.Apis.YouTube.v3.Data.Channel channelInfo in lstChannelInfo) {
-            // do not add channel if already in rDict
-            if (rDict.ContainsKey(channelInfo.Id)) {
-                continue;
-            }
-
-            ulong? viewCount = channelInfo.Statistics.ViewCount;
-            ulong? subscriberCount = channelInfo.Statistics.SubscriberCount;
-
-            YouTubeStatistics statistics = new() {
-                ViewCount = viewCount.GetValueOrDefault(0),
-            };
-            statistics.UpdateSubscriberCount(subscriberCount.GetValueOrDefault(0));
-
-            rDict.Add(channelInfo.Id, statistics);
-        }
-
-        return rDict;
-    }
-
-    private Dictionary<string, DateTimeOffset> GetChannelRecentVideoList(Google.Apis.YouTube.v3.Data.Channel channelInfo) {
-        Dictionary<string, DateTimeOffset> dictIdTime = new();
+    private ImmutableDictionary<YouTubeVideoId, DateTimeOffset> GetChannelRecentVideoList(Google.Apis.YouTube.v3.Data.Channel channelInfo) {
+        Dictionary<YouTubeVideoId, DateTimeOffset> rDict = new();
 
         string uploadsListId = channelInfo.ContentDetails.RelatedPlaylists.Uploads;
         string nextPageToken = "";
@@ -115,25 +130,23 @@ public class Fetcher {
             playlistItemsListRequest.MaxResults = 1000;
             playlistItemsListRequest.PageToken = nextPageToken;
 
-            // Retrieve the list of videos uploaded to the authenticated user's channel.
+            // Retrieve the list of videos uploaded to the user's channel.
             Google.Apis.YouTube.v3.Data.PlaylistItemListResponse? playlistItemsListResponse;
             try {
                 playlistItemsListResponse = playlistItemsListRequest.Execute();
             } catch {
                 // return true because it is a successful result
-                return new();
+                return ImmutableDictionary<YouTubeVideoId, DateTimeOffset>.Empty;
             }
 
             foreach (Google.Apis.YouTube.v3.Data.PlaylistItem playlistItem in playlistItemsListResponse.Items) {
                 DateTimeOffset? videoPublishTime = playlistItem.Snippet.PublishedAtDateTimeOffset;
-                string videoPrivacyStatus = playlistItem.Status.PrivacyStatus;
                 string videoId = playlistItem.Snippet.ResourceId.VideoId;
 
                 // only add video id if its publish time is within 30 days
                 if (videoPublishTime is not null) {
-                    DateTimeOffset publishTime = videoPublishTime.Value;
-                    if ((DateTimeOffset.UtcNow - publishTime) < TimeSpan.FromDays(30)) {
-                        dictIdTime.Add(videoId, videoPublishTime.Value);
+                    if ((DateTimeOffset.UtcNow - videoPublishTime.Value) < TimeSpan.FromDays(30)) {
+                        rDict.Add(new YouTubeVideoId(videoId), videoPublishTime.Value);
                     }
                 }
             }
@@ -141,25 +154,29 @@ public class Fetcher {
             nextPageToken = playlistItemsListResponse.NextPageToken;
         }
 
-        return dictIdTime;
+        return rDict.ToImmutableDictionary();
     }
 
-    private void GetChannelRecentViewStatistic(
-        List<Google.Apis.YouTube.v3.Data.Channel> lstChannelInfo,
-        ref Dictionary<string, YouTubeStatistics> dictIdStatistics,
-        ref TopVideosList topVideosList,
-        ref LiveVideosList liveVideosList) {
-        foreach (Google.Apis.YouTube.v3.Data.Channel channelInfo in lstChannelInfo) {
-            Dictionary<string, DateTimeOffset> dictIdTime = GetChannelRecentVideoList(channelInfo);
+    private (ImmutableDictionary<YouTubeChannelId, YouTubeRecord.RecentRecord>, TopVideosList, LiveVideosList) GetChannelRecentViewStatistic(
+        ImmutableDictionary<YouTubeChannelId, Google.Apis.YouTube.v3.Data.Channel> dictChannelInfo) {
+        Dictionary<YouTubeChannelId, YouTubeRecord.RecentRecord> rDict = new();
+        TopVideosList rTopVideosList = new();
+        LiveVideosList rLiveVideosList = new();
+
+        foreach (KeyValuePair<YouTubeChannelId, Google.Apis.YouTube.v3.Data.Channel> keyValuePair in dictChannelInfo) {
+            YouTubeChannelId channelId = keyValuePair.Key;
+            Google.Apis.YouTube.v3.Data.Channel channelInfo = keyValuePair.Value;
+
+            ImmutableDictionary<YouTubeVideoId, DateTimeOffset> dictVideoIdAndTime = GetChannelRecentVideoList(channelInfo);
 
             // When querying multipie video statistics, only 50 videos at a time is allowed
-            List<string> idRequestList = Generate50IdsStringList(dictIdTime.Keys.ToList());
+            ImmutableList<IdRequstString> lstIdRequest = Generate50IdsStringList(dictVideoIdAndTime.Keys.Map(e => e.Value).ToImmutableList());
 
             // The Tuple is video ID and video view count
             List<Tuple<DateTimeOffset, string, ulong>> lstIdViewCount = new();
-            foreach (string idRequestString in idRequestList) {
+            foreach (IdRequstString idRequst in lstIdRequest) {
                 VideosResource.ListRequest videosListRequest = youtubeService.Videos.List("id,snippet,statistics,liveStreamingDetails");
-                videosListRequest.Id = idRequestString;
+                videosListRequest.Id = idRequst.Value;
 
                 Google.Apis.YouTube.v3.Data.VideoListResponse videoListResponse = videosListRequest.Execute();
 
@@ -173,7 +190,7 @@ public class Fetcher {
                         lstIdViewCount.Add(new(publishTime.GetValueOrDefault(DateTimeOffset.UnixEpoch), video.Id, viewCount.Value));
                     }
 
-                    topVideosList.Insert(new VideoInformation {
+                    rTopVideosList.Insert(new VideoInformation {
                         Id = channelInfo.Id,
                         Url = $"https://www.youtube.com/watch?v={video.Id}",
                         Title = video.Snippet.Title,
@@ -187,7 +204,7 @@ public class Fetcher {
                             (video.LiveStreamingDetails.ActualStartTimeDateTimeOffset ??
                             video.LiveStreamingDetails.ScheduledStartTimeDateTimeOffset.GetValueOrDefault(DateTimeOffset.UnixEpoch));
 
-                        liveVideosList.Add(new LiveVideoInformation {
+                        rLiveVideosList.Add(new LiveVideoInformation {
                             Id = channelInfo.Id,
                             Url = $"https://www.youtube.com/watch?v={video.Id}",
                             Title = video.Snippet.Title,
@@ -214,15 +231,16 @@ public class Fetcher {
                 highestViewedUrl = $"https://www.youtube.com/watch?v={largest.Item2}";
             }
 
-            dictIdStatistics[channelInfo.Id].RecentMedianViewCount = medianViews;
-            dictIdStatistics[channelInfo.Id].RecentPopularity = popularity;
-            dictIdStatistics[channelInfo.Id].RecentHighestViewCount = highestViews;
-            dictIdStatistics[channelInfo.Id].HighestViewedVideoURL = highestViewedUrl;
+            YouTubeRecord.RecentRecord recentRecord = new(medianViews, popularity, highestViews, highestViewedUrl);
+
+            rDict.Add(channelId, recentRecord);
         }
+
+        return (rDict.ToImmutableDictionary(), rTopVideosList, rLiveVideosList);
     }
 
-    private static List<string> Generate50IdsStringList(List<string> KeyList) {
-        List<string> ans = new();
+    private static ImmutableList<IdRequstString> Generate50IdsStringList(IImmutableList<string> KeyList) {
+        List<IdRequstString> rLst = new();
 
         int index;
         // pack 50 ids into a string
@@ -231,7 +249,7 @@ public class Fetcher {
             for (int offset = 0; offset < 50; offset++)
                 idRequestString += KeyList[index + offset] + ',';
             idRequestString = idRequestString.Substring(0, idRequestString.Length - 1);
-            ans.Add(idRequestString);
+            rLst.Add(new IdRequstString(idRequestString));
         }
 
         // residual
@@ -241,9 +259,9 @@ public class Fetcher {
                 idRequestStringRes += KeyList[index] + ',';
             }
             idRequestStringRes = idRequestStringRes.Substring(0, idRequestStringRes.Length - 1);
-            ans.Add(idRequestStringRes);
+            rLst.Add(new IdRequstString(idRequestStringRes));
         }
 
-        return ans;
+        return rLst.ToImmutableList();
     }
 }
