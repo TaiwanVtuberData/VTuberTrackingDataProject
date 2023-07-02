@@ -56,7 +56,9 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
             VTuberRecord.YouTubeData.Record youTubeRecord = new() {
                 SubscriberCount = vtuberStat.YouTube.Basic.SubscriberCount,
                 TotalViewCount = vtuberStat.YouTube.Basic.ViewCount,
-                RecentMedianViewCount = vtuberStat.YouTube.Recent.Total.MedialViewCount,
+                RecentTotalMedianViewCount = vtuberStat.YouTube.Recent.Total.MedialViewCount,
+                RecentLiveStreamMedianViewCount = vtuberStat.YouTube.Recent.LiveStream.MedialViewCount,
+                RecentVideoMedianViewCount = vtuberStat.YouTube.Recent.Video.MedialViewCount,
                 RecentPopularity = vtuberStat.YouTube.Recent.Total.Popularity,
                 HighestViewCount = vtuberStat.YouTube.Recent.Total.HighestViewCount,
                 HighestViewedVideoId = Utility.YouTubeVideoUrlToId(vtuberStat.YouTube.Recent.Total.HighestViewdUrl),
