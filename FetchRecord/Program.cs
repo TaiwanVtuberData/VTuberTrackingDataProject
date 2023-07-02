@@ -7,16 +7,30 @@ using System.Collections.Immutable;
 ILog log = LogManager.GetLogger("");
 
 YouTubeRecord DEFAULT_YOUTUBE_RECORD = new(
-    Basic: new YouTubeRecord.BasicRecord(
+    Basic: new(
         ChannelId: new YouTubeChannelId(""),
         SubscriberCount: 0,
         ViewCount: 0
         ),
-    RecentTotal: new YouTubeRecord.RecentRecord(
-        MedialViewCount: 0,
-        Popularity: 0,
-        HighestViewCount: 0,
-        HighestViewdUrl: ""
+    Recent: new(
+        Total: new(
+            MedialViewCount: 0,
+            Popularity: 0,
+            HighestViewCount: 0,
+            HighestViewdUrl: ""
+            ),
+        LiveStream: new(
+            MedialViewCount: 0,
+            Popularity: 0,
+            HighestViewCount: 0,
+            HighestViewdUrl: ""
+            ),
+        Video: new(
+            MedialViewCount: 0,
+            Popularity: 0,
+            HighestViewCount: 0,
+            HighestViewdUrl: ""
+            )
         )
     );
 

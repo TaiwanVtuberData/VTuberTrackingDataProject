@@ -24,30 +24,29 @@ public class Fetcher {
 
         ImmutableDictionary<YouTubeChannelId, YouTubeRecord.BasicRecord> dictBasicRecord = GetChannelBasicRecord(dictChannelInfo);
 
-        (ImmutableDictionary<YouTubeChannelId, YouTubeRecord.RecentRecord> dictRecentRecord, TopVideosList rVideoList, LiveVideosList rLiveVideoList) =
-            GetChannelRecentViewStatistic(dictChannelInfo);
+        ChannelRecentViewRecord channelRecentViewRecord = GetChannelRecentViewRecord(dictChannelInfo);
 
-        ImmutableDictionary<YouTubeChannelId, YouTubeRecord> rDict = CreateYouTubeRecord(dictBasicRecord, dictRecentRecord);
+        ImmutableDictionary<YouTubeChannelId, YouTubeRecord> rDict = CreateYouTubeRecord(dictBasicRecord, channelRecentViewRecord.DictRecentRecordTuple);
 
-        return (rDict, rVideoList, rLiveVideoList);
+        return (rDict, channelRecentViewRecord.TopVideosList, channelRecentViewRecord.LiveVideosList);
     }
 
     private static ImmutableDictionary<YouTubeChannelId, YouTubeRecord> CreateYouTubeRecord(
         IImmutableDictionary<YouTubeChannelId, YouTubeRecord.BasicRecord> dictBasicRecord,
-        IImmutableDictionary<YouTubeChannelId, YouTubeRecord.RecentRecord> dictRecentRecord) {
+        IImmutableDictionary<YouTubeChannelId, YouTubeRecord.RecentRecordTuple> dictRecentRecordTuple) {
         Dictionary<YouTubeChannelId, YouTubeRecord> rDict = new(dictBasicRecord.Count);
 
         foreach (KeyValuePair<YouTubeChannelId, YouTubeRecord.BasicRecord> keyValuePair in dictBasicRecord) {
             YouTubeChannelId channelId = keyValuePair.Key;
             YouTubeRecord.BasicRecord basicRecord = keyValuePair.Value;
-            YouTubeRecord.RecentRecord? recentRecord;
-            dictRecentRecord.TryGetValue(channelId, out recentRecord);
+            YouTubeRecord.RecentRecordTuple? recentRecordTuple;
+            dictRecentRecordTuple.TryGetValue(channelId, out recentRecordTuple);
 
-            if (recentRecord is null) {
+            if (recentRecordTuple is null) {
                 continue;
             }
 
-            rDict.Add(channelId, new YouTubeRecord(basicRecord, recentRecord));
+            rDict.Add(channelId, new YouTubeRecord(basicRecord, recentRecordTuple));
         }
 
         return rDict.ToImmutableDictionary();
@@ -157,9 +156,9 @@ public class Fetcher {
         return rDict.ToImmutableDictionary();
     }
 
-    private (ImmutableDictionary<YouTubeChannelId, YouTubeRecord.RecentRecord>, TopVideosList, LiveVideosList) GetChannelRecentViewStatistic(
+    private ChannelRecentViewRecord GetChannelRecentViewRecord(
         ImmutableDictionary<YouTubeChannelId, Google.Apis.YouTube.v3.Data.Channel> dictChannelInfo) {
-        Dictionary<YouTubeChannelId, YouTubeRecord.RecentRecord> rDict = new();
+        Dictionary<YouTubeChannelId, YouTubeRecord.RecentRecordTuple> rDict = new();
         TopVideosList rTopVideosList = new();
         LiveVideosList rLiveVideosList = new();
 
@@ -231,12 +230,23 @@ public class Fetcher {
                 highestViewedUrl = $"https://www.youtube.com/watch?v={largest.Item2}";
             }
 
-            YouTubeRecord.RecentRecord recentRecord = new(medianViews, popularity, highestViews, highestViewedUrl);
+            YouTubeRecord.RecentRecord recentTotalRecord = new(medianViews, popularity, highestViews, highestViewedUrl);
+            YouTubeRecord.RecentRecord recentLiveStreamRecord = new(medianViews, popularity, highestViews, highestViewedUrl);
+            YouTubeRecord.RecentRecord recentVideoRecord = new(medianViews, popularity, highestViews, highestViewedUrl);
 
-            rDict.Add(channelId, recentRecord);
+            rDict.Add(channelId, new YouTubeRecord.RecentRecordTuple(
+                Total: recentTotalRecord,
+                LiveStream: recentLiveStreamRecord,
+                Video: recentVideoRecord
+                )
+                );
         }
 
-        return (rDict.ToImmutableDictionary(), rTopVideosList, rLiveVideosList);
+        return new ChannelRecentViewRecord(
+            DictRecentRecordTuple: rDict.ToImmutableDictionary(),
+            TopVideosList: rTopVideosList,
+            rLiveVideosList
+            );
     }
 
     private static ImmutableList<IdRequstString> Generate50IdsStringList(IImmutableList<string> KeyList) {

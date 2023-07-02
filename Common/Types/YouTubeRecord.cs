@@ -4,15 +4,20 @@ namespace Common.Types;
 
 public record YouTubeRecord(
     BasicRecord Basic,
-    RecentRecord RecentTotal
-    //RecentRecord RecentLiveStream,
-    //RecentRecord RecentVideo
+    RecentRecordTuple Recent
     ) {
     public record BasicRecord(
         YouTubeChannelId ChannelId,
         ulong SubscriberCount,
         ulong ViewCount
         );
+
+    public record RecentRecordTuple(
+        RecentRecord Total,
+        RecentRecord LiveStream,
+        RecentRecord Video
+    );
+
     public record RecentRecord(
         ulong MedialViewCount,
         ulong Popularity,
