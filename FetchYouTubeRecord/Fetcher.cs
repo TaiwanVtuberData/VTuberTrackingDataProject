@@ -112,7 +112,6 @@ public class Fetcher {
         ) => dictChannelInfo.ToImmutableDictionary(
             keyValuePair => keyValuePair.Key,
             keyValuePair => new YouTubeRecord.BasicRecord(
-                ChannelId: keyValuePair.Key,
                 SubscriberCount: keyValuePair.Value.Statistics.SubscriberCount ?? 0,
                 ViewCount: keyValuePair.Value.Statistics.ViewCount ?? 0
                 )

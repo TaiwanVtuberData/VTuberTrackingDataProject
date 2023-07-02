@@ -7,7 +7,6 @@ public record YouTubeRecord(
     RecentRecordTuple Recent
     ) {
     public record BasicRecord(
-        YouTubeChannelId ChannelId,
         ulong SubscriberCount,
         ulong ViewCount
         );

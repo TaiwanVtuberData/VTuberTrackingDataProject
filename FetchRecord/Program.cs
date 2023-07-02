@@ -8,7 +8,6 @@ ILog log = LogManager.GetLogger("");
 
 YouTubeRecord DEFAULT_YOUTUBE_RECORD = new(
     Basic: new(
-        ChannelId: new YouTubeChannelId(""),
         SubscriberCount: 0,
         ViewCount: 0
         ),

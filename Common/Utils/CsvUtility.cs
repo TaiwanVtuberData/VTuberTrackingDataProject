@@ -18,7 +18,7 @@ public class CsvUtility {
         if (headerBlock is null)
             return new();
 
-        VTuberStatistics.Version version = VTuberStatistics.GetVersionByHeaderLength(headerBlock.Length);
+        VTuberStatistics.Version version = VTuberStatistics.GetVersion(headerBlock[0], headerBlock.Length);
         if (version == VTuberStatistics.Version.Unknown)
             return new();
 
@@ -31,7 +31,7 @@ public class CsvUtility {
                 continue;
             }
 
-            rLst.Add(new VTuberStatistics(entryBlock, entryBlock[0]));
+            rLst.Add(new VTuberStatistics(headerBlock, entryBlock));
         }
 
         return rLst;

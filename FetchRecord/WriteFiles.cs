@@ -17,7 +17,7 @@ internal class WriteFiles {
         log.Info($"Write record to : {filePath}");
         using StreamWriter recordFile = new(filePath);
         recordFile.Write(
-            "(V5)VTuber ID," +
+            "V5##VTuber ID," +
             "YouTube Subscriber Count," +
             "YouTube View Count," +
             "YouTube Recent Total Median View Count," +

@@ -1,27 +1,38 @@
-﻿namespace Common.Types;
-public class YouTubeStatistics {
-  public ulong SubscriberCount { get; private set; } = 0;
-  public ulong ViewCount { get; set; } = 0;
-  public ulong RecentMedianViewCount { get; set; } = 0;
-  public ulong RecentHighestViewCount { get; set; } = 0;
-  public ulong RecentPopularity { get; set; } = 0;
-  public string HighestViewedVideoURL { get; set; } = "";
-  public decimal SubscriberCountToMedianViewCount { get; private set; } = 0m;
-  public decimal SubscriberCountToPopularity { get; private set; } = 0m;
+﻿using static Common.Types.YouTubeRecord;
 
-  public YouTubeStatistics() {
-    UpdateSubscriberCount(0);
-  }
+namespace Common.Types;
+public record YouTubeStatistics(BasicRecord Basic, RecentRecordTuple Recent, YouTubeSubscriberCountToTuple SubscriberCountTo) {
 
-  public void UpdateSubscriberCount(ulong subscriberCount) {
-    SubscriberCount = subscriberCount;
+    public YouTubeStatistics(YouTubeRecord YouTubeRecord) : this(
+            Basic: YouTubeRecord.Basic,
+            Recent: YouTubeRecord.Recent,
+            SubscriberCountTo: CreateYouTubeSubscriberCountToTuple(
+                YouTubeRecord.Basic.SubscriberCount,
+                YouTubeRecord.Recent)
+    ) { }
 
-    if (SubscriberCount == 0) {
-      SubscriberCountToMedianViewCount = 0m;
-      SubscriberCountToPopularity = 0m;
-    } else {
-      SubscriberCountToMedianViewCount = (decimal)RecentMedianViewCount / SubscriberCount * 100m;
-      SubscriberCountToPopularity = (decimal)RecentPopularity / SubscriberCount * 100m;
+    private static YouTubeSubscriberCountToTuple CreateYouTubeSubscriberCountToTuple(
+        ulong subscriberCount, RecentRecordTuple recordTuple) {
+        if (subscriberCount == 0) {
+            return new(
+                Total: new(MedianViewCount: 0, Popularity: 0),
+                LiveStream: new(MedianViewCount: 0, Popularity: 0),
+                Video: new(MedianViewCount: 0, Popularity: 0)
+                );
+        } else {
+            return new(
+                Total: CreateSubscriberCountTo(subscriberCount, recordTuple.Total),
+                LiveStream: CreateSubscriberCountTo(subscriberCount, recordTuple.LiveStream),
+                Video: CreateSubscriberCountTo(subscriberCount, recordTuple.Video)
+                );
+        }
     }
-  }
+
+    private static YouTubeSubscriberCountToTuple.SubscriberCountTo CreateSubscriberCountTo(
+        ulong subscriberCount, RecentRecord recentRecord) {
+        return new(
+            MedianViewCount: (decimal)recentRecord.MedialViewCount / subscriberCount * 100m,
+            Popularity: (decimal)recentRecord.Popularity / subscriberCount * 100m
+            );
+    }
 }
