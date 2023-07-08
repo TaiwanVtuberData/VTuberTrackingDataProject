@@ -335,7 +335,7 @@ class DictionaryRecordToJsonStruct {
         return rLst;
     }
 
-    private Func<VTuberRecord.YouTubeData?, YouTubePopularityData?> GetPopularityFunction(TrendingVTuberSortOrder sortBy) {
+    private Func<VTuberRecord.YouTubeData?, YouTubePopularityData?> GetYouTubePopularityFunction(TrendingVTuberSortOrder sortBy) {
         return sortBy switch {
             TrendingVTuberSortOrder.livestream => (VTuberRecord.YouTubeData? input) => dataTransform.ToYouTubeLivestreamPopularityData(input),
             TrendingVTuberSortOrder.video => (VTuberRecord.YouTubeData? input) => dataTransform.ToYouTubeVideoPopularityData(input),
@@ -343,10 +343,29 @@ class DictionaryRecordToJsonStruct {
         };
     }
 
+    private Func<VTuberRecord.TwitchData?, TwitchPopularityData?> GetTwitchPopularityFunction(TrendingVTuberSortOrder sortBy) {
+        return sortBy switch {
+            TrendingVTuberSortOrder.video => (VTuberRecord.TwitchData? input) => {
+                TwitchPopularityData? result = dataTransform.ToTwitchPopularityData(input);
+
+                if (result is null) {
+                    return null;
+                }
+
+                result = result with { popularity = 0 };
+
+                return result;
+            }
+            ,
+            _ => (VTuberRecord.TwitchData? input) => dataTransform.ToTwitchPopularityData(input),
+        };
+    }
+
     public List<VTuberPopularityData> TrendingVTubers(TrendingVTuberSortOrder sortBy, int? count) {
         List<VTuberPopularityData> rLst = new();
 
-        Func<VTuberRecord.YouTubeData?, YouTubePopularityData?> popularityFunc = GetPopularityFunction(sortBy);
+        Func<VTuberRecord.YouTubeData?, YouTubePopularityData?> youTubePopularityFunc = GetYouTubePopularityFunction(sortBy);
+        Func<VTuberRecord.TwitchData?, TwitchPopularityData?> twitchPopularityFunc = GetTwitchPopularityFunction(sortBy);
 
         foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in DictRecord
             .Where(p => p.Value.Nationality.Contains(NationalityFilter))
@@ -359,8 +378,8 @@ class DictionaryRecordToJsonStruct {
                 activity: CommonActivityToJsonActivity(record.Activity),
                 name: record.DisplayName,
                 imgUrl: record.ImageUrl,
-                YouTube: popularityFunc(record.YouTube),
-                Twitch: dataTransform.ToTwitchPopularityData(record.Twitch),
+                YouTube: youTubePopularityFunc(record.YouTube),
+                Twitch: twitchPopularityFunc(record.Twitch),
                 popularVideo: dataTransform.GetPopularVideo(record),
                 group: record.GroupName,
                 nationality: record.Nationality,
