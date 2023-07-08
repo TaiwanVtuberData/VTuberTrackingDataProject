@@ -119,6 +119,7 @@ public class Fetcher {
 
     private ImmutableDictionary<YouTubeVideoId, DateTimeOffset> GetChannelRecentVideoList(Google.Apis.YouTube.v3.Data.Channel channelInfo) {
         Dictionary<YouTubeVideoId, DateTimeOffset> rDict = new();
+        int DAYS_LIMIT = 90;
 
         string uploadsListId = channelInfo.ContentDetails.RelatedPlaylists.Uploads;
         string nextPageToken = "";
@@ -141,9 +142,9 @@ public class Fetcher {
                 DateTimeOffset? videoPublishTime = playlistItem.Snippet.PublishedAtDateTimeOffset;
                 string videoId = playlistItem.Snippet.ResourceId.VideoId;
 
-                // only add video id if its publish time is within 30 days
+                // only add video id if its publish time is within DAYS_LIMIT days
                 if (videoPublishTime is not null) {
-                    if ((DateTimeOffset.UtcNow - videoPublishTime.Value) < TimeSpan.FromDays(30)) {
+                    if ((DateTimeOffset.UtcNow - videoPublishTime.Value) < TimeSpan.FromDays(DAYS_LIMIT)) {
                         rDict.Add(new YouTubeVideoId(videoId), videoPublishTime.Value);
                     }
                 }
