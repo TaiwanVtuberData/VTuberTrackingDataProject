@@ -75,11 +75,13 @@ class Program {
                     $"vtubers/{tuple.Item2}.json");
             }
 
-            foreach (var tuple in new List<(int?, string)> { (10, "10"), (100, "100") }) {
-                WriteJson(
-                    transformer.TrendingVTubers(count: tuple.Item1),
-                    nationality.Item2,
-                    $"trending-vtubers/{tuple.Item2}.json");
+            foreach (var sort in Enum.GetValues<TrendingVTuberSortOrder>()) {
+                foreach (var tuple in new List<(int?, string)> { (10, "10"), (100, "100") }) {
+                    WriteJson(
+                        transformer.TrendingVTubers(sortBy: sort, count: tuple.Item1),
+                        nationality.Item2,
+                        $"trending-vtubers/{sort}/{tuple.Item2}.json");
+                }
             }
 
             foreach (var sortTuple in new List<(SortBy, string)> { (SortBy._7Days, "7-days"), (SortBy._30Days, "30-days") }) {

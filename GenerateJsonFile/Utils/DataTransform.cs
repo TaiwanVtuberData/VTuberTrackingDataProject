@@ -22,7 +22,7 @@ internal class DataTransform {
             subscriber: ToYouTubeCountType(input.hasValidRecord, sub));
     }
 
-    public YouTubePopularityData? ToYouTubePopularityData(VTuberRecord.YouTubeData? input) {
+    public YouTubePopularityData? ToYouTubeTotalPopularityData(VTuberRecord.YouTubeData? input) {
         if (input == null)
             return null;
 
@@ -30,16 +30,41 @@ internal class DataTransform {
         ulong? sub = basicData?.SubscriberCount;
 
         VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
-        ulong totalPopularity = record?.RecentTotalMedianViewCount ?? 0;
-        ulong livestreamPopularity = record?.RecentLivestreamMedianViewCount ?? 0;
-        ulong videoPopularity = record?.RecentVideoMedianViewCount ?? 0;
 
         return new YouTubePopularityData(
             id: input.ChannelId,
             subscriber: ToYouTubeCountType(input.hasValidRecord, sub),
-            popularity: totalPopularity,
-            livestreamPopularity: livestreamPopularity,
-            videoPopularity: videoPopularity);
+            popularity: record?.RecentTotalMedianViewCount ?? 0);
+    }
+
+    public YouTubePopularityData? ToYouTubeLivestreamPopularityData(VTuberRecord.YouTubeData? input) {
+        if (input == null)
+            return null;
+
+        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        ulong? sub = basicData?.SubscriberCount;
+
+        VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
+
+        return new YouTubePopularityData(
+            id: input.ChannelId,
+            subscriber: ToYouTubeCountType(input.hasValidRecord, sub),
+            popularity: record?.RecentLivestreamMedianViewCount ?? 0);
+    }
+
+    public YouTubePopularityData? ToYouTubeVideoPopularityData(VTuberRecord.YouTubeData? input) {
+        if (input == null)
+            return null;
+
+        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        ulong? sub = basicData?.SubscriberCount;
+
+        VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
+
+        return new YouTubePopularityData(
+            id: input.ChannelId,
+            subscriber: ToYouTubeCountType(input.hasValidRecord, sub),
+            popularity: record?.RecentVideoMedianViewCount ?? 0);
     }
 
     public ulong ToYouTubeTotalPopularity(VTuberRecord.YouTubeData? input) {
