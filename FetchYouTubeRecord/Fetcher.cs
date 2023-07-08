@@ -184,14 +184,28 @@ public class Fetcher {
                 foreach (Google.Apis.YouTube.v3.Data.Video video in videoListResponse.Items) {
                     ulong? viewCount = video.Statistics.ViewCount;
                     DateTimeOffset? publishTime = video.Snippet.PublishedAtDateTimeOffset;
-                    // if there is view count and the video is not (streaming or upcoming livestream)
+
+                    // if there is view count and the video is not (streaming or upcoming livestream) and 
                     if (viewCount is not null
                         && publishTime is not null
                         && !LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent)) {
                         lstTotalViewCount.Add(new(publishTime ?? DateTimeOffset.UnixEpoch, new YouTubeVideoId(video.Id), viewCount.Value));
 
                         bool isLivestream = video.LiveStreamingDetails is not null;
+                        bool isLongerThan15Minutes = false;
                         if (isLivestream) {
+                            DateTimeOffset? startTime = video.LiveStreamingDetails?.ActualStartTimeDateTimeOffset;
+                            DateTimeOffset? endTime = video.LiveStreamingDetails?.ActualEndTimeDateTimeOffset;
+
+                            if (startTime is not null && endTime is not null) {
+                                TimeSpan duration = endTime.Value - startTime.Value;
+                                if (duration > TimeSpan.FromMinutes(15)) {
+                                    isLongerThan15Minutes = true;
+                                }
+                            }
+                        }
+
+                        if (isLivestream && isLongerThan15Minutes) {
                             lstLivestreamViewCount.Add(new(publishTime ?? DateTimeOffset.UnixEpoch, new YouTubeVideoId(video.Id), viewCount.Value));
                         } else {
                             lstVideoViewCount.Add(new(publishTime ?? DateTimeOffset.UnixEpoch, new YouTubeVideoId(video.Id), viewCount.Value));
