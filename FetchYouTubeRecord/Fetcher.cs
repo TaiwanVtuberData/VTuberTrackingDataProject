@@ -144,7 +144,7 @@ public class Fetcher {
 
                 // only add video id if its publish time is within DAYS_LIMIT days
                 if (videoPublishTime is not null) {
-                    if ((DateTimeOffset.UtcNow - videoPublishTime.Value) < TimeSpan.FromDays(DAYS_LIMIT)) {
+                    if ((CurrentTime - videoPublishTime.Value) < TimeSpan.FromDays(DAYS_LIMIT)) {
                         rDict.Add(new YouTubeVideoId(videoId), videoPublishTime.Value);
                     }
                 }
@@ -188,6 +188,7 @@ public class Fetcher {
                     // if there is view count and the video is not (streaming or upcoming livestream) and 
                     if (viewCount is not null
                         && publishTime is not null
+                        && (CurrentTime - publishTime) < TimeSpan.FromDays(30)
                         && !LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent)) {
                         lstTotalViewCount.Add(new(publishTime ?? DateTimeOffset.UnixEpoch, new YouTubeVideoId(video.Id), viewCount.Value));
 
@@ -210,16 +211,16 @@ public class Fetcher {
                         } else {
                             lstVideoViewCount.Add(new(publishTime ?? DateTimeOffset.UnixEpoch, new YouTubeVideoId(video.Id), viewCount.Value));
                         }
-                    }
 
-                    rTopVideosList.Insert(new VideoInformation {
-                        Id = channelInfo.Id,
-                        Url = $"https://www.youtube.com/watch?v={video.Id}",
-                        Title = video.Snippet.Title,
-                        ThumbnailUrl = video.Snippet.Thumbnails.Medium.Url,
-                        PublishDateTime = video.Snippet.PublishedAtDateTimeOffset ?? DateTimeOffset.UnixEpoch,
-                        ViewCount = viewCount ?? 0,
-                    });
+                        rTopVideosList.Insert(new VideoInformation {
+                            Id = channelInfo.Id,
+                            Url = $"https://www.youtube.com/watch?v={video.Id}",
+                            Title = video.Snippet.Title,
+                            ThumbnailUrl = video.Snippet.Thumbnails.Medium.Url,
+                            PublishDateTime = publishTime ?? DateTimeOffset.UnixEpoch,
+                            ViewCount = viewCount ?? 0,
+                        });
+                    }
 
                     if (LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent)) {
                         DateTimeOffset startTime =
