@@ -1,59 +1,84 @@
 ﻿using Common.Types;
 using CsvHelper;
 using log4net;
+using System.Collections.Immutable;
 using System.Globalization;
 
 namespace FetchStatistics;
 internal class WriteFiles {
     private static readonly ILog log = LogManager.GetLogger(typeof(WriteFiles));
 
-    public static void WriteResult(List<VTuberStatistics> vtuberStatisticsList, DateTimeOffset currentTime, string savePath) {
+    public static void WriteResult(ImmutableList<VTuberRecord> lstVTuberRecord, DateTimeOffset currentTime, string savePath) {
         // create monthly directory first
         string fileDir = $"{savePath}/{currentTime:yyyy-MM}";
         Directory.CreateDirectory(fileDir);
 
         string filePath = $"{fileDir}/record_{currentTime:yyyy-MM-dd-HH-mm-ss}.csv";
-        log.Info($"Write statistics to : {filePath}");
+        log.Info($"Write record to : {filePath}");
         using StreamWriter recordFile = new(filePath);
         recordFile.Write(
-            "VTuber ID," +
+            "V5##VTuber ID," +
             "YouTube Subscriber Count," +
             "YouTube View Count," +
-            "YouTube Recent Median View Count," +
-            "YouTube Recent Popularity," +
-            "YouTube Recent Highest View Count," +
-            "YouTube Recent Highest Viewed Video URL," +
+            "YouTube Recent Total Median View Count," +
+            "YouTube Recent Total Popularity," +
+            "YouTube Recent Total Highest View Count," +
+            "YouTube Recent Total Highest Viewed URL," +
+            "YouTube Recent Livestream Median View Count," +
+            "YouTube Recent Livestream Popularity," +
+            "YouTube Recent Livestream Highest View Count," +
+            "YouTube Recent Livestream Highest Viewed URL," +
+            "YouTube Recent Video Median View Count," +
+            "YouTube Recent Video Popularity," +
+            "YouTube Recent Video Highest View Count," +
+            "YouTube Recent Video Highest Viewed URL," +
             "Twitch Follower Count," +
             "Twitch Recent Median View Count," +
             "Twitch Recent Popularity," +
             "Twitch Recent Highest View Count," +
-            "Twitch Recent Highest Viewed Video URL\n");
-        foreach (VTuberStatistics statistics in vtuberStatisticsList.OrderByDescending(p => p.YouTube.SubscriberCount)) {
-            recordFile.Write(statistics.Id);
+            "Twitch Recent Highest Viewed URL\n");
+        foreach (VTuberRecord record in lstVTuberRecord.OrderByDescending(e => e.YouTube.Basic.SubscriberCount)) {
+            recordFile.Write(record.VTuberId.Value);
             recordFile.Write(',');
 
-            recordFile.Write(statistics.YouTube.SubscriberCount);
+            recordFile.Write(record.YouTube.Basic.SubscriberCount);
             recordFile.Write(',');
-            recordFile.Write(statistics.YouTube.ViewCount);
+            recordFile.Write(record.YouTube.Basic.ViewCount);
             recordFile.Write(',');
-            recordFile.Write(statistics.YouTube.RecentMedianViewCount);
+            recordFile.Write(record.YouTube.Recent.Total.MedialViewCount);
             recordFile.Write(',');
-            recordFile.Write(statistics.YouTube.RecentPopularity);
+            recordFile.Write(record.YouTube.Recent.Total.Popularity);
             recordFile.Write(',');
-            recordFile.Write(statistics.YouTube.RecentHighestViewCount);
+            recordFile.Write(record.YouTube.Recent.Total.HighestViewCount);
             recordFile.Write(',');
-            recordFile.Write(statistics.YouTube.HighestViewedVideoURL);
+            recordFile.Write(record.YouTube.Recent.Total.HighestViewdUrl);
+            recordFile.Write(',');
+            recordFile.Write(record.YouTube.Recent.Livestream.MedialViewCount);
+            recordFile.Write(',');
+            recordFile.Write(record.YouTube.Recent.Livestream.Popularity);
+            recordFile.Write(',');
+            recordFile.Write(record.YouTube.Recent.Livestream.HighestViewCount);
+            recordFile.Write(',');
+            recordFile.Write(record.YouTube.Recent.Livestream.HighestViewdUrl);
+            recordFile.Write(',');
+            recordFile.Write(record.YouTube.Recent.Video.MedialViewCount);
+            recordFile.Write(',');
+            recordFile.Write(record.YouTube.Recent.Video.Popularity);
+            recordFile.Write(',');
+            recordFile.Write(record.YouTube.Recent.Video.HighestViewCount);
+            recordFile.Write(',');
+            recordFile.Write(record.YouTube.Recent.Video.HighestViewdUrl);
             recordFile.Write(',');
 
-            recordFile.Write(statistics.Twitch.FollowerCount);
+            recordFile.Write(record.Twitch.FollowerCount);
             recordFile.Write(',');
-            recordFile.Write(statistics.Twitch.RecentMedianViewCount);
+            recordFile.Write(record.Twitch.RecentMedianViewCount);
             recordFile.Write(',');
-            recordFile.Write(statistics.Twitch.RecentPopularity);
+            recordFile.Write(record.Twitch.RecentPopularity);
             recordFile.Write(',');
-            recordFile.Write(statistics.Twitch.RecentHighestViewCount);
+            recordFile.Write(record.Twitch.RecentHighestViewCount);
             recordFile.Write(',');
-            recordFile.Write(statistics.Twitch.HighestViewedVideoURL);
+            recordFile.Write(record.Twitch.HighestViewedVideoURL);
             recordFile.Write('\n');
         }
 

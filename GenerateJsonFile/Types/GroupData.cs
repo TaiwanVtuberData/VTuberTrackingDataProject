@@ -1,10 +1,13 @@
 ﻿namespace GenerateJsonFile.Types;
 
-internal readonly record struct GroupData(
+internal record GroupData(
     string id,
     string name,
     ulong popularity,
-    List<VTuberData> members);
+    ulong livestreamPopularity,
+    ulong videoPopularity,
+    List<VTuberData> members
+    );
 
-internal readonly record struct GroupDataResponse(
+internal record GroupDataResponse(
     List<GroupData> groups);

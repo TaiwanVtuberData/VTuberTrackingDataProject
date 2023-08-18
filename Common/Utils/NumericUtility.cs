@@ -1,10 +1,12 @@
-﻿namespace Common.Utils;
+﻿using System.Collections.Immutable;
+
+namespace Common.Utils;
 public class NumericUtility {
     private static int CompareTupleThirdValue(Tuple<DateTimeOffset, string, ulong> v1, Tuple<DateTimeOffset, string, ulong> v2) {
         return Comparer<ulong>.Default.Compare(v1.Item3, v2.Item3);
     }
 
-    public static ulong GetMedian(List<Tuple<DateTimeOffset, string, ulong>> list) {
+    public static ulong GetMedian(IImmutableList<Tuple<DateTimeOffset, string, ulong>> list) {
         List<Tuple<DateTimeOffset, string, ulong>> newList = new(list);
 
         newList.Sort(CompareTupleThirdValue);
@@ -21,7 +23,7 @@ public class NumericUtility {
             return (newList[newList.Count / 2 - 1].Item3 + newList[newList.Count / 2].Item3) / 2;
     }
 
-    private static decimal GetMedian(List<decimal> list) {
+    private static decimal GetMedian(IImmutableList<decimal> list) {
         List<decimal> newList = new(list);
 
         newList.Sort();
@@ -38,15 +40,15 @@ public class NumericUtility {
             return (newList[newList.Count / 2 - 1] + newList[newList.Count / 2]) / 2;
     }
 
-    public static Tuple<DateTimeOffset, string, ulong> GetLargest(List<Tuple<DateTimeOffset, string, ulong>> list) {
+    public static Tuple<DateTimeOffset, string, ulong> GetLargest(IImmutableList<Tuple<DateTimeOffset, string, ulong>> list) {
         return list.MaxBy(e => e.Item3) ?? new Tuple<DateTimeOffset, string, ulong>(DateTimeOffset.UnixEpoch, "", 0);
     }
 
-    public static decimal GetPopularity(List<Tuple<DateTimeOffset, string, ulong>> list, DateTimeOffset currentTime) {
+    public static decimal GetPopularity(IImmutableList<Tuple<DateTimeOffset, string, ulong>> list, DateTimeOffset currentTime) {
         if (list.Count <= 0)
             return 0m;
 
-        List<decimal> newList = list.Select(e => e.Item3 * Get30DaysRatio(currentTime, e.Item1)).ToList();
+        ImmutableList<decimal> newList = list.Select(e => e.Item3 * Get30DaysRatio(currentTime, e.Item1)).ToImmutableList();
 
         return GetMedian(newList);
     }

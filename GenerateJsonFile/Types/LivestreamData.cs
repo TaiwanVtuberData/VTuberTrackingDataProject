@@ -1,6 +1,6 @@
 ﻿namespace GenerateJsonFile.Types;
 
-internal readonly record struct LivestreamData(
+internal record LivestreamData(
     string id,
     string name,
     string? imgUrl,
@@ -9,5 +9,5 @@ internal readonly record struct LivestreamData(
     string? thumbnailUrl,
     string? startTime);
 
-internal readonly record struct LivestreamDataResponse(
+internal record LivestreamDataResponse(
     List<LivestreamData> livestreams);

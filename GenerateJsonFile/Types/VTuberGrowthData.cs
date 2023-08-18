@@ -1,6 +1,6 @@
 ﻿namespace GenerateJsonFile.Types;
 
-internal readonly record struct VTuberGrowthData(
+internal record VTuberGrowthData(
     string id,
     Activity activity,
     string name,
@@ -12,5 +12,5 @@ internal readonly record struct VTuberGrowthData(
     string? nationality,
     string? debutDate);
 
-internal readonly record struct VTuberGrowthDataResponse(
+internal record VTuberGrowthDataResponse(
     List<VTuberGrowthData> VTubers);

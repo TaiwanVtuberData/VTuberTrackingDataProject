@@ -1,19 +1,20 @@
 ﻿using Common.Types;
 using Common.Utils;
+using System.Collections.Immutable;
 using System.Xml;
 using TwitchLib.Api;
 
 namespace FetchTwitchStatistics;
 public class Fetcher {
-    public record Credential(string clientId, string secret);
+    public record Credential(string ClientId, string Secret);
 
     private readonly TwitchAPI api;
     private readonly DateTimeOffset CurrentTime;
 
     public Fetcher(Credential credential, DateTimeOffset currentTime) {
         api = new TwitchAPI();
-        api.Settings.ClientId = credential.clientId;
-        api.Settings.Secret = credential.secret;
+        api.Settings.ClientId = credential.ClientId;
+        api.Settings.Secret = credential.Secret;
 
         CurrentTime = currentTime;
     }
@@ -139,9 +140,11 @@ public class Fetcher {
             return (true, 0, 0, 0, "", new());
         }
 
-        ulong medianViews = NumericUtility.GetMedian(viewCountList);
-        Tuple<DateTimeOffset, string, ulong> largest = NumericUtility.GetLargest(viewCountList);
-        decimal popularity = NumericUtility.GetPopularity(viewCountList, CurrentTime.UtcDateTime);
+        ImmutableList<Tuple<DateTimeOffset, string, ulong>> immutableList = viewCountList.ToImmutableList();
+
+        ulong medianViews = NumericUtility.GetMedian(immutableList);
+        Tuple<DateTimeOffset, string, ulong> largest = NumericUtility.GetLargest(immutableList);
+        decimal popularity = NumericUtility.GetPopularity(immutableList, CurrentTime.UtcDateTime);
         return (true, medianViews, (ulong)popularity, largest.Item3, largest.Item2, topVideosList);
     }
 

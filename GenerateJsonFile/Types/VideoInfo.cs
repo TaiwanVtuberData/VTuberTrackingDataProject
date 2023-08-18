@@ -5,9 +5,9 @@ namespace GenerateJsonFile.Types;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 internal enum VideoType {
-  [EnumMember(Value = "YouTube")]
-  YouTube,
-  [EnumMember(Value = "Twitch")]
-  Twitch,
+    [EnumMember(Value = "YouTube")]
+    YouTube,
+    [EnumMember(Value = "Twitch")]
+    Twitch,
 }
-internal readonly record struct VideoInfo(VideoType type, string id);
+internal record VideoInfo(VideoType type, string id);

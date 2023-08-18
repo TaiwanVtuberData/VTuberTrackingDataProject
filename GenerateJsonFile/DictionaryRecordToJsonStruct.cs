@@ -335,13 +335,41 @@ class DictionaryRecordToJsonStruct {
         return rLst;
     }
 
-    public List<VTuberPopularityData> TrendingVTubers(int? count) {
+    private Func<VTuberRecord.YouTubeData?, YouTubePopularityData?> GetYouTubePopularityFunction(TrendingVTuberSortOrder sortBy) {
+        return sortBy switch {
+            TrendingVTuberSortOrder.livestream => (VTuberRecord.YouTubeData? input) => dataTransform.ToYouTubeLivestreamPopularityData(input),
+            TrendingVTuberSortOrder.video => (VTuberRecord.YouTubeData? input) => dataTransform.ToYouTubeVideoPopularityData(input),
+            _ => (VTuberRecord.YouTubeData? input) => dataTransform.ToYouTubeTotalPopularityData(input),
+        };
+    }
+
+    private Func<VTuberRecord.TwitchData?, TwitchPopularityData?> GetTwitchPopularityFunction(TrendingVTuberSortOrder sortBy) {
+        return sortBy switch {
+            TrendingVTuberSortOrder.video => (VTuberRecord.TwitchData? input) => {
+                TwitchPopularityData? result = dataTransform.ToTwitchPopularityData(input);
+
+                if (result is null) {
+                    return null;
+                }
+
+                result = result with { popularity = 0 };
+
+                return result;
+            }
+            ,
+            _ => (VTuberRecord.TwitchData? input) => dataTransform.ToTwitchPopularityData(input),
+        };
+    }
+
+    public List<VTuberPopularityData> TrendingVTubers(TrendingVTuberSortOrder sortBy, int? count) {
         List<VTuberPopularityData> rLst = new();
+
+        Func<VTuberRecord.YouTubeData?, YouTubePopularityData?> youTubePopularityFunc = GetYouTubePopularityFunction(sortBy);
+        Func<VTuberRecord.TwitchData?, TwitchPopularityData?> twitchPopularityFunc = GetTwitchPopularityFunction(sortBy);
 
         foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in DictRecord
             .Where(p => p.Value.Nationality.Contains(NationalityFilter))
-            .OrderByDescending(p => p, new VTuberRecordComparator.CombinedViewCount(LatestRecordTime))
-            .Take(count ?? int.MaxValue)) {
+            ) {
             string displayName = vtuberStatPair.Key;
             VTuberRecord record = vtuberStatPair.Value;
 
@@ -350,8 +378,8 @@ class DictionaryRecordToJsonStruct {
                 activity: CommonActivityToJsonActivity(record.Activity),
                 name: record.DisplayName,
                 imgUrl: record.ImageUrl,
-                YouTube: dataTransform.ToYouTubePopularityData(record.YouTube),
-                Twitch: dataTransform.ToTwitchPopularityData(record.Twitch),
+                YouTube: youTubePopularityFunc(record.YouTube),
+                Twitch: twitchPopularityFunc(record.Twitch),
                 popularVideo: dataTransform.GetPopularVideo(record),
                 group: record.GroupName,
                 nationality: record.Nationality,
@@ -361,14 +389,19 @@ class DictionaryRecordToJsonStruct {
             rLst.Add(vTuberData);
         }
 
-        return rLst;
+        return rLst
+            .OrderByDescending(e => (e.YouTube?.popularity ?? 0) + (e.Twitch?.popularity ?? 0))
+            .Take(count ?? int.MaxValue)
+            .ToList();
     }
 
     public List<GroupData> Groups() {
         List<GroupData> rLst = new();
 
         foreach (string groupName in _trackList.GetGroupNameList()) {
-            ulong popularity = 0;
+            ulong totalPopularity = 0;
+            ulong livestreamPopularity = 0;
+            ulong videoPopularity = 0;
             List<Types.VTuberData> lstMembers = new();
 
             foreach (KeyValuePair<string, VTuberRecord> vtuberStatPair in DictRecord
@@ -381,7 +414,9 @@ class DictionaryRecordToJsonStruct {
                 if (displayName == groupName)
                     continue;
 
-                popularity += dataTransform.ToCombinedPopularity(record);
+                totalPopularity += dataTransform.ToCombinedTotalPopularity(record);
+                livestreamPopularity += dataTransform.ToCombinedLivestreamPopulairty(record);
+                videoPopularity += dataTransform.ToCombinedVideoPopulairty(record);
 
                 Types.VTuberData vTuberData = new(
                     id: record.Id,
@@ -402,12 +437,14 @@ class DictionaryRecordToJsonStruct {
             if (lstMembers.Count == 0)
                 continue;
 
-            GroupData groupData = new() {
-                id = groupName,
-                name = groupName,
-                popularity = popularity,
-                members = lstMembers,
-            };
+            GroupData groupData = new(
+                id: groupName,
+                name: groupName,
+                popularity: totalPopularity,
+                livestreamPopularity: livestreamPopularity,
+                videoPopularity: videoPopularity,
+                members: lstMembers
+                );
 
             rLst.Add(groupData);
         }

@@ -1,6 +1,6 @@
 ﻿namespace GenerateJsonFile.Types;
 
-internal readonly record struct VTuberLivestreamData(
+internal record VTuberLivestreamData(
     string? title,
     string videoUrl,
     string? thumbnailUrl,

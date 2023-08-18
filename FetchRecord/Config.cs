@@ -3,12 +3,12 @@
 namespace FetchStatistics;
 internal record Config {
 
-    public string youTubeApiKey { get; init; }
-    public FetchTwitchStatistics.Fetcher.Credential twitchCrenditial { get; init; }
-    public string trackListPath { get; init; }
-    public string excludeListPath { get; init; }
-    public string savePath { get; init; }
-    public FetchType fetchType { get; init; }
+    public string YouTubeApiKey { get; init; }
+    public FetchTwitchStatistics.Fetcher.Credential TwitchCrenditial { get; init; }
+    public string TrackListPath { get; init; }
+    public string ExcludeListPath { get; init; }
+    public string SavePath { get; init; }
+    public FetchType FetchType { get; init; }
 
     public Config(string[] filePaths, string[] defaultArgs) {
         // set file paths
@@ -21,12 +21,12 @@ internal record Config {
         string fetchTypeStr = filePaths.Length >= 7 ? filePaths[6] : defaultArgs[6];
 
         // initialize fields
-        this.youTubeApiKey = FileUtility.GetSingleLineFromFile(youTubeApiKeyPath);
-        this.twitchCrenditial = new(FileUtility.GetSingleLineFromFile(twitchClientIdPath),
+        this.YouTubeApiKey = FileUtility.GetSingleLineFromFile(youTubeApiKeyPath);
+        this.TwitchCrenditial = new(FileUtility.GetSingleLineFromFile(twitchClientIdPath),
         FileUtility.GetSingleLineFromFile(twitchSecretPath));
-        this.trackListPath = trackListPath;
-        this.excludeListPath = excludeListPath;
-        this.savePath = savePath;
-        this.fetchType = (FetchType)Enum.Parse(typeof(FetchType), fetchTypeStr);
+        this.TrackListPath = trackListPath;
+        this.ExcludeListPath = excludeListPath;
+        this.SavePath = savePath;
+        this.FetchType = (FetchType)Enum.Parse(typeof(FetchType), fetchTypeStr);
     }
 }

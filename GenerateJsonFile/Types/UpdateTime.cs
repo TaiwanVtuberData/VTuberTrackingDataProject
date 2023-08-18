@@ -1,7 +1,7 @@
 ﻿namespace GenerateJsonFile.Types;
-internal readonly record struct UpdateTime(
+internal record UpdateTime(
     string statisticUpdateTime,
     string VTuberDataUpdateTime);
 
-internal readonly record struct UpdateTimeResponse(
+internal record UpdateTimeResponse(
     UpdateTime time);
