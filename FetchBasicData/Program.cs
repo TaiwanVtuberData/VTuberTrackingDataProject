@@ -32,250 +32,267 @@ Dictionary<string, TwitchData> dictTwitch = GenerateTwitchDataDict(trackList,
 WriteBasicData(trackList, dictYouTube, dictTwitch, saveDir);
 
 static void WriteBasicData(TrackList trackList, Dictionary<string, YouTubeData> dictYouTube, Dictionary<string, TwitchData> dictTwitch, string outputFileDir) {
-  DateTime currentDateTime = DateTime.Now;
+    DateTime currentDateTime = DateTime.Now;
 
-  // create monthly directory first
-  string fileDir = $"{outputFileDir}/{currentDateTime:yyyy-MM}";
-  Directory.CreateDirectory(fileDir);
+    // create monthly directory first
+    string fileDir = $"{outputFileDir}/{currentDateTime:yyyy-MM}";
+    Directory.CreateDirectory(fileDir);
 
-  using StreamWriter writer = new($"{fileDir}/basic-data_{currentDateTime:yyyy-MM-dd-HH-mm-ss}.csv");
+    using StreamWriter writer = new($"{fileDir}/basic-data_{currentDateTime:yyyy-MM-dd-HH-mm-ss}.csv");
 
-  VTuberBasicData.WriteToCsv(
-      writer,
-      MergeDictionary(trackList, dictYouTube, dictTwitch).Select(p => p.Value).ToList()
-      );
+    VTuberBasicData.WriteToCsv(
+        writer,
+        MergeDictionary(trackList, dictYouTube, dictTwitch).Select(p => p.Value).ToList()
+        );
 }
 
 // Key: VTuber ID
 static Dictionary<string, VTuberBasicData> MergeDictionary(TrackList trackList, Dictionary<string, YouTubeData> mainDict, Dictionary<string, TwitchData> minorDict) {
-  Dictionary<string, VTuberBasicData> rDict = new();
+    Dictionary<string, VTuberBasicData> rDict = new();
 
-  foreach (KeyValuePair<string, YouTubeData> pair in mainDict) {
-    string VTuberId = pair.Key;
-    YouTubeData youTubeData = pair.Value;
+    foreach (KeyValuePair<string, YouTubeData> pair in mainDict) {
+        string VTuberId = pair.Key;
+        YouTubeData youTubeData = pair.Value;
 
-    if (minorDict.ContainsKey(VTuberId)) {
-      rDict.Add(VTuberId, new VTuberBasicData(Id: VTuberId, YouTube: youTubeData, Twitch: minorDict[VTuberId]));
-    } else {
-      rDict.Add(VTuberId, new VTuberBasicData(Id: VTuberId, YouTube: youTubeData, Twitch: null));
+        if (minorDict.ContainsKey(VTuberId)) {
+            rDict.Add(VTuberId, new VTuberBasicData(Id: VTuberId, YouTube: youTubeData, Twitch: minorDict[VTuberId]));
+        } else {
+            rDict.Add(VTuberId, new VTuberBasicData(Id: VTuberId, YouTube: youTubeData, Twitch: null));
+        }
     }
-  }
 
-  foreach (KeyValuePair<string, TwitchData> pair in minorDict) {
-    string VTuberId = pair.Key;
-    TwitchData twitchData = pair.Value;
+    foreach (KeyValuePair<string, TwitchData> pair in minorDict) {
+        string VTuberId = pair.Key;
+        TwitchData twitchData = pair.Value;
 
-    if (!rDict.ContainsKey(VTuberId)) {
-      rDict.Add(VTuberId, new VTuberBasicData(Id: VTuberId, YouTube: null, Twitch: twitchData));
+        if (!rDict.ContainsKey(VTuberId)) {
+            rDict.Add(VTuberId, new VTuberBasicData(Id: VTuberId, YouTube: null, Twitch: twitchData));
+        }
     }
-  }
 
-  return rDict;
+    return rDict;
 }
 
 // Key: VTuber ID
 static Dictionary<string, YouTubeData> GenerateYouTubeDataDict(TrackList trackList, string apiKey) {
-  Dictionary<string, string> dictChannelIdVtuberId = GenerateYouTubeIdVTtuberIdDict(trackList);
-  List<string> lstIdStringList = Generate50IdsStringList(dictChannelIdVtuberId.Keys.ToList());
-  // initialize capacity
-  Dictionary<string, YouTubeData> dictVTuberIdThumbnailUrl = new(dictChannelIdVtuberId.Count);
+    Dictionary<string, string> dictChannelIdVtuberId = GenerateYouTubeIdVTtuberIdDict(trackList);
+    List<string> lstIdStringList = Generate50IdsStringList(dictChannelIdVtuberId.Keys.ToList());
+    // initialize capacity
+    Dictionary<string, YouTubeData> dictVTuberIdThumbnailUrl = new(dictChannelIdVtuberId.Count);
 
-  YouTubeService youtubeService = new(new BaseClientService.Initializer() { ApiKey = apiKey });
-  foreach (string idStringList in lstIdStringList) {
-    ChannelsResource.ListRequest channelListRequest = youtubeService.Channels.List("snippet, statistics");
-    channelListRequest.Id = idStringList;
-    channelListRequest.MaxResults = 50;
+    YouTubeService youtubeService = new(new BaseClientService.Initializer() { ApiKey = apiKey });
+    foreach (string idStringList in lstIdStringList) {
+        ChannelsResource.ListRequest channelListRequest = youtubeService.Channels.List("snippet, statistics");
+        channelListRequest.Id = idStringList;
+        channelListRequest.MaxResults = 50;
 
-    Google.Apis.YouTube.v3.Data.ChannelListResponse channellistItemsListResponse = channelListRequest.Execute();
-    // channellistItemsListResponse.Items is actually nullable
-    if (channellistItemsListResponse.Items is null) {
-      continue;
+        Google.Apis.YouTube.v3.Data.ChannelListResponse? channellistItemsListResponse = ExecuteThrowableWithRetry(() => channelListRequest.Execute());
+        // channellistItemsListResponse.Items is actually nullable
+        if (channellistItemsListResponse?.Items is null) {
+            continue;
+        }
+
+        foreach (Google.Apis.YouTube.v3.Data.Channel channelItem in channellistItemsListResponse.Items) {
+            string channelId = channelItem.Id;
+            ulong? subscriberCount = channelItem.Statistics.SubscriberCount;
+            ulong? viewCount = channelItem.Statistics.ViewCount;
+            string thumbnailUrl = channelItem.Snippet.Thumbnails.Default__.Url;
+
+            bool hasId = dictChannelIdVtuberId.TryGetValue(channelId, out string? VTuberId);
+            if (hasId && VTuberId is not null && !dictVTuberIdThumbnailUrl.ContainsKey(VTuberId)) {
+                dictVTuberIdThumbnailUrl.Add(VTuberId, new YouTubeData(SubscriberCount: subscriberCount, ViewCount: viewCount, ThumbnailUrl: thumbnailUrl));
+            }
+        }
     }
 
-    foreach (Google.Apis.YouTube.v3.Data.Channel channelItem in channellistItemsListResponse.Items) {
-      string channelId = channelItem.Id;
-      ulong? subscriberCount = channelItem.Statistics.SubscriberCount;
-      ulong? viewCount = channelItem.Statistics.ViewCount;
-      string thumbnailUrl = channelItem.Snippet.Thumbnails.Default__.Url;
-
-      bool hasId = dictChannelIdVtuberId.TryGetValue(channelId, out string? VTuberId);
-      if (hasId && VTuberId is not null && !dictVTuberIdThumbnailUrl.ContainsKey(VTuberId)) {
-        dictVTuberIdThumbnailUrl.Add(VTuberId, new YouTubeData(SubscriberCount: subscriberCount, ViewCount: viewCount, ThumbnailUrl: thumbnailUrl));
-      }
-    }
-  }
-
-  return dictVTuberIdThumbnailUrl;
+    return dictVTuberIdThumbnailUrl;
 }
 
 // Key: VTuber ID
 static Dictionary<string, TwitchData> GenerateTwitchDataDict(TrackList trackList, string clientId, string secret) {
-  Dictionary<string, string> dictChannelIdVtuberId = GenerateTwitchIdVTuberIdDict(trackList);
-  List<List<string>> lstIdStringList = Generate100IdsStringListList(dictChannelIdVtuberId.Keys.ToList());
-  // initialize capacity
-  Dictionary<string, TwitchData> dictNameThumbnailUrl = new(dictChannelIdVtuberId.Count);
+    Dictionary<string, string> dictChannelIdVtuberId = GenerateTwitchIdVTuberIdDict(trackList);
+    List<List<string>> lstIdStringList = Generate100IdsStringListList(dictChannelIdVtuberId.Keys.ToList());
+    // initialize capacity
+    Dictionary<string, TwitchData> dictNameThumbnailUrl = new(dictChannelIdVtuberId.Count);
 
-  TwitchAPI api = new();
-  api.Settings.ClientId = clientId;
-  api.Settings.Secret = secret;
+    TwitchAPI api = new();
+    api.Settings.ClientId = clientId;
+    api.Settings.Secret = secret;
 
-  foreach (List<string> idStringList in lstIdStringList) {
-    Dictionary<string, TwitchData> dictTwitch = GetTwitchIdThumbnailUrlDict(idStringList, api);
+    foreach (List<string> idStringList in lstIdStringList) {
+        Dictionary<string, TwitchData> dictTwitch = GetTwitchIdThumbnailUrlDict(idStringList, api);
 
-    foreach (KeyValuePair<string, TwitchData> pair in dictTwitch) {
-      string channelId = pair.Key;
-      TwitchData twitchData = pair.Value;
+        foreach (KeyValuePair<string, TwitchData> pair in dictTwitch) {
+            string channelId = pair.Key;
+            TwitchData twitchData = pair.Value;
 
-      bool hasId = dictChannelIdVtuberId.TryGetValue(channelId, out string? VTuberId);
-      if (hasId && VTuberId is not null && !dictNameThumbnailUrl.ContainsKey(VTuberId)) {
-        dictNameThumbnailUrl.Add(VTuberId, twitchData);
-      }
+            bool hasId = dictChannelIdVtuberId.TryGetValue(channelId, out string? VTuberId);
+            if (hasId && VTuberId is not null && !dictNameThumbnailUrl.ContainsKey(VTuberId)) {
+                dictNameThumbnailUrl.Add(VTuberId, twitchData);
+            }
+        }
     }
-  }
 
-  return dictNameThumbnailUrl;
+    return dictNameThumbnailUrl;
 }
 
 // Key: Twitch channel ID
 static Dictionary<string, TwitchData> GetTwitchIdThumbnailUrlDict(List<string> lstUserId, TwitchAPI api) {
-  TwitchLib.Api.Helix.Models.Users.GetUsers.GetUsersResponse? userResponseResult = null;
+    TwitchLib.Api.Helix.Models.Users.GetUsers.GetUsersResponse? userResponseResult = null;
 
-  bool hasResponse = false;
-  for (int i = 0; i < 2; i++) {
-    try {
-      var userResponse =
-          api.Helix.Users.GetUsersAsync(lstUserId);
-      userResponseResult = userResponse.Result;
-
-      hasResponse = true;
-      break;
-    } catch {
-    }
-  }
-
-  if (!hasResponse || userResponseResult is null) {
-    return new();
-  }
-
-  Dictionary<string, TwitchData> rDict = new(userResponseResult.Users.Length);
-  foreach (TwitchLib.Api.Helix.Models.Users.GetUsers.User user in userResponseResult.Users) {
-    if (!rDict.ContainsKey(user.Id)) {
-      TwitchLib.Api.Helix.Models.Users.GetUserFollows.GetUsersFollowsResponse? usersFollowsResponseResult = null;
-
-      hasResponse = false;
-      for (int i = 0; i < 2; i++) {
+    bool hasResponse = false;
+    for (int i = 0; i < 2; i++) {
         try {
-          var usersFollowsResponse =
-              api.Helix.Users.GetUsersFollowsAsync(
-                  first: 100,
-                  toId: user.Id
-                  );
-          usersFollowsResponseResult = usersFollowsResponse.Result;
+            var userResponse =
+                api.Helix.Users.GetUsersAsync(lstUserId);
+            userResponseResult = userResponse.Result;
 
-          hasResponse = true;
-          break;
+            hasResponse = true;
+            break;
         } catch {
         }
-      }
-
-      if (!hasResponse || usersFollowsResponseResult is null) {
-        return new();
-      }
-
-      rDict.Add(user.Id, new TwitchData(FollowerCount: (ulong)usersFollowsResponseResult.TotalFollows, ThumbnailUrl: user.ProfileImageUrl));
     }
-  }
 
-  return rDict;
+    if (!hasResponse || userResponseResult is null) {
+        return new();
+    }
+
+    Dictionary<string, TwitchData> rDict = new(userResponseResult.Users.Length);
+    foreach (TwitchLib.Api.Helix.Models.Users.GetUsers.User user in userResponseResult.Users) {
+        if (!rDict.ContainsKey(user.Id)) {
+            TwitchLib.Api.Helix.Models.Users.GetUserFollows.GetUsersFollowsResponse? usersFollowsResponseResult = null;
+
+            hasResponse = false;
+            for (int i = 0; i < 2; i++) {
+                try {
+                    var usersFollowsResponse =
+                        api.Helix.Users.GetUsersFollowsAsync(
+                            first: 100,
+                            toId: user.Id
+                            );
+                    usersFollowsResponseResult = usersFollowsResponse.Result;
+
+                    hasResponse = true;
+                    break;
+                } catch {
+                }
+            }
+
+            if (!hasResponse || usersFollowsResponseResult is null) {
+                return new();
+            }
+
+            rDict.Add(user.Id, new TwitchData(FollowerCount: (ulong)usersFollowsResponseResult.TotalFollows, ThumbnailUrl: user.ProfileImageUrl));
+        }
+    }
+
+    return rDict;
 }
 
 // Key: YouTube Channel ID, Value: VTuber ID
 static Dictionary<string, string> GenerateYouTubeIdVTtuberIdDict(TrackList trackList) {
-  List<string> lstId = trackList.GetIdList();
+    List<string> lstId = trackList.GetIdList();
 
-  // initialize capacity
-  Dictionary<string, string> rDict = new(lstId.Count);
+    // initialize capacity
+    Dictionary<string, string> rDict = new(lstId.Count);
 
-  foreach (string id in lstId) {
-    string channelId = trackList.GetYouTubeChannelId(id);
-    if (channelId == "") {
-      continue;
+    foreach (string id in lstId) {
+        string channelId = trackList.GetYouTubeChannelId(id);
+        if (channelId == "") {
+            continue;
+        }
+
+        rDict.Add(channelId, id);
     }
 
-    rDict.Add(channelId, id);
-  }
-
-  return rDict;
+    return rDict;
 }
 
 // Key: Twitch Channel ID, Value: VTuber ID
 static Dictionary<string, string> GenerateTwitchIdVTuberIdDict(TrackList trackList) {
-  List<string> lstId = trackList.GetIdList();
+    List<string> lstId = trackList.GetIdList();
 
-  // initialize capacity
-  Dictionary<string, string> rDict = new(lstId.Count);
+    // initialize capacity
+    Dictionary<string, string> rDict = new(lstId.Count);
 
-  foreach (string id in lstId) {
-    string channelId = trackList.GetTwitchChannelId(id);
-    if (channelId == "") {
-      continue;
+    foreach (string id in lstId) {
+        string channelId = trackList.GetTwitchChannelId(id);
+        if (channelId == "") {
+            continue;
+        }
+
+        rDict.Add(channelId, id);
     }
 
-    rDict.Add(channelId, id);
-  }
-
-  return rDict;
+    return rDict;
 }
 
 static List<string> Generate50IdsStringList(List<string> KeyList) {
-  List<string> ans = new();
+    List<string> ans = new();
 
-  int index;
-  // pack 50 ids into a string
-  for (index = 0; index < (KeyList.Count) / 50 * 50; index += 50) {
-    string idRequestString = "";
-    for (int offset = 0; offset < 50; offset++)
-      idRequestString += KeyList[index + offset] + ',';
-    idRequestString = idRequestString.Substring(0, idRequestString.Length - 1);
-    ans.Add(idRequestString);
-  }
-
-  // residual
-  if (KeyList.Count % 50 != 0) {
-    string idRequestStringRes = "";
-    for (; index < KeyList.Count; index++) {
-      idRequestStringRes += KeyList[index] + ',';
+    int index;
+    // pack 50 ids into a string
+    for (index = 0; index < (KeyList.Count) / 50 * 50; index += 50) {
+        string idRequestString = "";
+        for (int offset = 0; offset < 50; offset++)
+            idRequestString += KeyList[index + offset] + ',';
+        idRequestString = idRequestString.Substring(0, idRequestString.Length - 1);
+        ans.Add(idRequestString);
     }
-    idRequestStringRes = idRequestStringRes.Substring(0, idRequestStringRes.Length - 1);
-    ans.Add(idRequestStringRes);
-  }
 
-  return ans;
+    // residual
+    if (KeyList.Count % 50 != 0) {
+        string idRequestStringRes = "";
+        for (; index < KeyList.Count; index++) {
+            idRequestStringRes += KeyList[index] + ',';
+        }
+        idRequestStringRes = idRequestStringRes.Substring(0, idRequestStringRes.Length - 1);
+        ans.Add(idRequestStringRes);
+    }
+
+    return ans;
 }
 
 static List<List<string>> Generate100IdsStringListList(List<string> KeyList) {
-  List<List<string>> ans = new();
+    List<List<string>> ans = new();
 
-  int index;
-  // pack 100 ids into a List<string>
-  for (index = 0; index < (KeyList.Count) / 100 * 100; index += 100) {
-    List<string> lstId = new();
-    for (int offset = 0; offset < 100; offset++) {
-      lstId.Add(KeyList[index + offset]);
+    int index;
+    // pack 100 ids into a List<string>
+    for (index = 0; index < (KeyList.Count) / 100 * 100; index += 100) {
+        List<string> lstId = new();
+        for (int offset = 0; offset < 100; offset++) {
+            lstId.Add(KeyList[index + offset]);
+        }
+
+        ans.Add(lstId);
     }
 
-    ans.Add(lstId);
-  }
+    // residual
+    if (KeyList.Count % 100 != 0) {
+        List<string> lstId = new();
+        for (; index < KeyList.Count; index++) {
+            lstId.Add(KeyList[index]);
+        }
 
-  // residual
-  if (KeyList.Count % 100 != 0) {
-    List<string> lstId = new();
-    for (; index < KeyList.Count; index++) {
-      lstId.Add(KeyList[index]);
+        ans.Add(lstId);
     }
 
-    ans.Add(lstId);
-  }
+    return ans;
+}
 
-  return ans;
+static T? ExecuteThrowableWithRetry<T>(Func<T> func) where T : class {
+    int RETRY_TIME = 50;
+    TimeSpan RETRY_DELAY = new(hours: 0, minutes: 0, seconds: 10);
+
+    for (int i = 0; i < RETRY_TIME; i++) {
+        try {
+            return func.Invoke();
+        } catch (Exception e) {
+            Console.WriteLine($"Failed to execute {func.Method.Name}. {i} tries. Retry after {RETRY_DELAY.TotalSeconds} seconds");
+            Console.WriteLine(e.Message, e);
+            Task.Delay(RETRY_DELAY);
+        }
+    }
+
+    return null;
 }

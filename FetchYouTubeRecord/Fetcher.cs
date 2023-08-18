@@ -78,33 +78,10 @@ public class Fetcher {
         channelsListRequest.Id = idRequestString.Value;
         channelsListRequest.MaxResults = 50;
 
-        IList<Google.Apis.YouTube.v3.Data.Channel>? responseItems = null;
-        bool hasResponse = false;
-        int RETRY_TIME = 50;
-        TimeSpan RETRY_DELAY = new(hours: 0, minutes: 0, seconds: 10);
-        for (int i = 0; i < RETRY_TIME; i++) {
-            try {
-                Google.Apis.YouTube.v3.Data.ChannelListResponse channelsListResponse = channelsListRequest.Execute();
-                responseItems = channelsListResponse.Items;
-            } catch (Exception e) {
-                log.Warn($"Failed to execute channelsListRequest.Execute(). {i} tries. Retry after {RETRY_DELAY.TotalSeconds} seconds");
-                log.Warn(e.Message, e);
-                Task.Delay(RETRY_DELAY);
-            }
+        Google.Apis.YouTube.v3.Data.ChannelListResponse? channelsListResponse = ExecuteThrowableWithRetry(() => channelsListRequest.Execute());
 
-            if (responseItems is null) {
-                continue;
-            }
-
-            hasResponse = true;
-            break;
-        }
-
-        if (!hasResponse) {
-            return null;
-        }
-
-        return responseItems?.ToImmutableList();
+        // channellistItemsListResponse.Items is actually nullable
+        return channelsListResponse?.Items?.ToImmutableList();
     }
 
     private static ImmutableDictionary<YouTubeChannelId, YouTubeRecord.BasicRecord> GetChannelBasicRecord(
@@ -130,10 +107,9 @@ public class Fetcher {
             playlistItemsListRequest.PageToken = nextPageToken;
 
             // Retrieve the list of videos uploaded to the user's channel.
-            Google.Apis.YouTube.v3.Data.PlaylistItemListResponse? playlistItemsListResponse;
-            try {
-                playlistItemsListResponse = playlistItemsListRequest.Execute();
-            } catch {
+
+            Google.Apis.YouTube.v3.Data.PlaylistItemListResponse? playlistItemsListResponse = ExecuteThrowableWithRetry(() => playlistItemsListRequest.Execute());
+            if (playlistItemsListResponse == null) {
                 // return true because it is a successful result
                 return ImmutableDictionary<YouTubeVideoId, DateTimeOffset>.Empty;
             }
@@ -179,7 +155,11 @@ public class Fetcher {
                 VideosResource.ListRequest videosListRequest = youtubeService.Videos.List("id,snippet,statistics,liveStreamingDetails");
                 videosListRequest.Id = idRequst.Value;
 
-                Google.Apis.YouTube.v3.Data.VideoListResponse videoListResponse = videosListRequest.Execute();
+                Google.Apis.YouTube.v3.Data.VideoListResponse? videoListResponse = ExecuteThrowableWithRetry(() => videosListRequest.Execute());
+
+                if (videoListResponse == null) {
+                    continue;
+                }
 
                 foreach (Google.Apis.YouTube.v3.Data.Video video in videoListResponse.Items) {
                     ulong? viewCount = video.Statistics.ViewCount;
@@ -305,5 +285,22 @@ public class Fetcher {
         }
 
         return rLst.ToImmutableList();
+    }
+
+    private static T? ExecuteThrowableWithRetry<T>(Func<T> func) where T : class {
+        int RETRY_TIME = 50;
+        TimeSpan RETRY_DELAY = new(hours: 0, minutes: 0, seconds: 10);
+
+        for (int i = 0; i < RETRY_TIME; i++) {
+            try {
+                return func.Invoke();
+            } catch (Exception e) {
+                log.Warn($"Failed to execute {func.Method.Name}. {i} tries. Retry after {RETRY_DELAY.TotalSeconds} seconds");
+                log.Warn(e.Message, e);
+                Task.Delay(RETRY_DELAY);
+            }
+        }
+
+        return null;
     }
 }
