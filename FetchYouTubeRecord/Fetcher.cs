@@ -4,6 +4,7 @@ using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using log4net;
 using System.Collections.Immutable;
+using System.Net;
 
 namespace FetchYouTubeStatistics;
 public class Fetcher {
@@ -294,8 +295,13 @@ public class Fetcher {
         for (int i = 0; i < RETRY_TIME; i++) {
             try {
                 return func.Invoke();
+            } catch (Google.GoogleApiException e) {
+                if (e.HttpStatusCode == HttpStatusCode.NotFound) {
+                    log.Warn($"Request HttpStatusCode it HttpStatusCode.NotFound.");
+                    return null;
+                }
             } catch (Exception e) {
-                log.Warn($"Failed to execute {func.Method.Name}. {i} tries. Retry after {RETRY_DELAY.TotalSeconds} seconds");
+                log.Warn($"Failed to execute {func.Method.Name}. {i} tries. Retry after {RETRY_DELAY.TotalSeconds} seconds.");
                 log.Warn(e.Message, e);
                 Task.Delay(RETRY_DELAY);
             }

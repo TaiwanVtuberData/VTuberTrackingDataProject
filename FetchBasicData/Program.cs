@@ -2,6 +2,7 @@
 using Common.Utils;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
+using System.Net;
 using TwitchLib.Api;
 
 string YouTubeApiKeyPath = args.Length >= 1 ? args[0] : "./DATA/YOUTUBE_API_KEY";
@@ -287,6 +288,11 @@ static T? ExecuteThrowableWithRetry<T>(Func<T> func) where T : class {
     for (int i = 0; i < RETRY_TIME; i++) {
         try {
             return func.Invoke();
+        } catch (Google.GoogleApiException e) {
+            if (e.HttpStatusCode == HttpStatusCode.NotFound) {
+                Console.WriteLine($"Request HttpStatusCode it HttpStatusCode.NotFound.");
+                return null;
+            }
         } catch (Exception e) {
             Console.WriteLine($"Failed to execute {func.Method.Name}. {i} tries. Retry after {RETRY_DELAY.TotalSeconds} seconds");
             Console.WriteLine(e.Message, e);
