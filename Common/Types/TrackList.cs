@@ -399,9 +399,7 @@ public class TrackList {
             return Option<DateOnly>.None;
         }
 
-        bool isValid = DateOnly.TryParseExact(dateString,
-            new string[] { "yyyy/MM/dd", "yyyy/M/dd", "yyyy/MM/d", "yyyy/M/d" },
-            out DateOnly parseResult);
+        bool isValid = DateOnly.TryParseExact(dateString, "yyyy-MM-dd", out DateOnly parseResult);
 
         if (isValid) {
             return Option<DateOnly>.Some(parseResult);
