@@ -24,7 +24,8 @@ public class Fetcher {
         var (successRecentViewCount, medianViewCount, popularity, highestViewCount, highestViewdVideoID, topVideoList_) = GetChannelRecentViewStatistic(userId);
         LiveVideosList liveVideos = GetLiveVideosList(userId);
 
-        if (successStatistics && successRecentViewCount) {
+        // if (successStatistics && successRecentViewCount) {
+        if (successRecentViewCount) {
             statistics = new TwitchStatistics {
                 RecentMedianViewCount = medianViewCount,
                 RecentPopularity = popularity,
