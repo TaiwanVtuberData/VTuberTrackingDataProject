@@ -180,10 +180,10 @@ static Dictionary<string, TwitchData> GetTwitchIdThumbnailUrlDict(List<string> l
             }
 
             if (!hasResponse || usersFollowsResponseResult is null) {
-                return new();
+                rDict.Add(user.Id, new TwitchData(FollowerCount: 0, ThumbnailUrl: user.ProfileImageUrl));
+            } else {
+                rDict.Add(user.Id, new TwitchData(FollowerCount: (ulong)usersFollowsResponseResult.TotalFollows, ThumbnailUrl: user.ProfileImageUrl));
             }
-
-            rDict.Add(user.Id, new TwitchData(FollowerCount: (ulong)usersFollowsResponseResult.TotalFollows, ThumbnailUrl: user.ProfileImageUrl));
         }
     }
 
