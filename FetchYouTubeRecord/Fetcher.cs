@@ -79,7 +79,7 @@ public class Fetcher {
         channelsListRequest.Id = idRequestString.Value;
         channelsListRequest.MaxResults = 50;
 
-        Google.Apis.YouTube.v3.Data.ChannelListResponse? channelsListResponse = ExecuteThrowableWithRetry(() => channelsListRequest.Execute());
+        Google.Apis.YouTube.v3.Data.ChannelListResponse? channelsListResponse = ExecuteYouTubeThrowableWithRetry(() => channelsListRequest.Execute());
 
         // channellistItemsListResponse.Items is actually nullable
         return channelsListResponse?.Items?.ToImmutableList();
@@ -109,7 +109,7 @@ public class Fetcher {
 
             // Retrieve the list of videos uploaded to the user's channel.
 
-            Google.Apis.YouTube.v3.Data.PlaylistItemListResponse? playlistItemsListResponse = ExecuteThrowableWithRetry(() => playlistItemsListRequest.Execute());
+            Google.Apis.YouTube.v3.Data.PlaylistItemListResponse? playlistItemsListResponse = ExecuteYouTubeThrowableWithRetry(() => playlistItemsListRequest.Execute());
             if (playlistItemsListResponse == null) {
                 // return true because it is a successful result
                 return ImmutableDictionary<YouTubeVideoId, DateTimeOffset>.Empty;
@@ -156,7 +156,7 @@ public class Fetcher {
                 VideosResource.ListRequest videosListRequest = youtubeService.Videos.List("id,snippet,statistics,liveStreamingDetails");
                 videosListRequest.Id = idRequst.Value;
 
-                Google.Apis.YouTube.v3.Data.VideoListResponse? videoListResponse = ExecuteThrowableWithRetry(() => videosListRequest.Execute());
+                Google.Apis.YouTube.v3.Data.VideoListResponse? videoListResponse = ExecuteYouTubeThrowableWithRetry(() => videosListRequest.Execute());
 
                 if (videoListResponse == null) {
                     continue;
@@ -288,16 +288,16 @@ public class Fetcher {
         return rLst.ToImmutableList();
     }
 
-    private static T? ExecuteThrowableWithRetry<T>(Func<T> func) where T : class {
-        int RETRY_TIME = 50;
-        TimeSpan RETRY_DELAY = new(hours: 0, minutes: 0, seconds: 10);
+    private static T? ExecuteYouTubeThrowableWithRetry<T>(Func<T> func) where T : class? {
+        int RETRY_TIME = 10;
+        TimeSpan RETRY_DELAY = new(hours: 0, minutes: 0, seconds: 3);
 
         for (int i = 0; i < RETRY_TIME; i++) {
             try {
                 return func.Invoke();
             } catch (Google.GoogleApiException e) {
                 if (e.HttpStatusCode == HttpStatusCode.NotFound) {
-                    log.Warn($"Request HttpStatusCode it HttpStatusCode.NotFound.");
+                    log.Warn($"Request HttpStatusCode is HttpStatusCode.NotFound.");
                     return null;
                 }
             } catch (Exception e) {

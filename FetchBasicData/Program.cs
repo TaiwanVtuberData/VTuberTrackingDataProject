@@ -91,7 +91,7 @@ static Dictionary<string, YouTubeData> GenerateYouTubeDataDict(TrackList trackLi
         channelListRequest.Id = idStringList;
         channelListRequest.MaxResults = 50;
 
-        Google.Apis.YouTube.v3.Data.ChannelListResponse? channellistItemsListResponse = ExecuteThrowableWithRetry(() => channelListRequest.Execute());
+        Google.Apis.YouTube.v3.Data.ChannelListResponse? channellistItemsListResponse = ExecuteYouTubeThrowableWithRetry(() => channelListRequest.Execute());
         // channellistItemsListResponse.Items is actually nullable
         if (channellistItemsListResponse?.Items is null) {
             continue;
@@ -187,19 +187,17 @@ static string? GetTwitchAccessToken(string clientId, string clientSecret) {
         )
     };
 
-    try {
+    return ExecuteTwitchThrowableWithRetry(() => {
         HttpResponseMessage response = new HttpClient()
             .SendAsync(request)
             .Result
             .EnsureSuccessStatusCode();
 
 
-        return JsonSerializer.Deserialize<TwitchOauth2Response>(response.Content.ReadAsStringAsync().Result)
-            ?.access_token;
-    } catch (HttpRequestException e) {
-        Console.WriteLine(e.Message);
-        return null;
-    }
+        return JsonSerializer
+        .Deserialize<TwitchOauth2Response>(response.Content.ReadAsStringAsync().Result)
+        ?.access_token;
+    });
 }
 
 static ulong? GetTwitchFollowerCount(string broadcasterId, string clientId, string accessToken) {
@@ -209,19 +207,19 @@ static ulong? GetTwitchFollowerCount(string broadcasterId, string clientId, stri
     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
     request.Headers.Add("Client-Id", clientId);
 
-    try {
+    // don't know why ulong does not fit generic constraint either
+    TwitchFollowerCountResponse? response = ExecuteTwitchThrowableWithRetry(() => {
         HttpResponseMessage response = new HttpClient()
             .SendAsync(request)
             .Result;
 
         response.EnsureSuccessStatusCode();
 
-        return JsonSerializer.Deserialize<TwitchFollowerCountResponse>(response.Content.ReadAsStringAsync().Result)
-            ?.total;
-    } catch (HttpRequestException e) {
-        Console.WriteLine(e.Message);
-        return null;
-    }
+        return JsonSerializer
+        .Deserialize<TwitchFollowerCountResponse>(response.Content.ReadAsStringAsync().Result);
+    });
+
+    return response?.total;
 }
 
 // Key: YouTube Channel ID, Value: VTuber ID
@@ -315,20 +313,42 @@ static List<List<string>> Generate100IdsStringListList(List<string> KeyList) {
     return ans;
 }
 
-static T? ExecuteThrowableWithRetry<T>(Func<T> func) where T : class {
-    int RETRY_TIME = 50;
-    TimeSpan RETRY_DELAY = new(hours: 0, minutes: 0, seconds: 10);
+static T? ExecuteYouTubeThrowableWithRetry<T>(Func<T> func) where T : class? {
+    int RETRY_TIME = 10;
+    TimeSpan RETRY_DELAY = new(hours: 0, minutes: 0, seconds: 3);
 
     for (int i = 0; i < RETRY_TIME; i++) {
         try {
             return func.Invoke();
         } catch (Google.GoogleApiException e) {
             if (e.HttpStatusCode == HttpStatusCode.NotFound) {
-                Console.WriteLine($"Request HttpStatusCode it HttpStatusCode.NotFound.");
+                Console.WriteLine($"Request HttpStatusCode is HttpStatusCode.NotFound.");
                 return null;
             }
         } catch (Exception e) {
             Console.WriteLine($"Failed to execute {func.Method.Name}. {i} tries. Retry after {RETRY_DELAY.TotalSeconds} seconds");
+            Console.WriteLine(e.Message, e);
+            Task.Delay(RETRY_DELAY);
+        }
+    }
+
+    return null;
+}
+
+static T? ExecuteTwitchThrowableWithRetry<T>(Func<T> func) where T : class? {
+    int RETRY_TIME = 10;
+    TimeSpan RETRY_DELAY = new(hours: 0, minutes: 0, seconds: 3);
+
+    for (int i = 0; i < RETRY_TIME; i++) {
+        try {
+            return func.Invoke();
+        } catch (HttpRequestException e) {
+            Console.WriteLine($"Request HttpStatusCode is {e.StatusCode}.");
+            Console.WriteLine($"Failed to execute {func.Method.Name}. {i} tries. Retry after {RETRY_DELAY.TotalSeconds} seconds.");
+            Console.WriteLine(e.Message, e);
+            Task.Delay(RETRY_DELAY);
+        } catch (Exception e) {
+            Console.WriteLine($"Failed to execute {func.Method.Name}. {i} tries. Retry after {RETRY_DELAY.TotalSeconds} seconds.");
             Console.WriteLine(e.Message, e);
             Task.Delay(RETRY_DELAY);
         }
