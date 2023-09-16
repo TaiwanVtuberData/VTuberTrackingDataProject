@@ -1,6 +1,7 @@
 ﻿using Common.Types;
 using Common.Utils;
 using FetchTwitchStatistics.Types;
+using log4net;
 using System.Collections.Immutable;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -9,6 +10,8 @@ using TwitchLib.Api;
 
 namespace FetchTwitchStatistics;
 public class Fetcher {
+    private static readonly ILog log = LogManager.GetLogger(typeof(Fetcher));
+
     public record Credential(string ClientId, string Secret);
 
     private readonly TwitchAPI api;
@@ -85,7 +88,7 @@ public class Fetcher {
             return JsonSerializer.Deserialize<TwitchOauth2Response>(response.Content.ReadAsStringAsync().Result)
                 ?.access_token;
         } catch (HttpRequestException e) {
-            Console.WriteLine(e.Message);
+            log.Error(e.Message);
             return null;
         }
     }
@@ -107,7 +110,7 @@ public class Fetcher {
             return JsonSerializer.Deserialize<TwitchFollowerCountResponse>(response.Content.ReadAsStringAsync().Result)
                 ?.total;
         } catch (HttpRequestException e) {
-            Console.WriteLine(e.Message);
+            log.Error(e.Message);
             return null;
         }
     }
