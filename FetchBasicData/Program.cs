@@ -1,8 +1,12 @@
 ﻿using Common.Types;
 using Common.Utils;
+using FetchBasicData.Types;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
+using LanguageExt.Pipes;
 using System.Net;
+using System.Net.Http.Headers;
+using System.Text.Json;
 using TwitchLib.Api;
 
 string YouTubeApiKeyPath = args.Length >= 1 ? args[0] : "./DATA/YOUTUBE_API_KEY";
@@ -161,33 +165,63 @@ static Dictionary<string, TwitchData> GetTwitchIdThumbnailUrlDict(List<string> l
     Dictionary<string, TwitchData> rDict = new(userResponseResult.Users.Length);
     foreach (TwitchLib.Api.Helix.Models.Users.GetUsers.User user in userResponseResult.Users) {
         if (!rDict.ContainsKey(user.Id)) {
-            TwitchLib.Api.Helix.Models.Users.GetUserFollows.GetUsersFollowsResponse? usersFollowsResponseResult = null;
+            string? accessToken = GetTwitchAccessToken(api.Settings.ClientId, api.Settings.Secret);
 
-            hasResponse = false;
-            for (int i = 0; i < 2; i++) {
-                try {
-                    var usersFollowsResponse =
-                        api.Helix.Users.GetUsersFollowsAsync(
-                            first: 100,
-                            toId: user.Id
-                            );
-                    usersFollowsResponseResult = usersFollowsResponse.Result;
-
-                    hasResponse = true;
-                    break;
-                } catch {
-                }
-            }
-
-            if (!hasResponse || usersFollowsResponseResult is null) {
-                rDict.Add(user.Id, new TwitchData(FollowerCount: 0, ThumbnailUrl: user.ProfileImageUrl));
-            } else {
-                rDict.Add(user.Id, new TwitchData(FollowerCount: (ulong)usersFollowsResponseResult.TotalFollows, ThumbnailUrl: user.ProfileImageUrl));
+            if (accessToken != null) {
+                ulong? followerCount = GetTwitchFollowerCount(user.Id, api.Settings.ClientId, accessToken);
+                rDict.Add(user.Id, new TwitchData(FollowerCount: followerCount ?? 0ul, ThumbnailUrl: user.ProfileImageUrl));
             }
         }
     }
 
     return rDict;
+}
+static string? GetTwitchAccessToken(string clientId, string clientSecret) {
+    HttpRequestMessage request = new(HttpMethod.Post, "https://id.twitch.tv/oauth2/token") {
+        Content = new FormUrlEncodedContent(
+        new Dictionary<string, string> {
+            { "client_id", clientId },
+            { "client_secret", clientSecret },
+            { "grant_type", "client_credentials" },
+        }
+        )
+    };
+
+    try {
+        HttpResponseMessage response = new HttpClient()
+            .SendAsync(request)
+            .Result
+            .EnsureSuccessStatusCode();
+
+
+        return JsonSerializer.Deserialize<TwitchOauth2Response>(response.Content.ReadAsStringAsync().Result)
+            ?.access_token;
+    } catch (HttpRequestException e) {
+        Console.WriteLine(e.Message);
+        return null;
+    }
+}
+
+static ulong? GetTwitchFollowerCount(string broadcasterId, string clientId, string accessToken) {
+    // don't know why query parameter doesn't work like the method in GetTwitchAccessToken
+    HttpRequestMessage request = new(HttpMethod.Get, $"https://api.twitch.tv/helix/channels/followers?broadcaster_id={broadcasterId}");
+
+    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+    request.Headers.Add("Client-Id", clientId);
+
+    try {
+        HttpResponseMessage response = new HttpClient()
+            .SendAsync(request)
+            .Result;
+
+        response.EnsureSuccessStatusCode();
+
+        return JsonSerializer.Deserialize<TwitchFollowerCountResponse>(response.Content.ReadAsStringAsync().Result)
+            ?.total;
+    } catch (HttpRequestException e) {
+        Console.WriteLine(e.Message);
+        return null;
+    }
 }
 
 // Key: YouTube Channel ID, Value: VTuber ID
