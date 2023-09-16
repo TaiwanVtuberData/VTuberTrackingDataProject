@@ -14,14 +14,11 @@ public class Fetcher {
 
     public record Credential(string ClientId, string Secret);
 
-    private readonly TwitchAPI api;
+    private readonly Credential _Credential;
     private readonly DateTimeOffset CurrentTime;
 
     public Fetcher(Credential credential, DateTimeOffset currentTime) {
-        api = new TwitchAPI();
-        api.Settings.ClientId = credential.ClientId;
-        api.Settings.Secret = credential.Secret;
-
+        _Credential = credential;
         CurrentTime = currentTime;
     }
 
@@ -52,13 +49,13 @@ public class Fetcher {
     }
 
     private (bool Success, ulong FollowerCount) GetChannelStatistics(string userId) {
-        string? accessToken = GetTwitchAccessToken(api.Settings.ClientId, api.Settings.Secret);
+        string? accessToken = GetTwitchAccessToken(_Credential.ClientId, _Credential.Secret);
 
         if (accessToken is null) {
             return (false, 0);
         }
 
-        ulong? followerCount = GetTwitchFollowerCount(userId, api.Settings.ClientId, accessToken);
+        ulong? followerCount = GetTwitchFollowerCount(userId, _Credential.ClientId, accessToken);
 
         if (followerCount is null) {
             return (false, 0);
@@ -126,6 +123,8 @@ public class Fetcher {
             bool hasResponse = false;
             for (int i = 0; i < 2; i++) {
                 try {
+                    TwitchAPI api = CreateTwitchApiInstance();
+
                     var videosResponse =
                         api.Helix.Videos.GetVideosAsync(
                             userId: userId,
@@ -209,6 +208,8 @@ public class Fetcher {
         bool hasResponse = false;
         for (int i = 0; i < 2; i++) {
             try {
+                TwitchAPI api = CreateTwitchApiInstance();
+
                 var streamResponse = api.Helix.Streams.GetStreamsAsync(userIds: new List<string>() { userId });
                 streamResponseResult = streamResponse.Result;
 
@@ -248,6 +249,8 @@ public class Fetcher {
         bool hasResponse = false;
         for (int i = 0; i < 2; i++) {
             try {
+                TwitchAPI api = CreateTwitchApiInstance();
+
                 var scheduleResponse = api.Helix.Schedule.GetChannelStreamScheduleAsync(
                     broadcasterId: userId,
                     first: 10
@@ -285,6 +288,14 @@ public class Fetcher {
         }
 
         return rLst;
+    }
+
+    private TwitchAPI CreateTwitchApiInstance() {
+        TwitchAPI api = new();
+        api.Settings.ClientId = _Credential.ClientId;
+        api.Settings.Secret = _Credential.Secret;
+
+        return api;
     }
 
     static T? ExecuteTwitchThrowableWithRetry<T>(Func<T> func) where T : class? {
