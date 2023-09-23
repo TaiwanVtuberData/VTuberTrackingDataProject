@@ -48,10 +48,10 @@ class Program {
             FileUtility.GetSingleLineFromFile(TwitchClientIdPath),
             FileUtility.GetSingleLineFromFile(TwitchSecretPath));
 
-        WriteBasicData(trackList, dictYouTube, dictTwitch, saveDir);
+        WriteBasicData(dictYouTube, dictTwitch, saveDir);
     }
 
-    static void WriteBasicData(TrackList trackList, Dictionary<string, YouTubeData> dictYouTube, Dictionary<string, TwitchData> dictTwitch, string outputFileDir) {
+    static void WriteBasicData(Dictionary<string, YouTubeData> dictYouTube, Dictionary<string, TwitchData> dictTwitch, string outputFileDir) {
         DateTime currentDateTime = DateTime.Now;
 
         // create monthly directory first
@@ -62,12 +62,12 @@ class Program {
 
         VTuberBasicData.WriteToCsv(
             writer,
-            MergeDictionary(trackList, dictYouTube, dictTwitch).Select(p => p.Value).ToList()
+            MergeDictionary(dictYouTube, dictTwitch).Select(p => p.Value).ToList()
             );
     }
 
     // Key: VTuber ID
-    static Dictionary<string, VTuberBasicData> MergeDictionary(TrackList trackList, Dictionary<string, YouTubeData> mainDict, Dictionary<string, TwitchData> minorDict) {
+    static Dictionary<string, VTuberBasicData> MergeDictionary(Dictionary<string, YouTubeData> mainDict, Dictionary<string, TwitchData> minorDict) {
         Dictionary<string, VTuberBasicData> rDict = new();
 
         foreach (KeyValuePair<string, YouTubeData> pair in mainDict) {
