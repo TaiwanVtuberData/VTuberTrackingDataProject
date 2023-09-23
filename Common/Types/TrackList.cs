@@ -224,6 +224,10 @@ public class TrackList {
     }
 
     private static Validation<ValidationError, string> ValidateDisplayName(string rawName) {
+        if (rawName.Trim() != rawName) {
+            return new ValidationError($"There is leading or trailing whitespce: {rawName}");
+        }
+
         if (rawName.Length == 0) {
             return new ValidationError($"Display name should not be empty: {rawName}");
         } else {
@@ -232,6 +236,10 @@ public class TrackList {
     }
 
     private static Validation<ValidationError, List<string>> ValidateAliasNames(string rawNames) {
+        if (rawNames.Trim() != rawNames) {
+            return new ValidationError($"There is leading or trailing whitespce: {rawNames}");
+        }
+
         List<string> result = rawNames.Split(',').ToList().Where(p => p != "").ToList();
 
         if (result.Where(p => p.Length == 0).Any()) {
@@ -242,6 +250,10 @@ public class TrackList {
     }
 
     private static Validation<ValidationError, string> ValidateYouTubeChannelId(string rawId) {
+        if (rawId.Trim() != rawId) {
+            return new ValidationError($"There is leading or trailing whitespce: {rawId}");
+        }
+
         // YouTube Channel ID format: 24 characters
         // Ex: UCRf7OJA3azS4RsGd_G96FUw
         if (rawId.Length != 24) {
@@ -255,6 +267,14 @@ public class TrackList {
 
     private readonly record struct TwitchInformation(string Id, string Name);
     private static Validation<ValidationError, TwitchInformation> ValidateTwitchInformation(string rawId, string rawName) {
+        if (rawId.Trim() != rawId) {
+            return new ValidationError($"There is leading or trailing whitespce: {rawId}");
+        }
+
+        if (rawName.Trim() != rawName) {
+            return new ValidationError($"There is leading or trailing whitespce: {rawName}");
+        }
+
         // Both Twitch Channel ID and Twitch Channel Name should present at the same time
         // Ex: 436730505, vtuber_amiru
         int TwitchIdNameNonEmptyCount = (new List<string> { rawId, rawName }).Where(p => p.Length != 0).Count();
@@ -378,6 +398,10 @@ public class TrackList {
     }
 
     private static Validation<ValidationError, Option<string>> ValidateGroupName(string rawName) {
+        if (rawName.Trim() != rawName) {
+            return new ValidationError($"There is leading or trailing whitespce: {rawName}");
+        }
+
         if (rawName.Length == 0) {
             return Option<string>.None;
         } else {
@@ -386,6 +410,10 @@ public class TrackList {
     }
 
     private static Validation<ValidationError, string> ValidateNationality(string rawNationality) {
+        if (rawNationality.Trim() != rawNationality) {
+            return new ValidationError($"There is leading or trailing whitespce: {rawNationality}");
+        }
+
         if (rawNationality.Length == 0) {
             return new ValidationError($"Nationality should not be empty: {rawNationality}");
         } else {
