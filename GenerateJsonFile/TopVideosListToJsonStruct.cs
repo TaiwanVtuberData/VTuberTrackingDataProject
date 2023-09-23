@@ -1,4 +1,5 @@
 ﻿using Common.Types;
+using Common.Types.Basic;
 using GenerateJsonFile.Types;
 using GenerateJsonFile.Utils;
 
@@ -39,7 +40,7 @@ class TopVideosListToJsonStruct {
             lstVideoInformation = topVideoList.GetNoDuplicateList();
         }
 
-        List<string> lstValidVTubers = dictRecord.Keys.ToList();
+        List<VTuberId> lstValidVTubers = dictRecord.Keys.ToList();
 
         foreach (VideoInformation videoInfo in lstVideoInformation
             .Where(p => lstValidVTubers.Contains(p.Id))

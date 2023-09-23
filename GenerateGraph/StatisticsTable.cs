@@ -1,4 +1,5 @@
 ﻿using Common.Types;
+using Common.Types.Basic;
 using System.Data;
 
 namespace GenerateGraph;
@@ -17,22 +18,22 @@ class StatisticsTable : DataTable {
                 this.Columns.Add(groupName, typeof(VTuberStatistics));
             }
         } else {
-            foreach (string id in _TrackList.GetIdList()) {
-                this.Columns.Add(id, typeof(VTuberStatistics));
+            foreach (VTuberId id in _TrackList.GetIdList()) {
+                this.Columns.Add(id.Value, typeof(VTuberStatistics));
             }
         }
     }
 
-    public void AddRow(DateTime dateTime, Dictionary<string, VTuberStatistics> statisticsDict) {
+    public void AddRow(DateTime dateTime, Dictionary<VTuberId, VTuberStatistics> statisticsDict) {
         _RowDateTime.Add(dateTime);
 
         DataRow dataRow = this.NewRow();
-        foreach (KeyValuePair<string, VTuberStatistics> channelStat in statisticsDict) {
-            string channelName = channelStat.Key;
+        foreach (KeyValuePair<VTuberId, VTuberStatistics> channelStat in statisticsDict) {
+            VTuberId channelName = channelStat.Key;
             VTuberStatistics stat = channelStat.Value;
 
-            if (this.Columns.Contains(channelName)) {
-                dataRow[channelName] = stat;
+            if (this.Columns.Contains(channelName.Value)) {
+                dataRow[channelName.Value] = stat;
             }
         }
 
@@ -91,13 +92,13 @@ class StatisticsTable : DataTable {
         return obj;
     }
 
-    public Dictionary<string, List<decimal>> GetStatisticDictByField(string fieldName, decimal? youTubeSubscriberCountConstriant) {
+    public Dictionary<VTuberId, List<decimal>> GetStatisticDictByField(string fieldName, decimal? youTubeSubscriberCountConstriant) {
         // initialize capacity, not size
-        Dictionary<string, List<decimal>> rList = new(_RowDateTime.Count);
+        Dictionary<VTuberId, List<decimal>> rList = new(_RowDateTime.Count);
 
         if (!youTubeSubscriberCountConstriant.HasValue) {
             foreach (DataColumn column in this.Columns) {
-                rList.Add(column.ColumnName, new List<decimal>());
+                rList.Add(new VTuberId(column.ColumnName), new List<decimal>());
             }
         } else {
             DataRow lastRow = this.Rows[this.Rows.Count - 1];
@@ -110,7 +111,7 @@ class StatisticsTable : DataTable {
                     decimal value = Convert.ToDecimal(GetPropValue(statObj, "YouTube.Basic.SubscriberCount"));
 
                     if (value >= youTubeSubscriberCountConstriant)
-                        rList.Add(column.ColumnName, new List<decimal>());
+                        rList.Add(new VTuberId(column.ColumnName), new List<decimal>());
                 }
 
                 index++;
@@ -121,12 +122,12 @@ class StatisticsTable : DataTable {
             foreach (DataColumn column in this.Columns) {
                 object statObj = row[column.ColumnName];
 
-                if (rList.ContainsKey(column.ColumnName)) {
+                if (rList.ContainsKey(new VTuberId(column.ColumnName))) {
                     if (statObj.GetType() == typeof(VTuberStatistics)) {
                         decimal value = Convert.ToDecimal(GetPropValue(statObj, fieldName));
-                        rList[column.ColumnName].Add(value);
+                        rList[new VTuberId(column.ColumnName)].Add(value);
                     } else {
-                        rList[column.ColumnName].Add(0m);
+                        rList[new VTuberId(column.ColumnName)].Add(0m);
                     }
                 }
             }

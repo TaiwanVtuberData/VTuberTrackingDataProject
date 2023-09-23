@@ -1,14 +1,15 @@
 ﻿using Common.Types;
+using Common.Types.Basic;
 using Common.Utils;
 
 namespace GenerateJsonFile.Types;
 
 // Key: VTuber ID
-public class DictionaryRecord : Dictionary<string, VTuberRecord> {
-    public DictionaryRecord(TrackList trackList, List<string> excluedList, Dictionary<string, VTuberBasicData> dictBasicData) {
-        List<string> lstId = trackList.GetIdList();
+public class DictionaryRecord : Dictionary<VTuberId, VTuberRecord> {
+    public DictionaryRecord(TrackList trackList, List<VTuberId> excluedList, Dictionary<VTuberId, VTuberBasicData> dictBasicData) {
+        List<VTuberId> lstId = trackList.GetIdList();
 
-        foreach (string id in lstId) {
+        foreach (VTuberId id in lstId) {
             if (excluedList.Contains(id)) {
                 continue;
             }
@@ -22,7 +23,7 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
                 DebutDate = trackList.GetDebutDate(id),
                 GraduationDate = trackList.GetGraduationDate(id),
                 Activity = trackList.GetActivity(id),
-                GroupName = trackList.GetGroupName(id),
+                GroupName = trackList.GetGroupName(id)?.Value,
                 Nationality = trackList.GetNationality(id),
                 ImageUrl = imageUrl,
 
@@ -44,9 +45,9 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
         }
     }
 
-    public void AppendStatistic(DateTime recordDateTime, Dictionary<string, VTuberStatistics> statisticsDict) {
-        foreach (KeyValuePair<string, VTuberStatistics> vtuberStatPair in statisticsDict) {
-            string id = vtuberStatPair.Key;
+    public void AppendStatistic(DateTime recordDateTime, Dictionary<VTuberId, VTuberStatistics> statisticsDict) {
+        foreach (KeyValuePair<VTuberId, VTuberStatistics> vtuberStatPair in statisticsDict) {
+            VTuberId id = vtuberStatPair.Key;
             if (!this.ContainsKey(id)) {
                 continue;
             }
@@ -76,9 +77,9 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
             this[id].Twitch?.AddRecord(recordDateTime, twitchRecord);
         }
     }
-    public void AppendBasicData(DateTime recordDateTime, Dictionary<string, VTuberStatistics> statisticsDict) {
-        foreach (KeyValuePair<string, VTuberStatistics> vtuberStatPair in statisticsDict) {
-            string id = vtuberStatPair.Key;
+    public void AppendBasicData(DateTime recordDateTime, Dictionary<VTuberId, VTuberStatistics> statisticsDict) {
+        foreach (KeyValuePair<VTuberId, VTuberStatistics> vtuberStatPair in statisticsDict) {
+            VTuberId id = vtuberStatPair.Key;
             if (!this.ContainsKey(id)) {
                 continue;
             }
@@ -103,9 +104,9 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
             }
         }
     }
-    public void AppendBasicData(DateTime recordDateTime, Dictionary<string, VTuberBasicData> dictBasicData) {
-        foreach (KeyValuePair<string, VTuberBasicData> vtuberDataPair in dictBasicData) {
-            string id = vtuberDataPair.Key;
+    public void AppendBasicData(DateTime recordDateTime, Dictionary<VTuberId, VTuberBasicData> dictBasicData) {
+        foreach (KeyValuePair<VTuberId, VTuberBasicData> vtuberDataPair in dictBasicData) {
+            VTuberId id = vtuberDataPair.Key;
             if (!this.ContainsKey(id)) {
                 continue;
             }
@@ -137,7 +138,7 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
 
     public List<VTuberRecord> GetAboutToDebutList(DateOnly date) {
         List<VTuberRecord> rLst = new();
-        foreach (KeyValuePair<string, VTuberRecord> pair in this) {
+        foreach (KeyValuePair<VTuberId, VTuberRecord> pair in this) {
             VTuberRecord record = pair.Value;
 
             if (record.DebutDate is null) {
@@ -166,7 +167,7 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
     }
 
 
-    public GrowthResult GetYouTubeSubscriberCountGrowth(string id, int days, int daysLimit) {
+    public GrowthResult GetYouTubeSubscriberCountGrowth(VTuberId id, int days, int daysLimit) {
         // at least one(1) day interval
         daysLimit = Math.Max(1, daysLimit);
 
@@ -211,7 +212,7 @@ public class DictionaryRecord : Dictionary<string, VTuberRecord> {
         }
     }
 
-    public GrowthResult GetYouTubeViewCountGrowth(string id, int days, int daysLimit) {
+    public GrowthResult GetYouTubeViewCountGrowth(VTuberId id, int days, int daysLimit) {
         // at least one(1) day interval
         daysLimit = Math.Max(1, daysLimit);
 

@@ -1,4 +1,5 @@
 using Common.Types;
+using Common.Types.Basic;
 using Common.Utils;
 using GenerateJsonFile.Types;
 using GenerateJsonFile.Utils;
@@ -19,11 +20,11 @@ class Program {
 
         (_, DateTime latestRecordTime) = FileUtility.GetLatestRecord(dataRepoPath, "record");
 
-        List<string> excluedList = FileUtility.GetListFromCsv(Path.Combine(dataRepoPath, "DATA/EXCLUDE_LIST.csv"));
+        List<VTuberId> excluedList = FileUtility.GetListFromCsv(Path.Combine(dataRepoPath, "DATA/EXCLUDE_LIST.csv"));
         TrackList trackList = new(Path.Combine(dataRepoPath, "DATA/TW_VTUBER_TRACK_LIST.csv"), lstExcludeId: excluedList, throwOnValidationFail: true);
 
         (string latestBasicDataFilePath, DateTime latestBasicDataTime) = FileUtility.GetLatestRecord(dataRepoPath, "basic-data");
-        Dictionary<string, VTuberBasicData> dictBasicData = VTuberBasicData.ReadFromCsv(latestBasicDataFilePath);
+        Dictionary<VTuberId, VTuberBasicData> dictBasicData = VTuberBasicData.ReadFromCsv(latestBasicDataFilePath);
 
         (string latestLivestreamsFilePath, DateTime latestLivestreamsDateTime) = FileUtility.GetLatestRecord(dataRepoPath, "livestreams");
         LiveVideosList liveVideos = new(latestLivestreamsFilePath, clearGarbage: true, throwOnValidationFail: true);
@@ -287,7 +288,7 @@ class Program {
             recentDays: recentDays);
 
         foreach (Tuple<FileInfo, DateTime> fileInfoDateTime in csvFileList) {
-            Dictionary<string, VTuberStatistics> dictStatistics = CsvUtility.ReadStatisticsDictionary(fileInfoDateTime.Item1.FullName);
+            Dictionary<VTuberId, VTuberStatistics> dictStatistics = CsvUtility.ReadStatisticsDictionary(fileInfoDateTime.Item1.FullName);
 
             if (dictStatistics.Count >= trackList.GetCount() * 0.5) {
                 dictRecord.AppendStatistic(fileInfoDateTime.Item2, dictStatistics);
@@ -303,7 +304,7 @@ class Program {
             recentDays: recentDays);
 
         foreach (Tuple<FileInfo, DateTime> fileInfoDateTime in csvFileList) {
-            Dictionary<string, VTuberBasicData> dictBasicData = VTuberBasicData.ReadFromCsv(fileInfoDateTime.Item1.FullName);
+            Dictionary<VTuberId, VTuberBasicData> dictBasicData = VTuberBasicData.ReadFromCsv(fileInfoDateTime.Item1.FullName);
 
             if (dictBasicData.Count >= trackList.GetCount() * 0.5) {
                 dictRecord.AppendBasicData(fileInfoDateTime.Item2, dictBasicData);

@@ -1,4 +1,5 @@
 ﻿using Common.Types;
+using Common.Types.Basic;
 using Common.Utils;
 using FetchTwitchStatistics.Types;
 using log4net;
@@ -164,7 +165,7 @@ public class Fetcher {
 
                     try {
                         topVideosList.Insert(new VideoInformation {
-                            Id = userId,
+                            Id = new VTuberId(userId),
                             Url = $"https://www.twitch.tv/videos/{video.Id}",
                             Title = video.Title,
                             ThumbnailUrl = video.ThumbnailUrl,
@@ -230,7 +231,7 @@ public class Fetcher {
         TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream stream = streams[0];
 
         return (new LiveVideoInformation {
-            Id = userId,
+            Id = new VTuberId(userId),
             Url = $"https://www.twitch.tv/{stream.UserLogin}",
             Title = stream.Title,
             ThumbnailUrl = stream.ThumbnailUrl,
@@ -272,7 +273,7 @@ public class Fetcher {
         foreach (var segment in schedule.Segments) {
             try {
                 rLst.Add(new LiveVideoInformation {
-                    Id = userId,
+                    Id = new VTuberId(userId),
                     Url = $"https://www.twitch.tv/{schedule.BroadcasterLogin}",
                     Title = segment.Title,
                     ThumbnailUrl = "",

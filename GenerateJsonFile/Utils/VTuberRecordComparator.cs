@@ -1,4 +1,5 @@
-﻿using GenerateJsonFile.Types;
+﻿using Common.Types.Basic;
+using GenerateJsonFile.Types;
 
 namespace GenerateJsonFile.Utils;
 internal class VTuberRecordComparator {
@@ -34,12 +35,12 @@ internal class VTuberRecordComparator {
         }
     }
 
-    public class CombinedCount : IComparer<KeyValuePair<string, VTuberRecord>> {
+    public class CombinedCount : IComparer<KeyValuePair<VTuberId, VTuberRecord>> {
         readonly DateTime TargetDateTime;
         public CombinedCount(DateTime targetDateTime) {
             TargetDateTime = targetDateTime;
         }
-        public int Compare(KeyValuePair<string, VTuberRecord> lhs, KeyValuePair<string, VTuberRecord> rhs) {
+        public int Compare(KeyValuePair<VTuberId, VTuberRecord> lhs, KeyValuePair<VTuberId, VTuberRecord> rhs) {
             VTuberRecord.YouTubeData.BasicData? lhsYouTubeRecord = lhs.Value.YouTube?.GetBasicData(TargetDateTime);
             VTuberRecord.YouTubeData.BasicData? rhsYouTubeRecord = rhs.Value.YouTube?.GetBasicData(TargetDateTime);
 
@@ -61,12 +62,12 @@ internal class VTuberRecordComparator {
         }
     }
 
-    public class CombinedViewCount : IComparer<KeyValuePair<string, VTuberRecord>> {
+    public class CombinedViewCount : IComparer<KeyValuePair<VTuberId, VTuberRecord>> {
         readonly DateTime TargetDateTime;
         public CombinedViewCount(DateTime targetDateTime) {
             TargetDateTime = targetDateTime;
         }
-        public int Compare(KeyValuePair<string, VTuberRecord> lhs, KeyValuePair<string, VTuberRecord> rhs) {
+        public int Compare(KeyValuePair<VTuberId, VTuberRecord> lhs, KeyValuePair<VTuberId, VTuberRecord> rhs) {
             VTuberRecord.YouTubeData.Record? lhsYouTubeRecord = lhs.Value.YouTube?.GetRecord(TargetDateTime);
             VTuberRecord.YouTubeData.Record? rhsYouTubeRecord = rhs.Value.YouTube?.GetRecord(TargetDateTime);
 

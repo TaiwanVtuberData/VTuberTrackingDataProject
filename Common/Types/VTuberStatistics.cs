@@ -1,4 +1,6 @@
-﻿namespace Common.Types;
+﻿using Common.Types.Basic;
+
+namespace Common.Types;
 public class VTuberStatistics {
     public enum Version {
         Unknown,
@@ -44,7 +46,7 @@ public class VTuberStatistics {
         };
     }
 
-    public string Id { get; private set; } = "";
+    public VTuberId Id { get; private set; } = new VTuberId("");
     public YouTubeStatistics YouTube { get; private set; } = new(
         Basic: new(
             SubscriberCount: 0,
@@ -92,18 +94,18 @@ public class VTuberStatistics {
     );
 
     public VTuberStatistics(string id) {
-        this.Id = id;
+        this.Id = new VTuberId(id);
     }
 
     public VTuberStatistics(string id, YouTubeStatistics youTubeStatistics, TwitchStatistics twitchStatistics) {
-        this.Id = id;
+        this.Id = new VTuberId(id);
         this.YouTube = youTubeStatistics;
         this.Twitch = twitchStatistics;
     }
 
     public VTuberStatistics(string[] header, string[] stringBlocks, string? displayName = null) {
         // if displayName is not specified, use ID from stringBlocks
-        this.Id = displayName ?? stringBlocks[0];
+        this.Id = new VTuberId(displayName ?? stringBlocks[0]);
 
         Version version = GetVersion(header[0], stringBlocks.Length);
         (YouTubeRecord youTubeRecord, TwitchStatistics twitchStatistics) =
@@ -129,7 +131,7 @@ public class VTuberStatistics {
     public static VTuberStatistics GenerateStatisticsByInterpolation(decimal preRatio, VTuberStatistics preStat, VTuberStatistics postStat) {
         decimal postRatio = 1m - preRatio;
 
-        VTuberStatistics rValue = new(preStat.Id);
+        VTuberStatistics rValue = new(preStat.Id.Value);
         rValue.YouTube = CombineYouTubeStatistics(preRatio, preStat.YouTube, postStat.YouTube);
 
         rValue.Twitch.RecentMedianViewCount = (ulong)(preRatio * preStat.Twitch.RecentMedianViewCount + postRatio * postStat.Twitch.RecentMedianViewCount);

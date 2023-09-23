@@ -1,7 +1,11 @@
-﻿namespace GenerateJsonFile.Types;
+﻿using Common.Types.Basic;
+using Common.Utils;
+using System.Text.Json.Serialization;
+
+namespace GenerateJsonFile.Types;
 
 internal record VTuberGraduateData(
-    string id,
+    [property: JsonConverter(typeof(VTuberIdJsonConverter))] VTuberId id,
     Activity activity,
     string name,
     string? imgUrl,

@@ -1,4 +1,5 @@
-﻿using System.Xml;
+﻿using Common.Types.Basic;
+using System.Xml;
 
 namespace Common.Types;
 public class TopVideosList {
@@ -38,7 +39,7 @@ public class TopVideosList {
 
     public void Insert(string[] entryBlock) {
         Insert(new VideoInformation() {
-            Id = entryBlock[0],
+            Id = new VTuberId(entryBlock[0]),
             ViewCount = ulong.Parse(entryBlock[1]),
             Title = entryBlock[2],
             PublishDateTime = XmlConvert.ToDateTime(entryBlock[3], XmlDateTimeSerializationMode.Utc),

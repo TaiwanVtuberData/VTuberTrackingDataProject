@@ -1,4 +1,5 @@
 ﻿using Common.Types;
+using Common.Types.Basic;
 
 namespace FetchStatistics;
 

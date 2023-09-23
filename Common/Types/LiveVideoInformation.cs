@@ -1,11 +1,13 @@
-﻿using CsvHelper.Configuration;
+﻿using Common.Types.Basic;
+using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
+using static Common.Utils.CsvUtility;
 
 namespace Common.Types;
 
 public class LiveVideoInformation : IComparable<VideoInformation> {
     [Index(0), HeaderPrefix]
-    public string Id { get; set; } = "";
+    public VTuberId Id { get; set; } = new VTuberId("");
     [Index(4)]
     public string Url { get; init; } = "";
     [Index(2)]
@@ -34,6 +36,7 @@ public sealed class LiveVideoInformationMap : ClassMap<LiveVideoInformation> {
         Map(m => m.Url).Name("URL");
         Map(m => m.ThumbnailUrl).Name("Thumbnail URL");
 
+        Map(m => m.Id).TypeConverter(new VTuberIdConverter());
         // 2021-12-31T18:58:28Z
         string RFC3339Format = @"yyyy-MM-ddTHH:mm:ssZ";
         Map(m => m.PublishDateTime).TypeConverterOption.Format(RFC3339Format);

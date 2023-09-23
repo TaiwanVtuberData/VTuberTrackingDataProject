@@ -1,4 +1,8 @@
 ﻿using Common.Types;
+using Common.Types.Basic;
+using CsvHelper;
+using CsvHelper.Configuration;
+using CsvHelper.TypeConversion;
 using Microsoft.VisualBasic.FileIO;
 
 namespace Common.Utils;
@@ -37,11 +41,25 @@ public class CsvUtility {
         return rLst;
     }
 
-    public static Dictionary<string, VTuberStatistics> ReadStatisticsDictionary(string filePath) {
+    public static Dictionary<VTuberId, VTuberStatistics> ReadStatisticsDictionary(string filePath) {
         List<VTuberStatistics> lstStatistics = ReadStatisticsList(filePath);
 
         return lstStatistics.ToDictionary(
             t => t.Id,
             t => t);
+    }
+
+    public class VTuberIdConverter : ITypeConverter {
+        public object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData) {
+            return new VTuberId(text);
+        }
+
+        public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData) {
+            if (value is null) {
+                return "";
+            }
+
+            return (value as VTuberId)?.Value ?? "";
+        }
     }
 }

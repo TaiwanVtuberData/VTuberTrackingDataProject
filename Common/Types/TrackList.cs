@@ -1,10 +1,10 @@
-﻿using LanguageExt;
+﻿using Common.Types.Basic;
+using LanguageExt;
 using Microsoft.VisualBasic.FileIO;
 
 namespace Common.Types;
 public class TrackList {
-    // Key: ID, Value: VTuberData
-    private Dictionary<string, VTuberData> internalDictionary = new();
+    private Dictionary<VTuberId, VTuberData> internalDictionary = new();
     public IEnumerator<VTuberData> GetEnumerator() {
         return internalDictionary.Values.GetEnumerator();
     }
@@ -28,7 +28,7 @@ public class TrackList {
         { "Nationality", 10 },
     };
 
-    public TrackList(string csvFilePath, List<string> lstExcludeId, bool throwOnValidationFail) {
+    public TrackList(string csvFilePath, List<VTuberId> lstExcludeId, bool throwOnValidationFail) {
         Validation<ValidationError, TrackList> loadResult = LoadAndValidateDateAndActivity(csvFilePath, todayDate: null);
 
         loadResult.Match(
@@ -45,7 +45,7 @@ public class TrackList {
             );
     }
 
-    private TrackList(Dictionary<string, VTuberData> dict) {
+    private TrackList(Dictionary<VTuberId, VTuberData> dict) {
         internalDictionary = dict;
     }
 
@@ -84,7 +84,7 @@ public class TrackList {
             lstData => {
                 return CheckFieldsDuplicate(lstData).Match<Validation<ValidationError, TrackList>>(
                     validatedLstData => {
-                        Dictionary<string, VTuberData> dictLoaded =
+                        Dictionary<VTuberId, VTuberData> dictLoaded =
                         validatedLstData.ToDictionary(
                             t => t.Id,
                             t => t);
@@ -119,7 +119,7 @@ public class TrackList {
     }
 
     private static Validation<ValidationError, OptionNone> CheckIdDuplicate(IEnumerable<VTuberData> lstVtuberData) {
-        List<string> duplicateId = lstVtuberData
+        List<VTuberId> duplicateId = lstVtuberData
             .GroupBy(p => p.Id)
             .Where(p => p.Count() > 1)
             .Select(p => p.Key)
@@ -408,70 +408,75 @@ public class TrackList {
         }
     }
 
-    public bool HasId(string id) {
+    public bool HasId(VTuberId id) {
         return internalDictionary.ContainsKey(id);
     }
 
-    public string GetDisplayName(string id) {
+    public string GetDisplayName(VTuberId id) {
         return internalDictionary[id].DisplayName;
     }
 
-    public string GetIdByYouTubeChannelId(string YouTubeChannelId) {
+    public VTuberId GetIdByYouTubeChannelId(string YouTubeChannelId) {
         return internalDictionary.Find(p => p.Value.YouTubeChannelId == YouTubeChannelId)
             .Match(
             some => some.Key,
             None: () => throw new KeyNotFoundException($"Could not find YouTube Channel ID: {YouTubeChannelId}"));
     }
 
-    public string GetIdByTwitchChannelId(string TwitchChannelId) {
+    public VTuberId GetIdByTwitchChannelId(string TwitchChannelId) {
         return internalDictionary.Find(p => p.Value.TwitchChannelId == TwitchChannelId)
             .Match(
             some => some.Key,
             None: () => throw new KeyNotFoundException($"Could not find Twitch Channel ID: {TwitchChannelId}"));
     }
 
-    public string GetYouTubeChannelId(string id) {
+    public string GetYouTubeChannelId(VTuberId id) {
         return internalDictionary[id].YouTubeChannelId;
     }
 
-    public string GetTwitchChannelId(string id) {
+    public string GetTwitchChannelId(VTuberId id) {
         return internalDictionary[id].TwitchChannelId;
     }
 
-    public string GetTwitchChannelName(string id) {
+    public string GetTwitchChannelName(VTuberId id) {
         return internalDictionary[id].TwitchChannelName;
     }
 
-    public string? GetGroupName(string id) {
-        return internalDictionary[id].GroupName;
+    public VTuberId? GetGroupName(VTuberId id) {
+        string? groupName = internalDictionary[id].GroupName;
+        if (groupName is null) {
+            return null;
+        } else {
+            return (VTuberId?)new VTuberId(groupName);
+        }
     }
 
-    public DateOnly? GetDebutDate(string id) {
+    public DateOnly? GetDebutDate(VTuberId id) {
         return internalDictionary[id].DebuteDate;
     }
 
-    public DateOnly? GetGraduationDate(string id) {
+    public DateOnly? GetGraduationDate(VTuberId id) {
         return internalDictionary[id].GraduationDate;
     }
 
-    public string GetNationality(string id) {
+    public string GetNationality(VTuberId id) {
         return internalDictionary[id].Nationality;
     }
 
-    public Activity GetActivity(string id) {
+    public Activity GetActivity(VTuberId id) {
         return internalDictionary[id].Activity;
     }
 
     public int GetVtuberWithGroupCount() {
         int vtuberWithGroupCount = 0;
-        foreach (KeyValuePair<string, VTuberData> keyValuePair in internalDictionary) {
+        foreach (KeyValuePair<VTuberId, VTuberData> keyValuePair in internalDictionary) {
             if (keyValuePair.Value.GroupName is not null)
                 vtuberWithGroupCount++;
         }
 
         return vtuberWithGroupCount;
     }
-    public List<string> GetIdList() {
+    public List<VTuberId> GetIdList() {
         return internalDictionary.Keys.ToList();
     }
 
@@ -488,7 +493,7 @@ public class TrackList {
 
     public List<string> GetYouTubeChannelIdList() {
         List<string> rList = new();
-        foreach (KeyValuePair<string, VTuberData> keyValuePair in internalDictionary) {
+        foreach (KeyValuePair<VTuberId, VTuberData> keyValuePair in internalDictionary) {
             rList.Add(keyValuePair.Value.YouTubeChannelId);
         }
 

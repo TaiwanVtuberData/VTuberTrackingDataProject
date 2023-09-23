@@ -1,4 +1,5 @@
 ﻿using Common.Types;
+using Common.Types.Basic;
 using Common.Utils;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
@@ -194,7 +195,7 @@ public class Fetcher {
                         }
 
                         rTopVideosList.Insert(new VideoInformation {
-                            Id = channelInfo.Id,
+                            Id = new VTuberId(channelInfo.Id),
                             Url = $"https://www.youtube.com/watch?v={video.Id}",
                             Title = video.Snippet.Title,
                             ThumbnailUrl = video.Snippet.Thumbnails.Medium.Url,
@@ -210,7 +211,7 @@ public class Fetcher {
                             ?? DateTimeOffset.UnixEpoch);
 
                         rLiveVideosList.Add(new LiveVideoInformation {
-                            Id = channelInfo.Id,
+                            Id = new VTuberId(channelInfo.Id),
                             Url = $"https://www.youtube.com/watch?v={video.Id}",
                             Title = video.Snippet.Title,
                             ThumbnailUrl = video.Snippet.Thumbnails.Medium.Url,

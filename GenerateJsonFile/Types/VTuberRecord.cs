@@ -1,6 +1,8 @@
-﻿namespace GenerateJsonFile.Types;
+﻿using Common.Types.Basic;
+
+namespace GenerateJsonFile.Types;
 public class VTuberRecord {
-    public string Id { get; set; } = "";
+    public VTuberId Id { get; set; } = new VTuberId("");
     public string DisplayName { get; set; } = "";
     public DateOnly? DebutDate { get; set; }
     public DateOnly? GraduationDate { get; set; }

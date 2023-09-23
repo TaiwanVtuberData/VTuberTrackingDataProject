@@ -1,7 +1,11 @@
-﻿namespace GenerateJsonFile.Types;
+﻿using Common.Types.Basic;
+using Common.Utils;
+using System.Text.Json.Serialization;
+
+namespace GenerateJsonFile.Types;
 
 internal record LivestreamData(
-    string id,
+    [property: JsonConverter(typeof(VTuberIdJsonConverter))] VTuberId id,
     string name,
     string? imgUrl,
     string? title,

@@ -1,4 +1,5 @@
-﻿using LanguageExt;
+﻿using Common.Types.Basic;
+using LanguageExt;
 using Microsoft.VisualBasic.FileIO;
 using System.Xml;
 

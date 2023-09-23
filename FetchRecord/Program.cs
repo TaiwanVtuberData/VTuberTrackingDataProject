@@ -1,4 +1,5 @@
 ﻿using Common.Types;
+using Common.Types.Basic;
 using Common.Utils;
 using FetchStatistics;
 using log4net;
@@ -33,12 +34,14 @@ YouTubeRecord DEFAULT_YOUTUBE_RECORD = new(
         )
     );
 
+log.Info("Start program");
 try {
     mainProcess();
 } catch (Exception e) {
     log.Error("Unhandled exception");
     log.Error(e.Message, e);
 }
+log.Info("End program");
 
 void mainProcess() {
     string[] defaultArgs = new string[] {
@@ -89,14 +92,10 @@ void mainProcess() {
             fetchTwitchLivestreamsAndWrite(twitchDataFetcher, trackList, CONFIG.SavePath, CURRENT_TIME);
             break;
     }
-
-
-    log.Info("End program");
 }
 
 TrackList createTrackList(string excludeListPath, string trackListPath) {
-    List<string> excluedList = FileUtility.GetListFromCsv(excludeListPath);
-    log.Info($"excluedList: {string.Join(",", excluedList)}");
+    List<VTuberId> excluedList = FileUtility.GetListFromCsv(excludeListPath);
     TrackList trackList = new(csvFilePath: trackListPath, lstExcludeId: excluedList, throwOnValidationFail: true);
     log.Info($"trackList.GetCount(): {trackList.GetCount()}");
 
@@ -160,7 +159,7 @@ void fetchTwitchLivestreamsAndWrite(
         YouTubeRecord youTubeRecord = keyValue.Value;
 
         try {
-            VTuberId vTuberId = new(trackList.GetIdByYouTubeChannelId(youTubeChannelId.Value));
+            VTuberId vTuberId = trackList.GetIdByYouTubeChannelId(youTubeChannelId.Value);
             rDict.Add(vTuberId, youTubeRecord);
         } catch (Exception e) {
             log.Error($"Error while converting rDict");
@@ -171,7 +170,7 @@ void fetchTwitchLivestreamsAndWrite(
 
     foreach (VideoInformation videoInfo in rVideosList) {
         try {
-            videoInfo.Id = trackList.GetIdByYouTubeChannelId(videoInfo.Id);
+            videoInfo.Id = trackList.GetIdByYouTubeChannelId(videoInfo.Id.Value);
         } catch (Exception e) {
             log.Error($"Error while converting rVideoList");
             log.Error($"GetIdByYouTubeChannelId with input {videoInfo.Id}");
@@ -181,7 +180,7 @@ void fetchTwitchLivestreamsAndWrite(
 
     foreach (LiveVideoInformation videoInfo in rLiveVideosList) {
         try {
-            videoInfo.Id = trackList.GetIdByYouTubeChannelId(videoInfo.Id);
+            videoInfo.Id = trackList.GetIdByYouTubeChannelId(videoInfo.Id.Value);
         } catch (Exception e) {
             log.Error($"Error while converting liveVideosList");
             log.Error($"GetIdByYouTubeChannelId with input {videoInfo.Id}");
@@ -210,11 +209,11 @@ void fetchTwitchLivestreamsAndWrite(
             if (!successful) { continue; }
         }
 
-        rDict.Add(new VTuberId(vtuber.Id), twitchRecord);
+        rDict.Add(vtuber.Id, twitchRecord);
 
         foreach (VideoInformation videoInfo in twitchTopVideoList) {
             try {
-                videoInfo.Id = trackList.GetIdByTwitchChannelId(videoInfo.Id);
+                videoInfo.Id = trackList.GetIdByTwitchChannelId(videoInfo.Id.Value);
             } catch (Exception e) {
                 log.Error($"Error while converting twitchTopVideoList");
                 log.Error($"GetIdByTwitchChannelId with input {videoInfo.Id}");
@@ -226,7 +225,7 @@ void fetchTwitchLivestreamsAndWrite(
 
         foreach (LiveVideoInformation videoInfo in twitchLiveVideosList) {
             try {
-                videoInfo.Id = trackList.GetIdByTwitchChannelId(videoInfo.Id);
+                videoInfo.Id = trackList.GetIdByTwitchChannelId(videoInfo.Id.Value);
             } catch (Exception e) {
                 log.Error($"Error while converting twitchTopVideoList");
                 log.Error($"GetIdByTwitchChannelId with input {videoInfo.Id}");

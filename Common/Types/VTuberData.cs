@@ -1,6 +1,8 @@
-﻿namespace Common.Types;
+﻿using Common.Types.Basic;
+
+namespace Common.Types;
 public readonly record struct VTuberData(
-    string Id,
+    VTuberId Id,
     string DisplayName,
     List<string> LstAliasName,
     string YouTubeChannelId,

@@ -1,4 +1,5 @@
 ﻿using Common.Types;
+using Common.Types.Basic;
 using Common.Utils;
 using FetchBasicData.Types;
 using Google.Apis.Services;
@@ -38,20 +39,20 @@ class Program {
         log.Info(excludeListPath);
         log.Info(saveDir);
 
-        List<string> excluedList = FileUtility.GetListFromCsv(excludeListPath);
+        List<VTuberId> excluedList = FileUtility.GetListFromCsv(excludeListPath);
         TrackList trackList = new(csvFilePath: trackListPath, lstExcludeId: excluedList, throwOnValidationFail: true);
 
         log.Info($"Total entries: {trackList.GetCount()}");
 
-        Dictionary<string, YouTubeData> dictYouTube = GenerateYouTubeDataDict(trackList, FileUtility.GetSingleLineFromFile(YouTubeApiKeyPath));
-        Dictionary<string, TwitchData> dictTwitch = GenerateTwitchDataDict(trackList,
+        Dictionary<VTuberId, YouTubeData> dictYouTube = GenerateYouTubeDataDict(trackList, FileUtility.GetSingleLineFromFile(YouTubeApiKeyPath));
+        Dictionary<VTuberId, TwitchData> dictTwitch = GenerateTwitchDataDict(trackList,
             FileUtility.GetSingleLineFromFile(TwitchClientIdPath),
             FileUtility.GetSingleLineFromFile(TwitchSecretPath));
 
         WriteBasicData(dictYouTube, dictTwitch, saveDir);
     }
 
-    static void WriteBasicData(Dictionary<string, YouTubeData> dictYouTube, Dictionary<string, TwitchData> dictTwitch, string outputFileDir) {
+    static void WriteBasicData(Dictionary<VTuberId, YouTubeData> dictYouTube, Dictionary<VTuberId, TwitchData> dictTwitch, string outputFileDir) {
         DateTime currentDateTime = DateTime.Now;
 
         // create monthly directory first
@@ -67,11 +68,11 @@ class Program {
     }
 
     // Key: VTuber ID
-    static Dictionary<string, VTuberBasicData> MergeDictionary(Dictionary<string, YouTubeData> mainDict, Dictionary<string, TwitchData> minorDict) {
-        Dictionary<string, VTuberBasicData> rDict = new();
+    static Dictionary<VTuberId, VTuberBasicData> MergeDictionary(Dictionary<VTuberId, YouTubeData> mainDict, Dictionary<VTuberId, TwitchData> minorDict) {
+        Dictionary<VTuberId, VTuberBasicData> rDict = new();
 
-        foreach (KeyValuePair<string, YouTubeData> pair in mainDict) {
-            string VTuberId = pair.Key;
+        foreach (KeyValuePair<VTuberId, YouTubeData> pair in mainDict) {
+            VTuberId VTuberId = pair.Key;
             YouTubeData youTubeData = pair.Value;
 
             if (minorDict.ContainsKey(VTuberId)) {
@@ -81,8 +82,8 @@ class Program {
             }
         }
 
-        foreach (KeyValuePair<string, TwitchData> pair in minorDict) {
-            string VTuberId = pair.Key;
+        foreach (KeyValuePair<VTuberId, TwitchData> pair in minorDict) {
+            VTuberId VTuberId = pair.Key;
             TwitchData twitchData = pair.Value;
 
             if (!rDict.ContainsKey(VTuberId)) {
@@ -93,12 +94,11 @@ class Program {
         return rDict;
     }
 
-    // Key: VTuber ID
-    static Dictionary<string, YouTubeData> GenerateYouTubeDataDict(TrackList trackList, string apiKey) {
-        Dictionary<string, string> dictChannelIdVtuberId = GenerateYouTubeIdVTtuberIdDict(trackList);
+    static Dictionary<VTuberId, YouTubeData> GenerateYouTubeDataDict(TrackList trackList, string apiKey) {
+        Dictionary<string, VTuberId> dictChannelIdVtuberId = GenerateYouTubeIdVTtuberIdDict(trackList);
         List<string> lstIdStringList = Generate50IdsStringList(dictChannelIdVtuberId.Keys.ToList());
         // initialize capacity
-        Dictionary<string, YouTubeData> dictVTuberIdThumbnailUrl = new(dictChannelIdVtuberId.Count);
+        Dictionary<VTuberId, YouTubeData> dictVTuberIdThumbnailUrl = new(dictChannelIdVtuberId.Count);
 
         YouTubeService youtubeService = new(new BaseClientService.Initializer() { ApiKey = apiKey });
         foreach (string idStringList in lstIdStringList) {
@@ -118,7 +118,7 @@ class Program {
                 ulong? viewCount = channelItem.Statistics.ViewCount;
                 string thumbnailUrl = channelItem.Snippet.Thumbnails.Default__.Url;
 
-                bool hasId = dictChannelIdVtuberId.TryGetValue(channelId, out string? VTuberId);
+                bool hasId = dictChannelIdVtuberId.TryGetValue(channelId, out VTuberId? VTuberId);
                 if (hasId && VTuberId is not null && !dictVTuberIdThumbnailUrl.ContainsKey(VTuberId)) {
                     dictVTuberIdThumbnailUrl.Add(VTuberId, new YouTubeData(SubscriberCount: subscriberCount, ViewCount: viewCount, ThumbnailUrl: thumbnailUrl));
                 }
@@ -128,12 +128,11 @@ class Program {
         return dictVTuberIdThumbnailUrl;
     }
 
-    // Key: VTuber ID
-    static Dictionary<string, TwitchData> GenerateTwitchDataDict(TrackList trackList, string clientId, string secret) {
-        Dictionary<string, string> dictChannelIdVtuberId = GenerateTwitchIdVTuberIdDict(trackList);
+    static Dictionary<VTuberId, TwitchData> GenerateTwitchDataDict(TrackList trackList, string clientId, string secret) {
+        Dictionary<string, VTuberId> dictChannelIdVtuberId = GenerateTwitchIdVTuberIdDict(trackList);
         List<List<string>> lstIdStringList = Generate100IdsStringListList(dictChannelIdVtuberId.Keys.ToList());
         // initialize capacity
-        Dictionary<string, TwitchData> dictNameThumbnailUrl = new(dictChannelIdVtuberId.Count);
+        Dictionary<VTuberId, TwitchData> dictNameThumbnailUrl = new(dictChannelIdVtuberId.Count);
 
         foreach (List<string> idStringList in lstIdStringList) {
             Dictionary<string, TwitchData> dictTwitch = GetTwitchIdThumbnailUrlDict(idStringList, clientId, secret);
@@ -142,7 +141,7 @@ class Program {
                 string channelId = pair.Key;
                 TwitchData twitchData = pair.Value;
 
-                bool hasId = dictChannelIdVtuberId.TryGetValue(channelId, out string? VTuberId);
+                bool hasId = dictChannelIdVtuberId.TryGetValue(channelId, out VTuberId? VTuberId);
                 if (hasId && VTuberId is not null && !dictNameThumbnailUrl.ContainsKey(VTuberId)) {
                     dictNameThumbnailUrl.Add(VTuberId, twitchData);
                 }
@@ -239,13 +238,13 @@ class Program {
     }
 
     // Key: YouTube Channel ID, Value: VTuber ID
-    static Dictionary<string, string> GenerateYouTubeIdVTtuberIdDict(TrackList trackList) {
-        List<string> lstId = trackList.GetIdList();
+    static Dictionary<string, VTuberId> GenerateYouTubeIdVTtuberIdDict(TrackList trackList) {
+        List<VTuberId> lstId = trackList.GetIdList();
 
         // initialize capacity
-        Dictionary<string, string> rDict = new(lstId.Count);
+        Dictionary<string, VTuberId> rDict = new(lstId.Count);
 
-        foreach (string id in lstId) {
+        foreach (VTuberId id in lstId) {
             string channelId = trackList.GetYouTubeChannelId(id);
             if (channelId == "") {
                 continue;
@@ -258,13 +257,13 @@ class Program {
     }
 
     // Key: Twitch Channel ID, Value: VTuber ID
-    static Dictionary<string, string> GenerateTwitchIdVTuberIdDict(TrackList trackList) {
-        List<string> lstId = trackList.GetIdList();
+    static Dictionary<string, VTuberId> GenerateTwitchIdVTuberIdDict(TrackList trackList) {
+        List<VTuberId> lstId = trackList.GetIdList();
 
         // initialize capacity
-        Dictionary<string, string> rDict = new(lstId.Count);
+        Dictionary<string, VTuberId> rDict = new(lstId.Count);
 
-        foreach (string id in lstId) {
+        foreach (VTuberId id in lstId) {
             string channelId = trackList.GetTwitchChannelId(id);
             if (channelId == "") {
                 continue;

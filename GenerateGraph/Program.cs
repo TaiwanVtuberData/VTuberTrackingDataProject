@@ -1,4 +1,5 @@
 ﻿using Common.Types;
+using Common.Types.Basic;
 using Common.Utils;
 using GenerateGraph;
 using Microsoft.VisualBasic.FileIO;
@@ -11,7 +12,7 @@ string csvDirectory = GetCsvDirectory("./CsvDirectory");
 string excludeListPath = Path.Combine(csvDirectory, "./DATA/EXCLUDE_LIST.csv");
 string trackListPath = Path.Combine(csvDirectory, "./DATA/TW_VTUBER_TRACK_LIST.csv");
 
-List<string> excluedList = FileUtility.GetListFromCsv(excludeListPath);
+List<VTuberId> excluedList = FileUtility.GetListFromCsv(excludeListPath);
 TrackList trackList = new(csvFilePath: trackListPath, lstExcludeId: excluedList, throwOnValidationFail: true);
 
 WriteDateTimeStatistics(trackList, csvDirectory, recentDays, byGroup: false, "Individual");
@@ -39,7 +40,7 @@ static void WriteDateTimeStatistics(TrackList trackList, string recordDirectory,
 
     StatisticsTable statisticsTable = new(trackList, byGroup);
     foreach (Tuple<FileInfo, DateTime> fileInfoDateTime in csvFileList) {
-        Dictionary<string, VTuberStatistics> statisticsDictionary = GetStatisticsDictionaryFromRecordCSV(trackList, fileInfoDateTime.Item1.FullName, byGroup);
+        Dictionary<VTuberId, VTuberStatistics> statisticsDictionary = GetStatisticsDictionaryFromRecordCSV(trackList, fileInfoDateTime.Item1.FullName, byGroup);
 
         bool shouldAdd = false;
         if (byGroup) {
@@ -102,7 +103,7 @@ static void WriteDateTimeStatistics(TrackList trackList, string recordDirectory,
 }
 
 // Key: VTuber ID or group name
-static Dictionary<string, VTuberStatistics> GetStatisticsDictionaryFromRecordCSV(TrackList trackList, string filePath, bool byGroup) {
+static Dictionary<VTuberId, VTuberStatistics> GetStatisticsDictionaryFromRecordCSV(TrackList trackList, string filePath, bool byGroup) {
     // CSV Format:
     // Name,SubscriberCount,ViewCount,MedianViewCount,HighestViewCount
     // 鳥羽樂奈,40600,1613960,9725,23248
@@ -126,7 +127,7 @@ static Dictionary<string, VTuberStatistics> GetStatisticsDictionaryFromRecordCSV
     if (version == VTuberStatistics.Version.Unknown)
         return new();
 
-    Dictionary<string, VTuberStatistics> ans = new();
+    Dictionary<VTuberId, VTuberStatistics> ans = new();
     int entryCount = 0;
     int groupEntryCount = 0;
     while (!reader.EndOfData) {
@@ -136,7 +137,7 @@ static Dictionary<string, VTuberStatistics> GetStatisticsDictionaryFromRecordCSV
 
         entryCount++;
 
-        string id = entryBlock[0];
+        VTuberId id = new(entryBlock[0]);
 
         if (!trackList.HasId(id)) {
             continue;
@@ -145,7 +146,7 @@ static Dictionary<string, VTuberStatistics> GetStatisticsDictionaryFromRecordCSV
         if (byGroup == false) {
             ans.Add(id, new VTuberStatistics(headerBlock, entryBlock));
         } else {
-            string? groupName = trackList.GetGroupName(id);
+            VTuberId? groupName = trackList.GetGroupName(id);
             if (groupName is null)
                 continue;
 
@@ -172,7 +173,7 @@ static void WritelRecordCSV(TrackList trackList, StatisticsTable statisticsTable
     DateTime minDate = dateList.Min();
     DateTime maxDate = dateList.Max();
 
-    Dictionary<string, List<decimal>> statisticsDict = statisticsTable.GetStatisticDictByField(writeColumnName, subConstriant);
+    Dictionary<VTuberId, List<decimal>> statisticsDict = statisticsTable.GetStatisticDictByField(writeColumnName, subConstriant);
 
     using StreamWriter file = new(
         path: $"./{writePrefix}_{minDate:yyyy-MM-dd}_{maxDate:yyyy-MM-dd}_{writeColumnName}.csv",
@@ -186,8 +187,8 @@ static void WritelRecordCSV(TrackList trackList, StatisticsTable statisticsTable
     file.Write('\n');
 
     // then write the data by the order of the latest value
-    foreach (KeyValuePair<string, List<decimal>> writtenValue in statisticsDict.OrderByDescending(p => p.Value.Last())) {
-        string line = byGroup ? writtenValue.Key : trackList.GetDisplayName(writtenValue.Key);
+    foreach (KeyValuePair<VTuberId, List<decimal>> writtenValue in statisticsDict.OrderByDescending(p => p.Value.Last())) {
+        string line = byGroup ? writtenValue.Key.Value : trackList.GetDisplayName(writtenValue.Key);
         List<decimal> copiedList = writtenValue.Value;
 
         foreach (decimal value in copiedList) {

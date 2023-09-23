@@ -1,4 +1,5 @@
 ﻿using Common.Types;
+using Common.Types.Basic;
 using GenerateJsonFile.Types;
 using GenerateJsonFile.Utils;
 
@@ -15,7 +16,7 @@ internal class LiveVideosListToJsonStruct {
     public List<LivestreamData> Get(LiveVideosList liveVideosList, List<DebutData> lstDebutData, DictionaryRecord dictRecord, bool noTitle) {
         List<LivestreamData> rLst = new();
 
-        List<string> lstValidVTubers = dictRecord.Keys.ToList();
+        List<VTuberId> lstValidVTubers = dictRecord.Keys.ToList();
 
         foreach (LiveVideoInformation videoInfo in liveVideosList
             .Where(p => lstValidVTubers.Contains(p.Id))
@@ -69,9 +70,9 @@ internal class LiveVideosListToJsonStruct {
     public List<LivestreamData> GetDebutToday(LiveVideosList liveVideosList, List<DebutData> lstDebutData, DictionaryRecord dictRecord, bool noTitle) {
         List<LivestreamData> rLst = new();
 
-        List<string> lstDebutVTubers =
+        List<VTuberId> lstDebutVTubers =
             dictRecord.GetAboutToDebutList(DateOnly.FromDateTime(CurrentTime.ToLocalTime()))
-            .Select(x => x.Id)
+            .Select(e => e.Id)
             .ToList();
 
         foreach (LiveVideoInformation videoInfo in liveVideosList

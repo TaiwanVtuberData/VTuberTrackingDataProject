@@ -1,4 +1,5 @@
 ﻿using Common.Types;
+using Common.Types.Basic;
 using Microsoft.VisualBasic.FileIO;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -154,7 +155,7 @@ public class FileUtility {
         return new Tuple<string, DateTime>(latestRecordFilePath, latestDateTime);
     }
 
-    public static List<string> GetListFromCsv(string filePath) {
+    public static List<VTuberId> GetListFromCsv(string filePath) {
         TextFieldParser reader = new(filePath) {
             HasFieldsEnclosedInQuotes = true,
             Delimiters = new string[] { "," },
@@ -166,14 +167,14 @@ public class FileUtility {
         // consume header
         string[]? headerBlock = reader.ReadFields();
 
-        List<string> rList = new();
+        List<VTuberId> rList = new();
         while (!reader.EndOfData) {
             string[]? entryBlock = reader.ReadFields();
             if (entryBlock is null || entryBlock.Length != 1) {
                 continue;
             }
 
-            rList.Add(entryBlock[0]);
+            rList.Add(new VTuberId(entryBlock[0]));
         }
 
         return rList;
