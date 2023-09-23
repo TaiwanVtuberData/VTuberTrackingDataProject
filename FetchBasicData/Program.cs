@@ -276,57 +276,12 @@ class Program {
         return rDict;
     }
 
-    static List<string> Generate50IdsStringList(List<string> KeyList) {
-        List<string> ans = new();
-
-        int index;
-        // pack 50 ids into a string
-        for (index = 0; index < (KeyList.Count) / 50 * 50; index += 50) {
-            string idRequestString = "";
-            for (int offset = 0; offset < 50; offset++)
-                idRequestString += KeyList[index + offset] + ',';
-            idRequestString = idRequestString.Substring(0, idRequestString.Length - 1);
-            ans.Add(idRequestString);
-        }
-
-        // residual
-        if (KeyList.Count % 50 != 0) {
-            string idRequestStringRes = "";
-            for (; index < KeyList.Count; index++) {
-                idRequestStringRes += KeyList[index] + ',';
-            }
-            idRequestStringRes = idRequestStringRes.Substring(0, idRequestStringRes.Length - 1);
-            ans.Add(idRequestStringRes);
-        }
-
-        return ans;
+    static List<string> Generate50IdsStringList(List<string> keyList) {
+        return keyList.Chunk(50).Map(e => string.Join(',', e)).ToList();
     }
 
-    static List<List<string>> Generate100IdsStringListList(List<string> KeyList) {
-        List<List<string>> ans = new();
-
-        int index;
-        // pack 100 ids into a List<string>
-        for (index = 0; index < (KeyList.Count) / 100 * 100; index += 100) {
-            List<string> lstId = new();
-            for (int offset = 0; offset < 100; offset++) {
-                lstId.Add(KeyList[index + offset]);
-            }
-
-            ans.Add(lstId);
-        }
-
-        // residual
-        if (KeyList.Count % 100 != 0) {
-            List<string> lstId = new();
-            for (; index < KeyList.Count; index++) {
-                lstId.Add(KeyList[index]);
-            }
-
-            ans.Add(lstId);
-        }
-
-        return ans;
+    static List<List<string>> Generate100IdsStringListList(List<string> keyList) {
+        return keyList.Chunk(100).Map(e => e.ToList()).ToList();
     }
 
     static T? ExecuteYouTubeThrowableWithRetry<T>(Func<T> func) where T : class? {
