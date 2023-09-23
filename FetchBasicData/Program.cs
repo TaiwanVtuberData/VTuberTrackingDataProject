@@ -154,13 +154,12 @@ class Program {
 
     // Key: Twitch channel ID
     static Dictionary<string, TwitchData> GetTwitchIdThumbnailUrlDict(List<string> lstUserId, string clientId, string secret) {
-        TwitchLib.Api.Helix.Models.Users.GetUsers.GetUsersResponse? userResponseResult = null;
+        TwitchAPI api = CreateTwitchApiInstance(clientId, secret);
 
+        TwitchLib.Api.Helix.Models.Users.GetUsers.GetUsersResponse? userResponseResult = null;
         bool hasResponse = false;
         for (int i = 0; i < 2; i++) {
             try {
-                TwitchAPI api = CreateTwitchApiInstance(clientId, secret);
-
                 var userResponse =
                     api.Helix.Users.GetUsersAsync(lstUserId);
                 userResponseResult = userResponse.Result;

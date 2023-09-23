@@ -24,11 +24,14 @@ public class Fetcher {
 
     public bool GetAll(string userId, out TwitchStatistics statistics, out TopVideosList topVideoList, out LiveVideosList liveVideosList) {
         var (successStatistics, followerCount) = GetChannelStatistics(userId);
-        var (successRecentViewCount, medianViewCount, popularity, highestViewCount, highestViewdVideoID, topVideoList_) = GetChannelRecentViewStatistic(userId);
-        LiveVideosList liveVideos = GetLiveVideosList(userId);
 
-        // if (successStatistics && successRecentViewCount) {
-        if (successRecentViewCount) {
+        TwitchAPI api = CreateTwitchApiInstance();
+
+        var (successRecentViewCount, medianViewCount, popularity, highestViewCount, highestViewdVideoID, topVideoList_) = GetChannelRecentViewStatistic(userId, api);
+
+        LiveVideosList liveVideos = GetLiveVideosList(userId, api);
+
+        if (successStatistics && successRecentViewCount) {
             statistics = new TwitchStatistics {
                 RecentMedianViewCount = medianViewCount,
                 RecentPopularity = popularity,
@@ -111,7 +114,7 @@ public class Fetcher {
     }
 
     private (bool Success, ulong MedianViewCount, ulong Popularity, ulong HighestViewCount, string HighestViewedVideoID, TopVideosList TopVideosList_)
-        GetChannelRecentViewStatistic(string userId) {
+        GetChannelRecentViewStatistic(string userId, TwitchAPI api) {
         List<Tuple<DateTimeOffset, string, ulong>> viewCountList = new();
 
         string afterCursor = "";
@@ -119,12 +122,9 @@ public class Fetcher {
 
         while (afterCursor != null) {
             TwitchLib.Api.Helix.Models.Videos.GetVideos.GetVideosResponse? videoResponseResult = null;
-
             bool hasResponse = false;
             for (int i = 0; i < 2; i++) {
                 try {
-                    TwitchAPI api = CreateTwitchApiInstance();
-
                     var videosResponse =
                         api.Helix.Videos.GetVideosAsync(
                             userId: userId,
@@ -190,10 +190,10 @@ public class Fetcher {
         return (true, medianViews, (ulong)popularity, largest.Item3, largest.Item2, topVideosList);
     }
 
-    private LiveVideosList GetLiveVideosList(string userId) {
-        LiveVideosList rLst = GetScheduleLiveVideosList(userId);
+    private LiveVideosList GetLiveVideosList(string userId, TwitchAPI api) {
+        LiveVideosList rLst = GetScheduleLiveVideosList(userId, api);
 
-        LiveVideoInformation? livestream = GetActiveStream(userId);
+        LiveVideoInformation? livestream = GetActiveStream(userId, api);
 
         if (livestream != null) {
             rLst.Add(livestream);
@@ -202,13 +202,11 @@ public class Fetcher {
         return rLst;
     }
 
-    private LiveVideoInformation? GetActiveStream(string userId) {
+    private LiveVideoInformation? GetActiveStream(string userId, TwitchAPI api) {
         TwitchLib.Api.Helix.Models.Streams.GetStreams.GetStreamsResponse? streamResponseResult = null;
-
         bool hasResponse = false;
         for (int i = 0; i < 2; i++) {
             try {
-                TwitchAPI api = CreateTwitchApiInstance();
 
                 var streamResponse = api.Helix.Streams.GetStreamsAsync(userIds: new List<string>() { userId });
                 streamResponseResult = streamResponse.Result;
@@ -241,15 +239,13 @@ public class Fetcher {
         });
     }
 
-    private LiveVideosList GetScheduleLiveVideosList(string userId) {
-        TwitchLib.Api.Helix.Models.Schedule.GetChannelStreamSchedule.GetChannelStreamScheduleResponse? scheduleResponseResult = null;
-
+    private static LiveVideosList GetScheduleLiveVideosList(string userId, TwitchAPI api) {
         LiveVideosList rLst = new();
 
+        TwitchLib.Api.Helix.Models.Schedule.GetChannelStreamSchedule.GetChannelStreamScheduleResponse? scheduleResponseResult = null;
         bool hasResponse = false;
         for (int i = 0; i < 2; i++) {
             try {
-                TwitchAPI api = CreateTwitchApiInstance();
 
                 var scheduleResponse = api.Helix.Schedule.GetChannelStreamScheduleAsync(
                     broadcasterId: userId,
