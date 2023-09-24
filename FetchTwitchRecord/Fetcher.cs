@@ -1,11 +1,9 @@
 ﻿using Common.Types;
 using Common.Types.Basic;
 using Common.Utils;
-using FetchTwitchStatistics.Types;
+using FetchTwitchRecord.Extensions;
 using log4net;
 using System.Collections.Immutable;
-using System.Net.Http.Headers;
-using System.Text.Json;
 using System.Xml;
 using TwitchLib.Api;
 
@@ -24,22 +22,22 @@ public class Fetcher {
     }
 
     public bool GetAll(string userId, out TwitchStatistics statistics, out TopVideosList topVideoList, out LiveVideosList liveVideosList) {
-        var (successStatistics, followerCount) = GetChannelStatistics(userId);
-
         TwitchAPI api = CreateTwitchApiInstance();
+
+        ulong? nullableFollowerCount = api.GetChannelFollwerCount(userId, log);
 
         var (successRecentViewCount, medianViewCount, popularity, highestViewCount, highestViewdVideoID, topVideoList_) = GetChannelRecentViewStatistic(userId, api);
 
         LiveVideosList liveVideos = GetLiveVideosList(userId, api);
 
-        if (successStatistics && successRecentViewCount) {
+        if (nullableFollowerCount != null && successRecentViewCount) {
             statistics = new TwitchStatistics {
                 RecentMedianViewCount = medianViewCount,
                 RecentPopularity = popularity,
                 RecentHighestViewCount = highestViewCount,
                 HighestViewedVideoURL = (highestViewdVideoID != "") ? $"https://www.twitch.tv/videos/{highestViewdVideoID}" : "",
             };
-            statistics.UpdateFollowerCount(followerCount);
+            statistics.UpdateFollowerCount(nullableFollowerCount.Value);
 
             topVideoList = topVideoList_;
             liveVideosList = liveVideos;
@@ -50,68 +48,6 @@ public class Fetcher {
             liveVideosList = new LiveVideosList();
             return false;
         }
-    }
-
-    private (bool Success, ulong FollowerCount) GetChannelStatistics(string userId) {
-        string? accessToken = GetTwitchAccessToken(_Credential.ClientId, _Credential.Secret);
-
-        if (accessToken is null) {
-            return (false, 0);
-        }
-
-        ulong? followerCount = GetTwitchFollowerCount(userId, _Credential.ClientId, accessToken);
-
-        if (followerCount is null) {
-            return (false, 0);
-        } else {
-            return (true, followerCount.Value);
-        }
-    }
-
-    static string? GetTwitchAccessToken(string clientId, string clientSecret) {
-        HttpRequestMessage request = new(HttpMethod.Post, "https://id.twitch.tv/oauth2/token") {
-            Content = new FormUrlEncodedContent(
-            new Dictionary<string, string> {
-            { "client_id", clientId },
-            { "client_secret", clientSecret },
-            { "grant_type", "client_credentials" },
-            }
-            )
-        };
-
-        return ExecuteTwitchThrowableWithRetry(() => {
-            HttpResponseMessage response = new HttpClient()
-                .SendAsync(request)
-                .Result
-                .EnsureSuccessStatusCode();
-
-
-            return JsonSerializer
-            .Deserialize<TwitchOauth2Response>(response.Content.ReadAsStringAsync().Result)
-            ?.access_token;
-        });
-    }
-
-    static ulong? GetTwitchFollowerCount(string broadcasterId, string clientId, string accessToken) {
-        // don't know why query parameter doesn't work like the method in GetTwitchAccessToken
-        HttpRequestMessage request = new(HttpMethod.Get, $"https://api.twitch.tv/helix/channels/followers?broadcaster_id={broadcasterId}");
-
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        request.Headers.Add("Client-Id", clientId);
-
-        // don't know why ulong does not fit generic constraint either
-        TwitchFollowerCountResponse? response = ExecuteTwitchThrowableWithRetry(() => {
-            HttpResponseMessage response = new HttpClient()
-                .SendAsync(request)
-                .Result;
-
-            response.EnsureSuccessStatusCode();
-
-            return JsonSerializer
-            .Deserialize<TwitchFollowerCountResponse>(response.Content.ReadAsStringAsync().Result);
-        });
-
-        return response?.total;
     }
 
     private (bool Success, ulong MedianViewCount, ulong Popularity, ulong HighestViewCount, string HighestViewedVideoID, TopVideosList TopVideosList_)
@@ -293,27 +229,5 @@ public class Fetcher {
         api.Settings.Secret = _Credential.Secret;
 
         return api;
-    }
-
-    static T? ExecuteTwitchThrowableWithRetry<T>(Func<T> func) where T : class? {
-        int RETRY_TIME = 10;
-        TimeSpan RETRY_DELAY = new(hours: 0, minutes: 0, seconds: 3);
-
-        for (int i = 0; i < RETRY_TIME; i++) {
-            try {
-                return func.Invoke();
-            } catch (HttpRequestException e) {
-                log.Error($"Request HttpStatusCode is {e.StatusCode}.");
-                log.Error($"Failed to execute {func.Method.Name}. {i} tries. Retry after {RETRY_DELAY.TotalSeconds} seconds.");
-                log.Error(e.Message, e);
-                Task.Delay(RETRY_DELAY);
-            } catch (Exception e) {
-                log.Error($"Failed to execute {func.Method.Name}. {i} tries. Retry after {RETRY_DELAY.TotalSeconds} seconds.");
-                log.Error(e.Message, e);
-                Task.Delay(RETRY_DELAY);
-            }
-        }
-
-        return null;
     }
 }
