@@ -63,7 +63,7 @@ class Program {
         List<VTuberFullData> lstAllVTuber = new DictionaryRecordToJsonStruct(trackList, dictRecord, DateTime.Today, latestRecordTime, latestBasicDataTime, "")
             .AllWithFullData(liveVideos, lstDebutData);
         foreach (VTuberFullData vtuber in lstAllVTuber) {
-            WriteJson(vtuber, $"vtubers/{vtuber.id}.json");
+            WriteJson(vtuber, $"vtubers/{vtuber.id.Value}.json");
         }
 
         foreach (var nationality in new List<(string, string)> { ("", "all"), ("TW", "TW"), ("HK", "HK"), ("MY", "MY") }) {
