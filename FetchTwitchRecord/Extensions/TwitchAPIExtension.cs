@@ -1,5 +1,6 @@
 ﻿using log4net;
 using TwitchLib.Api;
+using TwitchLib.Api.Helix.Models.Videos.GetVideos;
 
 namespace FetchTwitchRecord.Extensions;
 internal static class TwitchAPIExtension {
@@ -17,6 +18,20 @@ internal static class TwitchAPIExtension {
         } else {
             return (ulong)response.Total;
         }
+    }
+
+    public static GetVideosResponse? GetChannelPastLivestreams(this TwitchAPI api, string userId, string afterCursor, ILog log) {
+        return ExecuteTwitchLibThrowableWithRetry(
+            () => api.Helix.Videos.GetVideosAsync(
+                    userId: userId,
+                    after: afterCursor,
+                    first: 100,
+                    period: TwitchLib.Api.Core.Enums.Period.Month, // this parameter doesn't work at all
+                    sort: TwitchLib.Api.Core.Enums.VideoSort.Time,
+                    type: TwitchLib.Api.Core.Enums.VideoType.Archive // On-demand videos (VODs) of past streams
+                ).Result,
+            log: log
+            );
     }
 
     private static T? ExecuteTwitchLibThrowableWithRetry<T>(Func<T> func, ILog log) where T : class? {

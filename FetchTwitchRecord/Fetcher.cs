@@ -4,8 +4,8 @@ using Common.Utils;
 using FetchTwitchRecord.Extensions;
 using log4net;
 using System.Collections.Immutable;
-using System.Xml;
 using TwitchLib.Api;
+using TwitchLib.Api.Helix.Models.Videos.GetVideos;
 
 namespace FetchTwitchStatistics;
 public class Fetcher {
@@ -58,34 +58,19 @@ public class Fetcher {
         TopVideosList topVideosList = new();
 
         while (afterCursor != null) {
-            TwitchLib.Api.Helix.Models.Videos.GetVideos.GetVideosResponse? videoResponseResult = null;
-            bool hasResponse = false;
-            for (int i = 0; i < 2; i++) {
-                try {
-                    var videosResponse =
-                        api.Helix.Videos.GetVideosAsync(
-                            userId: userId,
-                            after: afterCursor,
-                            first: 100,
-                            period: TwitchLib.Api.Core.Enums.Period.Month, // this parameter doesn't work at all
-                            sort: TwitchLib.Api.Core.Enums.VideoSort.Time,
-                            type: TwitchLib.Api.Core.Enums.VideoType.Archive // Archive type probably is past broadcasts
-                            );
-                    videoResponseResult = videosResponse.Result;
+            GetVideosResponse? getVideosResponse = api.GetChannelPastLivestreams(
+                userId: userId,
+                afterCursor: afterCursor,
+                log: log
+                );
 
-                    hasResponse = true;
-                    break;
-                } catch {
-                }
-            }
-
-            if (!hasResponse || videoResponseResult is null) {
+            if (getVideosResponse == null) {
                 return (false, 0, 0, 0, "", new());
             }
 
-            afterCursor = videoResponseResult.Pagination.Cursor;
+            afterCursor = getVideosResponse.Pagination.Cursor;
 
-            foreach (TwitchLib.Api.Helix.Models.Videos.GetVideos.Video video in videoResponseResult.Videos) {
+            foreach (Video video in getVideosResponse.Videos) {
                 string videoId = video.Id;
                 ulong viewCount = (ulong)video.ViewCount;
                 DateTimeOffset publishTime = DateTimeOffset.Parse(video.PublishedAt);
@@ -105,10 +90,12 @@ public class Fetcher {
                             Url = $"https://www.twitch.tv/videos/{video.Id}",
                             Title = video.Title,
                             ThumbnailUrl = video.ThumbnailUrl,
-                            PublishDateTime = XmlConvert.ToDateTime(video.PublishedAt, XmlDateTimeSerializationMode.Utc),
+                            PublishDateTime = publishTime,
                             ViewCount = viewCount,
                         });
-                    } catch {
+                    } catch (Exception e) {
+                        log.Error($"Error calling topVideosList.Insert() when ID: {userId}, Video ID: {video.Id}");
+                        log.Error(e.Message, e);
                     }
                 }
             }
