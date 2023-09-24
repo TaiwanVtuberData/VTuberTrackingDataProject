@@ -5,6 +5,8 @@ using FetchTwitchRecord.Extensions;
 using log4net;
 using System.Collections.Immutable;
 using TwitchLib.Api;
+using TwitchLib.Api.Helix.Models.Schedule.GetChannelStreamSchedule;
+using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Helix.Models.Videos.GetVideos;
 
 namespace FetchTwitchStatistics;
@@ -127,25 +129,16 @@ public class Fetcher {
     }
 
     private LiveVideoInformation? GetActiveStream(string userId, TwitchAPI api) {
-        TwitchLib.Api.Helix.Models.Streams.GetStreams.GetStreamsResponse? streamResponseResult = null;
-        bool hasResponse = false;
-        for (int i = 0; i < 2; i++) {
-            try {
+        GetStreamsResponse? getStreamsResponse = api.GetChannelActiveLivestreams(
+            userId: userId,
+            log: log
+            );
 
-                var streamResponse = api.Helix.Streams.GetStreamsAsync(userIds: new List<string>() { userId });
-                streamResponseResult = streamResponse.Result;
-
-                hasResponse = true;
-                break;
-            } catch {
-            }
-        }
-
-        if (!hasResponse || streamResponseResult is null) {
+        if (getStreamsResponse == null) {
             return null;
         }
 
-        TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream[]? streams = streamResponseResult.Streams;
+        TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream[]? streams = getStreamsResponse.Streams;
 
         if (streams is null || streams.Length != 1) {
             return null;
@@ -163,31 +156,19 @@ public class Fetcher {
         });
     }
 
-    private static LiveVideosList GetScheduleLiveVideosList(string userId, TwitchAPI api) {
+    private static LiveVideosList GetScheduleLiveVideosList(string broadcasterId, TwitchAPI api) {
         LiveVideosList rLst = new();
 
-        TwitchLib.Api.Helix.Models.Schedule.GetChannelStreamSchedule.GetChannelStreamScheduleResponse? scheduleResponseResult = null;
-        bool hasResponse = false;
-        for (int i = 0; i < 2; i++) {
-            try {
+        GetChannelStreamScheduleResponse? getStreamsResponse = api.GetChannelScheduledLivestreams(
+            broadcasterId: broadcasterId,
+            log: log
+            );
 
-                var scheduleResponse = api.Helix.Schedule.GetChannelStreamScheduleAsync(
-                    broadcasterId: userId,
-                    first: 10
-                    );
-                scheduleResponseResult = scheduleResponse.Result;
-
-                hasResponse = true;
-                break;
-            } catch {
-            }
-        }
-
-        if (!hasResponse || scheduleResponseResult is null) {
+        if (getStreamsResponse == null) {
             return new();
         }
 
-        TwitchLib.Api.Helix.Models.Schedule.ChannelStreamSchedule? schedule = scheduleResponseResult.Schedule;
+        TwitchLib.Api.Helix.Models.Schedule.ChannelStreamSchedule? schedule = getStreamsResponse.Schedule;
 
         if (schedule.Segments is null) {
             return new();
@@ -196,7 +177,7 @@ public class Fetcher {
         foreach (var segment in schedule.Segments) {
             try {
                 rLst.Add(new LiveVideoInformation {
-                    Id = new VTuberId(userId),
+                    Id = new VTuberId(broadcasterId),
                     Url = $"https://www.twitch.tv/{schedule.BroadcasterLogin}",
                     Title = segment.Title,
                     ThumbnailUrl = "",

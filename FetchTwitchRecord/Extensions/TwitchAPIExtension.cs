@@ -1,5 +1,8 @@
 ﻿using log4net;
 using TwitchLib.Api;
+using TwitchLib.Api.Core.Exceptions;
+using TwitchLib.Api.Helix.Models.Schedule.GetChannelStreamSchedule;
+using TwitchLib.Api.Helix.Models.Streams.GetStreams;
 using TwitchLib.Api.Helix.Models.Videos.GetVideos;
 
 namespace FetchTwitchRecord.Extensions;
@@ -34,6 +37,23 @@ internal static class TwitchAPIExtension {
             );
     }
 
+    public static GetStreamsResponse? GetChannelActiveLivestreams(this TwitchAPI api, string userId, ILog log) {
+        return ExecuteTwitchLibThrowableWithRetry(
+            () => api.Helix.Streams.GetStreamsAsync(userIds: new List<string>() { userId }).Result,
+            log: log
+            );
+    }
+
+    public static GetChannelStreamScheduleResponse? GetChannelScheduledLivestreams(this TwitchAPI api, string broadcasterId, ILog log) {
+        return ExecuteTwitchLibThrowableWithRetry(
+            () => api.Helix.Schedule.GetChannelStreamScheduleAsync(
+                    broadcasterId: broadcasterId,
+                    first: 10
+                    ).Result,
+            log: log
+            );
+    }
+
     private static T? ExecuteTwitchLibThrowableWithRetry<T>(Func<T> func, ILog log) where T : class? {
         int RETRY_TIME = 10;
         TimeSpan RETRY_DELAY = new(hours: 0, minutes: 0, seconds: 3);
@@ -41,6 +61,16 @@ internal static class TwitchAPIExtension {
         for (int i = 0; i < RETRY_TIME; i++) {
             try {
                 return func.Invoke();
+            } catch (AggregateException e) {
+                log.Info(e.Message, e);
+
+                if (e.GetBaseException() is BadResourceException) {
+                    log.Info("Base error is BadResourceException. Skip retry.");
+                    return null;
+                } else {
+                    log.Error($"Failed to execute {func.Method.Name}. {i} tries. Retry after {RETRY_DELAY.TotalSeconds} seconds.");
+                    Task.Delay(RETRY_DELAY);
+                }
             } catch (Exception e) {
                 log.Error($"Failed to execute {func.Method.Name}. {i} tries. Retry after {RETRY_DELAY.TotalSeconds} seconds.");
                 log.Error(e.Message, e);
