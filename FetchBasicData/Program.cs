@@ -1,14 +1,12 @@
 ﻿using Common.Types;
 using Common.Types.Basic;
 using Common.Utils;
-using FetchBasicData.Types;
+using FetchTwitchRecord.Extensions;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using LanguageExt.Pipes;
 using log4net;
 using System.Net;
-using System.Net.Http.Headers;
-using System.Text.Json;
 using TwitchLib.Api;
 
 class Program {
@@ -45,9 +43,12 @@ class Program {
         log.Info($"Total entries: {trackList.GetCount()}");
 
         Dictionary<VTuberId, YouTubeData> dictYouTube = GenerateYouTubeDataDict(trackList, FileUtility.GetSingleLineFromFile(YouTubeApiKeyPath));
-        Dictionary<VTuberId, TwitchData> dictTwitch = GenerateTwitchDataDict(trackList,
-            FileUtility.GetSingleLineFromFile(TwitchClientIdPath),
-            FileUtility.GetSingleLineFromFile(TwitchSecretPath));
+
+        TwitchAPI api = CreateTwitchApiInstance(
+            clientId: FileUtility.GetSingleLineFromFile(TwitchClientIdPath),
+            clientSecret: FileUtility.GetSingleLineFromFile(TwitchSecretPath));
+
+        Dictionary<VTuberId, TwitchData> dictTwitch = GenerateTwitchDataDict(trackList, api);
 
         WriteBasicData(dictYouTube, dictTwitch, saveDir);
     }
@@ -128,14 +129,14 @@ class Program {
         return dictVTuberIdThumbnailUrl;
     }
 
-    static Dictionary<VTuberId, TwitchData> GenerateTwitchDataDict(TrackList trackList, string clientId, string secret) {
+    static Dictionary<VTuberId, TwitchData> GenerateTwitchDataDict(TrackList trackList, TwitchAPI api) {
         Dictionary<string, VTuberId> dictChannelIdVtuberId = GenerateTwitchIdVTuberIdDict(trackList);
         List<List<string>> lstIdStringList = Generate100IdsStringListList(dictChannelIdVtuberId.Keys.ToList());
         // initialize capacity
         Dictionary<VTuberId, TwitchData> dictNameThumbnailUrl = new(dictChannelIdVtuberId.Count);
 
         foreach (List<string> idStringList in lstIdStringList) {
-            Dictionary<string, TwitchData> dictTwitch = GetTwitchIdThumbnailUrlDict(idStringList, clientId, secret);
+            Dictionary<string, TwitchData> dictTwitch = GetTwitchIdThumbnailUrlDict(idStringList, api);
 
             foreach (KeyValuePair<string, TwitchData> pair in dictTwitch) {
                 string channelId = pair.Key;
@@ -152,89 +153,26 @@ class Program {
     }
 
     // Key: Twitch channel ID
-    static Dictionary<string, TwitchData> GetTwitchIdThumbnailUrlDict(List<string> lstUserId, string clientId, string secret) {
-        TwitchAPI api = CreateTwitchApiInstance(clientId, secret);
+    static Dictionary<string, TwitchData> GetTwitchIdThumbnailUrlDict(List<string> userIdList, TwitchAPI api) {
+        TwitchLib.Api.Helix.Models.Users.GetUsers.GetUsersResponse? getUsersResponse = api.GetUsers(userIdList, log);
 
-        TwitchLib.Api.Helix.Models.Users.GetUsers.GetUsersResponse? userResponseResult = null;
-        bool hasResponse = false;
-        for (int i = 0; i < 2; i++) {
-            try {
-                var userResponse =
-                    api.Helix.Users.GetUsersAsync(lstUserId);
-                userResponseResult = userResponse.Result;
-
-                hasResponse = true;
-                break;
-            } catch (Exception e) {
-                log.Error(e.Message, e);
-            }
-        }
-
-        if (!hasResponse || userResponseResult is null) {
+        if (getUsersResponse == null) {
             return new();
         }
 
-        Dictionary<string, TwitchData> rDict = new(userResponseResult.Users.Length);
-        log.Info($"Response user count is {userResponseResult.Users.Length}");
-        foreach (TwitchLib.Api.Helix.Models.Users.GetUsers.User user in userResponseResult.Users) {
-            if (!rDict.ContainsKey(user.Id)) {
-                string? accessToken = GetTwitchAccessToken(clientId, secret);
+        Dictionary<string, TwitchData> rDict = new(getUsersResponse.Users.Length);
+        log.Info($"Response user count is {getUsersResponse.Users.Length}");
+        foreach (TwitchLib.Api.Helix.Models.Users.GetUsers.User user in getUsersResponse.Users) {
+            ulong? nullableFollowerCount = api.GetChannelFollwerCount(
+                broadcasterId: user.Id,
+                log: log
+                );
 
-                if (accessToken != null) {
-                    ulong? followerCount = GetTwitchFollowerCount(user.Id, clientId, accessToken);
-                    log.Info($"Follower Count of {user.Id} is {followerCount}");
-                    rDict.Add(user.Id, new TwitchData(FollowerCount: followerCount ?? 0ul, ThumbnailUrl: user.ProfileImageUrl));
-                }
-            }
+            log.Info($"Follower Count of {user.Id} is {nullableFollowerCount}");
+            rDict.Add(user.Id, new TwitchData(FollowerCount: nullableFollowerCount ?? 0ul, ThumbnailUrl: user.ProfileImageUrl));
         }
 
         return rDict;
-    }
-
-    static string? GetTwitchAccessToken(string clientId, string clientSecret) {
-        HttpRequestMessage request = new(HttpMethod.Post, "https://id.twitch.tv/oauth2/token") {
-            Content = new FormUrlEncodedContent(
-            new Dictionary<string, string> {
-            { "client_id", clientId },
-            { "client_secret", clientSecret },
-            { "grant_type", "client_credentials" },
-            }
-            )
-        };
-
-        return ExecuteTwitchThrowableWithRetry(() => {
-            HttpResponseMessage response = new HttpClient()
-                .SendAsync(request)
-                .Result
-                .EnsureSuccessStatusCode();
-
-
-            return JsonSerializer
-            .Deserialize<TwitchOauth2Response>(response.Content.ReadAsStringAsync().Result)
-            ?.access_token;
-        });
-    }
-
-    static ulong? GetTwitchFollowerCount(string broadcasterId, string clientId, string accessToken) {
-        // don't know why query parameter doesn't work like the method in GetTwitchAccessToken
-        HttpRequestMessage request = new(HttpMethod.Get, $"https://api.twitch.tv/helix/channels/followers?broadcaster_id={broadcasterId}");
-
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        request.Headers.Add("Client-Id", clientId);
-
-        // don't know why ulong does not fit generic constraint either
-        TwitchFollowerCountResponse? response = ExecuteTwitchThrowableWithRetry(() => {
-            HttpResponseMessage response = new HttpClient()
-                .SendAsync(request)
-                .Result;
-
-            response.EnsureSuccessStatusCode();
-
-            return JsonSerializer
-            .Deserialize<TwitchFollowerCountResponse>(response.Content.ReadAsStringAsync().Result);
-        });
-
-        return response?.total;
     }
 
     // Key: YouTube Channel ID, Value: VTuber ID
@@ -311,27 +249,5 @@ class Program {
         api.Settings.Secret = clientSecret;
 
         return api;
-    }
-
-    private static T? ExecuteTwitchThrowableWithRetry<T>(Func<T> func) where T : class? {
-        int RETRY_TIME = 10;
-        TimeSpan RETRY_DELAY = new(hours: 0, minutes: 0, seconds: 3);
-
-        for (int i = 0; i < RETRY_TIME; i++) {
-            try {
-                return func.Invoke();
-            } catch (HttpRequestException e) {
-                log.Warn($"Request HttpStatusCode is {e.StatusCode}.");
-                log.Warn($"Failed to execute {func.Method.Name}. {i} tries. Retry after {RETRY_DELAY.TotalSeconds} seconds.");
-                log.Warn(e.Message, e);
-                Task.Delay(RETRY_DELAY);
-            } catch (Exception e) {
-                log.Warn($"Failed to execute {func.Method.Name}. {i} tries. Retry after {RETRY_DELAY.TotalSeconds} seconds.");
-                log.Warn(e.Message, e);
-                Task.Delay(RETRY_DELAY);
-            }
-        }
-
-        return null;
     }
 }

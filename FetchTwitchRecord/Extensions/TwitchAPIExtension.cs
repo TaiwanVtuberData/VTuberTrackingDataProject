@@ -3,10 +3,11 @@ using TwitchLib.Api;
 using TwitchLib.Api.Core.Exceptions;
 using TwitchLib.Api.Helix.Models.Schedule.GetChannelStreamSchedule;
 using TwitchLib.Api.Helix.Models.Streams.GetStreams;
+using TwitchLib.Api.Helix.Models.Users.GetUsers;
 using TwitchLib.Api.Helix.Models.Videos.GetVideos;
 
 namespace FetchTwitchRecord.Extensions;
-internal static class TwitchAPIExtension {
+public static class TwitchAPIExtension {
     public static ulong? GetChannelFollwerCount(this TwitchAPI api, string broadcasterId, ILog log) {
         TwitchLib.Api.Helix.Models.Channels.GetChannelFollowers.GetChannelFollowersResponse? response = ExecuteTwitchLibThrowableWithRetry(
             () => api.Helix.Channels.GetChannelFollowersAsync(
@@ -50,6 +51,13 @@ internal static class TwitchAPIExtension {
                     broadcasterId: broadcasterId,
                     first: 10
                     ).Result,
+            log: log
+            );
+    }
+
+    public static GetUsersResponse? GetUsers(this TwitchAPI api, List<string> userIdList, ILog log) {
+        return ExecuteTwitchLibThrowableWithRetry(
+            () => api.Helix.Users.GetUsersAsync(userIdList).Result,
             log: log
             );
     }
