@@ -4,7 +4,7 @@ using log4net;
 using System.Collections.Immutable;
 using System.Globalization;
 
-namespace FetchStatistics;
+namespace FetchRecord;
 internal class WriteFiles {
     private static readonly ILog log = LogManager.GetLogger(typeof(WriteFiles));
 

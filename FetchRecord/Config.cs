@@ -1,6 +1,6 @@
 ﻿using Common.Utils;
 
-namespace FetchStatistics;
+namespace FetchRecord;
 internal record Config {
 
     public string YouTubeApiKey { get; init; }

@@ -1,7 +1,7 @@
 ﻿using Common.Types;
 using Common.Types.Basic;
 using Common.Utils;
-using FetchStatistics;
+using FetchRecord;
 using log4net;
 using System.Collections.Immutable;
 
