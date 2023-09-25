@@ -15,22 +15,24 @@ public class Fetcher {
 
     public record Credential(string ClientId, string Secret);
 
-    private readonly Credential _Credential;
+    private readonly TwitchAPI twitchAPI;
     private readonly DateTimeOffset CurrentTime;
 
     public Fetcher(Credential credential, DateTimeOffset currentTime) {
-        _Credential = credential;
+        twitchAPI = new();
+        twitchAPI.Settings.ClientId = credential.ClientId;
+        twitchAPI.Settings.Secret = credential.Secret;
+
         CurrentTime = currentTime;
     }
 
     public bool GetAll(string userId, out TwitchStatistics statistics, out TopVideosList topVideoList, out LiveVideosList liveVideosList) {
-        TwitchAPI api = CreateTwitchApiInstance();
+        ulong? nullableFollowerCount = twitchAPI.GetChannelFollwerCount(userId, log);
 
-        ulong? nullableFollowerCount = api.GetChannelFollwerCount(userId, log);
+        var (successRecentViewCount, medianViewCount, popularity, highestViewCount, highestViewdVideoID, topVideoList_)
+            = GetChannelRecentViewStatistic(userId);
 
-        var (successRecentViewCount, medianViewCount, popularity, highestViewCount, highestViewdVideoID, topVideoList_) = GetChannelRecentViewStatistic(userId, api);
-
-        LiveVideosList liveVideos = GetLiveVideosList(userId, api);
+        LiveVideosList liveVideos = GetLiveVideosList(userId);
 
         if (nullableFollowerCount != null && successRecentViewCount) {
             statistics = new TwitchStatistics {
@@ -53,14 +55,14 @@ public class Fetcher {
     }
 
     private (bool Success, ulong MedianViewCount, ulong Popularity, ulong HighestViewCount, string HighestViewedVideoID, TopVideosList TopVideosList_)
-        GetChannelRecentViewStatistic(string userId, TwitchAPI api) {
+        GetChannelRecentViewStatistic(string userId) {
         List<Tuple<DateTimeOffset, string, ulong>> viewCountList = new();
 
         string afterCursor = "";
         TopVideosList topVideosList = new();
 
         while (afterCursor != null) {
-            GetVideosResponse? getVideosResponse = api.GetChannelPastLivestreams(
+            GetVideosResponse? getVideosResponse = twitchAPI.GetChannelPastLivestreams(
                 userId: userId,
                 afterCursor: afterCursor,
                 log: log
@@ -116,10 +118,12 @@ public class Fetcher {
         return (true, medianViews, (ulong)popularity, largest.Item3, largest.Item2, topVideosList);
     }
 
-    private LiveVideosList GetLiveVideosList(string userId, TwitchAPI api) {
-        LiveVideosList rLst = GetScheduleLiveVideosList(userId, api);
+    private LiveVideosList GetLiveVideosList(string userId) {
+        // LiveVideosList rLst = GetScheduleLiveVideosList(userId);
 
-        LiveVideoInformation? livestream = GetActiveStream(userId, api);
+        LiveVideosList rLst = new();
+
+        LiveVideoInformation? livestream = GetActiveStream(userId);
 
         if (livestream != null) {
             rLst.Add(livestream);
@@ -128,8 +132,8 @@ public class Fetcher {
         return rLst;
     }
 
-    private LiveVideoInformation? GetActiveStream(string userId, TwitchAPI api) {
-        GetStreamsResponse? getStreamsResponse = api.GetChannelActiveLivestreams(
+    private LiveVideoInformation? GetActiveStream(string userId) {
+        GetStreamsResponse? getStreamsResponse = twitchAPI.GetChannelActiveLivestreams(
             userId: userId,
             log: log
             );
@@ -156,10 +160,10 @@ public class Fetcher {
         });
     }
 
-    private static LiveVideosList GetScheduleLiveVideosList(string broadcasterId, TwitchAPI api) {
+    private LiveVideosList GetScheduleLiveVideosList(string broadcasterId) {
         LiveVideosList rLst = new();
 
-        GetChannelStreamScheduleResponse? getStreamsResponse = api.GetChannelScheduledLivestreams(
+        GetChannelStreamScheduleResponse? getStreamsResponse = twitchAPI.GetChannelScheduledLivestreams(
             broadcasterId: broadcasterId,
             log: log
             );
@@ -189,13 +193,5 @@ public class Fetcher {
         }
 
         return rLst;
-    }
-
-    private TwitchAPI CreateTwitchApiInstance() {
-        TwitchAPI api = new();
-        api.Settings.ClientId = _Credential.ClientId;
-        api.Settings.Secret = _Credential.Secret;
-
-        return api;
     }
 }
