@@ -26,32 +26,38 @@ public class Fetcher {
         CurrentTime = currentTime;
     }
 
-    public bool GetAll(string userId, out TwitchStatistics statistics, out TopVideosList topVideoList, out LiveVideosList liveVideosList) {
-        ulong? nullableFollowerCount = twitchAPI.GetChannelFollwerCount(userId, log);
+    public void GetAll(HashSet<string> userIdList, out Dictionary<string, TwitchStatistics> rStatisticDict, out TopVideosList rTopVideosList, out LiveVideosList rLiveVideosList) {
+        rStatisticDict = new Dictionary<string, TwitchStatistics>(userIdList.Count);
+        rTopVideosList = new();
 
-        var (successRecentViewCount, medianViewCount, popularity, highestViewCount, highestViewdVideoID, topVideoList_)
-            = GetChannelRecentViewStatistic(userId);
+        // rStatisticDict and rTopVideosList
+        foreach (string userId in userIdList) {
+            log.Info($"Start getting Twitch info of user ID: {userId}");
+            ulong? nullableFollowerCount = twitchAPI.GetChannelFollwerCount(userId, log);
 
-        LiveVideosList liveVideos = GetLiveVideosList(userId);
+            var (successRecentViewCount, medianViewCount, popularity, highestViewCount, highestViewdVideoID, topVideosList)
+                = GetChannelRecentViewStatistic(userId);
 
-        if (nullableFollowerCount != null && successRecentViewCount) {
-            statistics = new TwitchStatistics {
-                RecentMedianViewCount = medianViewCount,
-                RecentPopularity = popularity,
-                RecentHighestViewCount = highestViewCount,
-                HighestViewedVideoURL = (highestViewdVideoID != "") ? $"https://www.twitch.tv/videos/{highestViewdVideoID}" : "",
-            };
-            statistics.UpdateFollowerCount(nullableFollowerCount.Value);
+            if (nullableFollowerCount != null && successRecentViewCount) {
+                TwitchStatistics statistics = new() {
+                    RecentMedianViewCount = medianViewCount,
+                    RecentPopularity = popularity,
+                    RecentHighestViewCount = highestViewCount,
+                    HighestViewedVideoURL = (highestViewdVideoID != "") ? $"https://www.twitch.tv/videos/{highestViewdVideoID}" : "",
+                };
+                statistics.UpdateFollowerCount(nullableFollowerCount.Value);
 
-            topVideoList = topVideoList_;
-            liveVideosList = liveVideos;
-            return true;
-        } else {
-            statistics = new TwitchStatistics();
-            topVideoList = new TopVideosList();
-            liveVideosList = new LiveVideosList();
-            return false;
+                rStatisticDict.Add(userId, statistics);
+
+                rTopVideosList.Insert(topVideosList.GetSortedList());
+            }
+            log.Info($"End   getting Twitch info of user ID: {userId}");
         }
+
+        // rLiveVideosList
+        log.Info($"Start getting Twitch live videos");
+        rLiveVideosList = GetLiveVideosList(userIdList.ToList());
+        log.Info($"End   getting Twitch live videos");
     }
 
     private (bool Success, ulong MedianViewCount, ulong Popularity, ulong HighestViewCount, string HighestViewedVideoID, TopVideosList TopVideosList_)
@@ -118,46 +124,57 @@ public class Fetcher {
         return (true, medianViews, (ulong)popularity, largest.Item3, largest.Item2, topVideosList);
     }
 
-    private LiveVideosList GetLiveVideosList(string userId) {
+    private LiveVideosList GetLiveVideosList(List<string> userIdList) {
         // LiveVideosList rLst = GetScheduleLiveVideosList(userId);
 
         LiveVideosList rLst = new();
 
-        LiveVideoInformation? livestream = GetActiveStream(userId);
+        List<LiveVideoInformation> livestreamList = GetActiveStreams(userIdList);
+        rLst.AddRange(livestreamList);
 
-        if (livestream != null) {
-            rLst.Add(livestream);
+        return rLst;
+    }
+
+    private List<LiveVideoInformation> GetActiveStreams(List<string> userIdList) {
+        List<LiveVideoInformation> rLst = new(userIdList.Count);
+
+        List<List<string>> chunkedUserIdList = Generate100IdsStringListList(userIdList);
+        foreach (List<string> smallUserIdList in chunkedUserIdList) {
+            log.Info($"Start getting Twitch active livestreams user IDs: {string.Join(',', smallUserIdList)}");
+            GetStreamsResponse? getStreamsResponse = twitchAPI.GetChannelsActiveLivestreams(
+                userIdList: smallUserIdList,
+                log: log
+                );
+
+            if (getStreamsResponse == null) {
+                continue;
+            }
+
+            TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream[]? streams = getStreamsResponse.Streams;
+
+            if (streams is null) {
+                continue;
+            }
+
+            foreach (TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream stream in streams) {
+                rLst.Add(new LiveVideoInformation {
+                    Id = new VTuberId(stream.UserId),
+                    Url = $"https://www.twitch.tv/{stream.UserLogin}",
+                    Title = stream.Title,
+                    ThumbnailUrl = stream.ThumbnailUrl,
+                    PublishDateTime = stream.StartedAt.ToUniversalTime(),
+                    VideoType = LiveVideoType.live,
+                }
+                );
+            }
+            log.Info($"End   getting Twitch active livestreams user IDs: {string.Join(',', smallUserIdList)}");
         }
 
         return rLst;
     }
 
-    private LiveVideoInformation? GetActiveStream(string userId) {
-        GetStreamsResponse? getStreamsResponse = twitchAPI.GetChannelActiveLivestreams(
-            userId: userId,
-            log: log
-            );
-
-        if (getStreamsResponse == null) {
-            return null;
-        }
-
-        TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream[]? streams = getStreamsResponse.Streams;
-
-        if (streams is null || streams.Length != 1) {
-            return null;
-        }
-
-        TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream stream = streams[0];
-
-        return (new LiveVideoInformation {
-            Id = new VTuberId(userId),
-            Url = $"https://www.twitch.tv/{stream.UserLogin}",
-            Title = stream.Title,
-            ThumbnailUrl = stream.ThumbnailUrl,
-            PublishDateTime = stream.StartedAt.ToUniversalTime(),
-            VideoType = LiveVideoType.live,
-        });
+    private static List<List<string>> Generate100IdsStringListList(List<string> keyList) {
+        return keyList.Chunk(100).Map(e => e.ToList()).ToList();
     }
 
     private LiveVideosList GetScheduleLiveVideosList(string broadcasterId) {

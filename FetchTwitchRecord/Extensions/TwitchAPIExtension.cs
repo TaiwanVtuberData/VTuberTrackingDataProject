@@ -38,9 +38,12 @@ public static class TwitchAPIExtension {
             );
     }
 
-    public static GetStreamsResponse? GetChannelActiveLivestreams(this TwitchAPI api, string userId, ILog log) {
+    public static GetStreamsResponse? GetChannelsActiveLivestreams(this TwitchAPI api, List<string> userIdList, ILog log) {
         return ExecuteTwitchLibThrowableWithRetry(
-            () => api.Helix.Streams.GetStreamsAsync(userIds: new List<string>() { userId }).Result,
+            () => api.Helix.Streams.GetStreamsAsync(
+                userIds: userIdList,
+                first: 100
+                ).Result,
             log: log
             );
     }

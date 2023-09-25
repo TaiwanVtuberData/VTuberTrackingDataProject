@@ -525,6 +525,19 @@ public class TrackList {
             rList.Add(keyValuePair.Value.YouTubeChannelId);
         }
 
+        rList.RemoveAll(string.IsNullOrEmpty);
+
+        return rList;
+    }
+
+    public List<string> GetTwitchChannelIdList() {
+        List<string> rList = new();
+        foreach (KeyValuePair<VTuberId, VTuberData> keyValuePair in internalDictionary) {
+            rList.Add(keyValuePair.Value.TwitchChannelId);
+        }
+
+        rList.RemoveAll(string.IsNullOrEmpty);
+
         return rList;
     }
 }

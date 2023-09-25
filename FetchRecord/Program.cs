@@ -196,43 +196,44 @@ void fetchTwitchLivestreamsAndWrite(
     TopVideosList rVideosList = new();
     LiveVideosList rLiveVideosList = new();
 
-    foreach (VTuberData vtuber in trackList) {
-        log.Info("Display Name: " + vtuber.DisplayName);
-        log.Info("Twitch Channel ID: " + vtuber.TwitchChannelId);
+    Dictionary<string, TwitchStatistics> statisticDict = new();
+    TopVideosList twitchTopVideoList = new();
+    LiveVideosList twitchLiveVideosList = new();
+    twitchDataFetcher.GetAll(trackList.GetTwitchChannelIdList().ToHashSet(), out statisticDict, out twitchTopVideoList, out twitchLiveVideosList);
 
-        TwitchStatistics twitchRecord = new();
-        TopVideosList twitchTopVideoList = new();
-        LiveVideosList twitchLiveVideosList = new();
-        if (!string.IsNullOrEmpty(vtuber.TwitchChannelId)) {
-            bool successful = twitchDataFetcher.GetAll(vtuber.TwitchChannelId, out twitchRecord, out twitchTopVideoList, out twitchLiveVideosList);
+    foreach (KeyValuePair<string, TwitchStatistics> keyValuePair in statisticDict) {
+        string twitchChannelId = keyValuePair.Key;
+        TwitchStatistics twitchStatistics = keyValuePair.Value;
 
-            if (!successful) { continue; }
+        try {
+            VTuberId vTuberId = trackList.GetIdByTwitchChannelId(twitchChannelId);
+            rDict.Add(vTuberId, twitchStatistics);
+        } catch (Exception e) {
+            log.Error($"Error while converting Dictionary<VTuberId, TwitchStatistics>");
+            log.Error($"GetIdByTwitchChannelId with input {twitchChannelId}");
+            log.Error(e.Message, e);
         }
+    }
 
-        rDict.Add(vtuber.Id, twitchRecord);
-
-        foreach (VideoInformation videoInfo in twitchTopVideoList) {
-            try {
-                videoInfo.Id = trackList.GetIdByTwitchChannelId(videoInfo.Id.Value);
-            } catch (Exception e) {
-                log.Error($"Error while converting twitchTopVideoList");
-                log.Error($"GetIdByTwitchChannelId with input {videoInfo.Id}");
-                log.Error(e.Message, e);
-            }
-
+    foreach (VideoInformation videoInfo in twitchTopVideoList) {
+        try {
+            videoInfo.Id = trackList.GetIdByTwitchChannelId(videoInfo.Id.Value);
             rVideosList.Insert(videoInfo);
+        } catch (Exception e) {
+            log.Error($"Error while converting twitchTopVideoList");
+            log.Error($"GetIdByTwitchChannelId with input {videoInfo.Id}");
+            log.Error(e.Message, e);
         }
+    }
 
-        foreach (LiveVideoInformation videoInfo in twitchLiveVideosList) {
-            try {
-                videoInfo.Id = trackList.GetIdByTwitchChannelId(videoInfo.Id.Value);
-            } catch (Exception e) {
-                log.Error($"Error while converting twitchTopVideoList");
-                log.Error($"GetIdByTwitchChannelId with input {videoInfo.Id}");
-                log.Error(e.Message, e);
-            }
-
+    foreach (LiveVideoInformation videoInfo in twitchLiveVideosList) {
+        try {
+            videoInfo.Id = trackList.GetIdByTwitchChannelId(videoInfo.Id.Value);
             rLiveVideosList.Add(videoInfo);
+        } catch (Exception e) {
+            log.Error($"Error while converting twitchLiveVideosList");
+            log.Error($"GetIdByTwitchChannelId with input {videoInfo.Id}");
+            log.Error(e.Message, e);
         }
     }
 
