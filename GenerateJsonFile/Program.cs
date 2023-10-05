@@ -2,7 +2,9 @@ using Common.Types;
 using Common.Types.Basic;
 using Common.Utils;
 using GenerateJsonFile.Types;
-using GenerateJsonFile.Utils;
+using GenerateRecordList;
+using GenerateRecordList.Types;
+using GenerateRecordList.Utils;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
@@ -120,8 +122,8 @@ class Program {
                     nationality.Item2,
                     "groups.json");
 
-            Dictionary<string, List<Types.VTuberData>> dictGroupVTuberData = transformer.GroupMembers();
-            foreach (KeyValuePair<string, List<Types.VTuberData>> entry in dictGroupVTuberData) {
+            Dictionary<string, List<GenerateRecordList.Types.VTuberData>> dictGroupVTuberData = transformer.GroupMembers();
+            foreach (KeyValuePair<string, List<GenerateRecordList.Types.VTuberData>> entry in dictGroupVTuberData) {
                 string outputDir = $"groups/{entry.Key}";
                 WriteJson(
                     entry.Value,
@@ -195,7 +197,7 @@ class Program {
            );
     }
 
-    private static void WriteJson(List<Types.VTuberData> lstVTuberData, string nationality, string outputFilePath) {
+    private static void WriteJson(List<GenerateRecordList.Types.VTuberData> lstVTuberData, string nationality, string outputFilePath) {
         WriteJsonString(
             GetJsonString(new VTuberDataResponse(VTubers: lstVTuberData)),
             nationality,

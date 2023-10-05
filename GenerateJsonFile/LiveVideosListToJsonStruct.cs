@@ -1,7 +1,8 @@
 ﻿using Common.Types;
 using Common.Types.Basic;
 using GenerateJsonFile.Types;
-using GenerateJsonFile.Utils;
+using GenerateRecordList.Types;
+using GenerateRecordList.Utils;
 
 namespace GenerateJsonFile;
 internal class LiveVideosListToJsonStruct {
