@@ -6,9 +6,9 @@ using System.Text.RegularExpressions;
 
 namespace Common.Utils;
 public class FileUtility {
-    public static List<Tuple<FileInfo, DateTime>> GetFileInfoDateTimeList(string parentDirectory, string prefix, int recentDays) {
+    public static List<Tuple<FileInfo, DateTime>> GetFileInfoDateTimeList(string parentDirectory, string prefix, DateTime targetDate, int recentDays) {
 
-        List<string> dierctoryList = FilterYearOfMonthOfInterest(Directory.GetDirectories(parentDirectory), recentDays);
+        List<string> dierctoryList = FilterYearOfMonthOfInterest(Directory.GetDirectories(parentDirectory), targetDate, recentDays);
 
         List<Tuple<FileInfo, DateTime>> fileInfoDateTimeList = dierctoryList
           .Map(directory => GetFileInfoDateTimeListNotRecursive(directory, prefix))
@@ -21,7 +21,7 @@ public class FileUtility {
         if (recentDays > 0) {
             // add 3 hours buffer
             TimeSpan recentDaysBuffer = new(days: recentDays, hours: 3, minutes: 0, seconds: 0);
-            fileInfoDateTimeList.RemoveAll(s => (latestDateTime - s.Item2).Duration() > recentDaysBuffer);
+            fileInfoDateTimeList.RemoveAll(s => (targetDate - s.Item2).Duration() > recentDaysBuffer);
         }
 
         return fileInfoDateTimeList;
@@ -33,7 +33,7 @@ public class FileUtility {
     // yearMonthList [2022-05, 2022-06, 2022-07]
     // recentDays: 35
     // Output: [2022-06, 2022-07]
-    private static List<string> FilterYearOfMonthOfInterest(IEnumerable<string> directories, int recentDays) {
+    private static List<string> FilterYearOfMonthOfInterest(IEnumerable<string> directories, DateTime targetDate, int recentDays) {
         // format: 2022-09
         string pattern = $"^[0-9][0-9][0-9][0-9]-[0-9][0-9]$";
         Regex regex = new(pattern);
@@ -53,12 +53,8 @@ public class FileUtility {
             return new List<string>();
         }
 
-        DateTime latestTime = GetLastMomentOfMonth(
-          DateTime.ParseExact(latestMonthString, @"yyyy-MM", CultureInfo.InvariantCulture)
-          );
-
         // add one more day just to be sure
-        DateTime targetTime = latestTime.AddMonths(-1).AddDays(-(recentDays + 1));
+        DateTime targetTime = targetDate.AddMonths(-1).AddDays(-(recentDays + 1));
         string targetMonthString = targetTime.ToString(@"yyyy-MM");
 
         // only reserve striing that is greater or equal to targetMonthString
@@ -153,6 +149,51 @@ public class FileUtility {
         }
 
         return new Tuple<string, DateTime>(latestRecordFilePath, latestDateTime);
+    }
+
+    public static Tuple<string, DateTime> GetRecordAndDateDifference(string directory, string prefix, DateTime target, TimeSpan timeSpan) {
+        string pattern = $"^{prefix}_(?<Date>[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]).csv$";
+        // format: record_2021-02-21-21-52-13.csv
+        Regex fileNameRegex = new(pattern);
+
+        List<string> filePathList = new();
+        List<DateTime> dateTimeList = new();
+        foreach (string fileName in Directory.GetFiles(directory, "*.csv", System.IO.SearchOption.AllDirectories)) {
+            FileInfo fileInfo = new(fileName);
+
+            Match match = fileNameRegex.Match(fileInfo.Name);
+            if (!match.Success) {
+                // Console.WriteLine(fileName + " does not match the pattern.");
+                continue;
+            }
+
+            string dateString = match.Groups["Date"].Value;
+            DateTime parsedDateTime;
+            if (!DateTime.TryParseExact(dateString, @"yyyy-MM-dd-HH-mm-ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedDateTime))
+                continue;
+            parsedDateTime = DateTime.SpecifyKind(parsedDateTime, DateTimeKind.Local);
+
+            filePathList.Add(fileName);
+            dateTimeList.Add(parsedDateTime);
+        }
+
+        int closestIndex = FindClosestIndex(dateTimeList, target, timeSpan);
+
+        return new Tuple<string, DateTime>(filePathList[closestIndex], dateTimeList[closestIndex]);
+    }
+
+    private static int FindClosestIndex(List<DateTime> dateTimes, DateTime target, TimeSpan timeSpan) {
+        TimeSpan minTimeSpan = TimeSpan.MaxValue;
+        int minIndex = -1;
+        for (int i = 0; i < dateTimes.Count; i++) {
+            TimeSpan timeDifference = (timeSpan - (target - dateTimes[i]).Duration()).Duration();
+            if (minTimeSpan > timeDifference) {
+                minTimeSpan = timeDifference;
+                minIndex = i;
+            }
+        }
+
+        return minIndex;
     }
 
     public static List<VTuberId> GetListFromCsv(string filePath) {

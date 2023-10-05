@@ -42,17 +42,16 @@ class Program {
 
         List<DebutData> lstDebutData = DebutData.ReadFromCsv(Path.Combine(debutRepoPath, $"{now.ToLocalTime():yyyy-MM-dd}.csv"));
 
-        DictionaryRecord dictRecord = new(trackList, excluedList, dictBasicData);
-        FillRecord(ref dictRecord, trackList: trackList, recordDir: dataRepoPath, recentDays: 35);
-        FillBasicData(ref dictRecord, trackList: trackList, basicDataDir: dataRepoPath, recentDays: 35);
-
-
-        // Start output data
-        ClearAndCreateOutputFolders();
-
         if (latestBasicDataTime < latestRecordTime) {
             latestBasicDataTime = latestRecordTime;
         }
+
+        DictionaryRecord dictRecord = new(trackList, excluedList, dictBasicData);
+        MiscUtils.FillRecord(ref dictRecord, trackList: trackList, recordDir: dataRepoPath, targetDate: latestBasicDataTime.Date, recentDays: 35);
+        MiscUtils.FillBasicData(ref dictRecord, trackList: trackList, basicDataDir: dataRepoPath, targetDate: latestBasicDataTime.Date, recentDays: 35);
+
+        // Start output data
+        ClearAndCreateOutputFolders();
 
         UpdateTimeResponse updateTimeResponse = new(
             time: new UpdateTime(
@@ -281,37 +280,6 @@ class Program {
 
         writer.Write(jsonString);
         writer.Close();
-    }
-
-    private static void FillRecord(ref DictionaryRecord dictRecord, TrackList trackList, string recordDir, int recentDays) {
-        List<Tuple<FileInfo, DateTime>> csvFileList = FileUtility.GetFileInfoDateTimeList(
-            parentDirectory: recordDir,
-            prefix: "record",
-            recentDays: recentDays);
-
-        foreach (Tuple<FileInfo, DateTime> fileInfoDateTime in csvFileList) {
-            Dictionary<VTuberId, VTuberStatistics> dictStatistics = CsvUtility.ReadStatisticsDictionary(fileInfoDateTime.Item1.FullName);
-
-            if (dictStatistics.Count >= trackList.GetCount() * 0.5) {
-                dictRecord.AppendStatistic(fileInfoDateTime.Item2, dictStatistics);
-                dictRecord.AppendBasicData(fileInfoDateTime.Item2, dictStatistics);
-            }
-        }
-    }
-
-    private static void FillBasicData(ref DictionaryRecord dictRecord, TrackList trackList, string basicDataDir, int recentDays) {
-        List<Tuple<FileInfo, DateTime>> csvFileList = FileUtility.GetFileInfoDateTimeList(
-            parentDirectory: basicDataDir,
-            prefix: "basic-data",
-            recentDays: recentDays);
-
-        foreach (Tuple<FileInfo, DateTime> fileInfoDateTime in csvFileList) {
-            Dictionary<VTuberId, VTuberBasicData> dictBasicData = VTuberBasicData.ReadFromCsv(fileInfoDateTime.Item1.FullName);
-
-            if (dictBasicData.Count >= trackList.GetCount() * 0.5) {
-                dictRecord.AppendBasicData(fileInfoDateTime.Item2, dictBasicData);
-            }
-        }
     }
 
     private static LiveVideosList ClearTwitchLiveVideos(LiveVideosList liveVideosList) {

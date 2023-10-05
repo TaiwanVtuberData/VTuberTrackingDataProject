@@ -36,6 +36,7 @@ static void WriteDateTimeStatistics(TrackList trackList, string recordDirectory,
     List<Tuple<FileInfo, DateTime>> csvFileList = FileUtility.GetFileInfoDateTimeList(
         parentDirectory: recordDirectory,
         prefix: "record",
+        targetDate: DateTime.Today,
         recentDays: recentDays);
 
     StatisticsTable statisticsTable = new(trackList, byGroup);

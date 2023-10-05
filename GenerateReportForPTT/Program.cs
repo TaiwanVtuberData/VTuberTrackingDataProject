@@ -1,94 +1,82 @@
-﻿using GenerateReportForPTT;
-using System.Globalization;
+﻿using Common.Types;
+using Common.Types.Basic;
+using Common.Utils;
+using GenerateRecordList;
+using GenerateRecordList.Types;
+using GenerateRecordList.Utils;
+using GenerateReportForPTT;
 
-string commandLine = GetStringFromFile(args[0]);
-string[] command = commandLine.Split(' ');
+string dataRepoPath = args.Length >= 1 ? args[0] : "/tw_vtuber";
 
-string columnHeader = command[2];
-int maxColumnLength = int.Parse(command[3]);
-bool sortByIncreasePercentage = int.Parse(command[4]) == 1;
-bool onlyShowValueChanges = int.Parse(command[5]) == 1;
-bool accountForLessThanAWeek = int.Parse(command[6]) == 1;
+(_, DateTime latestRecordTime) = FileUtility.GetLatestRecord(dataRepoPath, "record");
 
-ChannelTable channelTable = new(valueHeader: columnHeader, sortByIncreasePercentage: sortByIncreasePercentage, onlyShowValueChanges: onlyShowValueChanges);
+DictionaryRecordToRecordList todayTransformer = GetDictionaryRecordToRecordList(
+    dataRepoPath: dataRepoPath, target: latestRecordTime, timeSpan: new TimeSpan(days: 0, hours: 0, minutes: 0, seconds: 0));
 
-StreamReader file = new(command[0]);
-string? line = file.ReadLine();
-if (line == null) {
-    return;
-}
+DictionaryRecordToRecordList lastWeekTransformer = GetDictionaryRecordToRecordList(
+    dataRepoPath: dataRepoPath, target: latestRecordTime, timeSpan: new TimeSpan(days: 7, hours: 0, minutes: 0, seconds: 0));
 
-List<DateTime> dateTimeList = ParseDateTimeList(line);
-int latestIndex = dateTimeList.Count - 1;
-int lastWeekIndex = FindClosestIndex(dateTimeList, dateTimeList.Last(), new TimeSpan(days: 7, hours: 0, minutes: 0, seconds: 0));
-int lastMonthIndex = FindClosestIndex(dateTimeList, dateTimeList.Last(), new TimeSpan(days: 28, hours: 0, minutes: 0, seconds: 0));
+DictionaryRecordToRecordList lastMonthTransformer = GetDictionaryRecordToRecordList(
+    dataRepoPath: dataRepoPath, target: latestRecordTime, timeSpan: new TimeSpan(days: 28, hours: 0, minutes: 0, seconds: 0));
 
-while ((line = file.ReadLine()) != null) {
-    List<string> stringBlock = line.Split(',').ToList();
-    string channelName = stringBlock[0];
+// Trending VTuber
+foreach (TrendingVTuberSortOrder sortOrder
+    in new List<TrendingVTuberSortOrder>
+    { TrendingVTuberSortOrder.livestream,
+        TrendingVTuberSortOrder.video,
+        TrendingVTuberSortOrder.combined }
+    ) {
+    List<VTuberPopularityData> todayVTuberList = todayTransformer.TrendingVTubers(sortBy: sortOrder, null);
+    List<VTuberPopularityData> lastWeekVTuberList = lastWeekTransformer.TrendingVTubers(sortBy: sortOrder, null);
+    List<VTuberPopularityData> lastMonthVTuberList = lastMonthTransformer.TrendingVTubers(sortBy: sortOrder, null);
 
-    stringBlock = stringBlock.Skip(1).ToList();
-    if (stringBlock.Count != dateTimeList.Count)
-        throw new Exception("Data count doesn't match.");
+    ChannelTable channelTable = new(valueHeader: "觀看中位數",
+        sortByIncreasePercentage: false,
+        onlyShowValueChanges: false);
 
-    int thisLastWeekIndex = lastWeekIndex;
-    bool isLesserThanLastWeek = false;
-    if (accountForLessThanAWeek) {
-        for (thisLastWeekIndex = lastWeekIndex; thisLastWeekIndex < stringBlock.Count; thisLastWeekIndex++) {
-            if (stringBlock[thisLastWeekIndex] != "")
-                break;
-        }
-        thisLastWeekIndex = Math.Min(thisLastWeekIndex, latestIndex);
+    foreach (VTuberPopularityData vtuber in todayVTuberList) {
+        VTuberPopularityData? lastWeekVTuber = lastWeekVTuberList.FirstOrDefault(e => e.id == vtuber.id);
+        VTuberPopularityData? lastMonthVTuber = lastMonthVTuberList.FirstOrDefault(e => e.id == vtuber.id);
 
-        if (stringBlock[lastWeekIndex] == "")
-            isLesserThanLastWeek = true;
+        decimal todayValue = (vtuber?.YouTube?.popularity ?? 0) + (vtuber?.Twitch?.popularity ?? 0);
+        decimal lastWeekValue = (lastWeekVTuber?.YouTube?.popularity ?? 0) + (lastWeekVTuber?.Twitch?.popularity ?? 0);
+        decimal lastMontuValue = (lastMonthVTuber?.YouTube?.popularity ?? 0) + (lastMonthVTuber?.Twitch?.popularity ?? 0);
+        channelTable.AddChannel(
+            channelName: vtuber?.name ?? "",
+            currentValue: todayValue,
+            lastWeekValue: lastWeekValue == 0m ? null : lastWeekValue,
+            lastMonthValue: lastMontuValue == 0m ? null : lastMontuValue,
+            isLesserThanLastWeek: lastWeekValue == 0m);
     }
 
-    channelTable.AddChannel(channelName, stringBlock[latestIndex], stringBlock[thisLastWeekIndex], stringBlock[lastMonthIndex], isLesserThanLastWeek);
+    StreamWriter writer = new($"trending_{sortOrder}.txt");
+    writer.Write(channelTable.ToString(maxColumnLength: 11));
+    writer.Close();
 }
 
-file.Close();
+static DictionaryRecordToRecordList GetDictionaryRecordToRecordList(string dataRepoPath, DateTime target, TimeSpan timeSpan) {
+    (_, DateTime latestRecordTime) = FileUtility.GetRecordAndDateDifference(dataRepoPath, "record", target, timeSpan);
 
-StreamWriter writer = new(command[1]);
-writer.Write(channelTable.ToString(maxColumnLength));
-writer.Close();
+    List<VTuberId> excluedList = FileUtility.GetListFromCsv(Path.Combine(dataRepoPath, "DATA/EXCLUDE_LIST.csv"));
+    TrackList trackList = new(Path.Combine(dataRepoPath, "DATA/TW_VTUBER_TRACK_LIST.csv"), lstExcludeId: excluedList, throwOnValidationFail: true);
 
-static string GetStringFromFile(string filePath) {
-    string? line;
+    (string latestBasicDataFilePath, DateTime latestBasicDataTime) = FileUtility.GetRecordAndDateDifference(dataRepoPath, "basic-data", target, timeSpan);
+    Dictionary<VTuberId, VTuberBasicData> dictBasicData = VTuberBasicData.ReadFromCsv(latestBasicDataFilePath);
 
-    // Read the file and display it line by line.  
-    using StreamReader file = new(filePath);
-    if ((line = file.ReadLine()) != null) {
-        file.Close();
-        return line;
+
+    if (latestBasicDataTime < latestRecordTime) {
+        latestBasicDataTime = latestRecordTime;
     }
 
-    throw new Exception("Could not retrieve file path.");
-}
+    DictionaryRecord dictRecord = new(trackList, excluedList, dictBasicData);
+    MiscUtils.FillRecord(ref dictRecord, trackList: trackList, recordDir: dataRepoPath, targetDate: latestBasicDataTime.Date, recentDays: 10);
+    MiscUtils.FillBasicData(ref dictRecord, trackList: trackList, basicDataDir: dataRepoPath, targetDate: latestBasicDataTime.Date, recentDays: 10);
 
-static List<DateTime> ParseDateTimeList(string data) {
-    string[] stringBlock = data.Split(',');
-
-    List<DateTime> ans = new();
-    foreach (string str in stringBlock) {
-        if (DateTime.TryParseExact(str, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDateTime)) {
-            ans.Add(parsedDateTime);
-        }
-    }
-
-    return ans;
-}
-
-static int FindClosestIndex(List<DateTime> dateTimes, DateTime target, TimeSpan timeSpan) {
-    TimeSpan minTimeSpan = TimeSpan.MaxValue;
-    int minIndex = -1;
-    for (int i = 0; i < dateTimes.Count; i++) {
-        TimeSpan timeDifference = (timeSpan - (target - dateTimes[i]).Duration()).Duration();
-        if (minTimeSpan > timeDifference) {
-            minTimeSpan = timeDifference;
-            minIndex = i;
-        }
-    }
-
-    return minIndex;
+    return new(
+        trackList: trackList,
+        dictRecord: dictRecord,
+        todayDate: latestBasicDataTime.Date,
+        latestRecordTime: latestRecordTime,
+        latestBasicDataTime: latestBasicDataTime,
+        nationalityFilter: "");
 }
