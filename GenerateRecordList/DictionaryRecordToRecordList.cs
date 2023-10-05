@@ -5,7 +5,7 @@ using GenerateRecordList.Utils;
 
 namespace GenerateRecordList;
 
-public class DictionaryRecordToJsonStruct {
+public class DictionaryRecordToRecordList {
     private readonly TrackList _trackList;
     private readonly DictionaryRecord DictRecord;
     private readonly DateTime TodayDate;
@@ -14,7 +14,7 @@ public class DictionaryRecordToJsonStruct {
     private readonly DataTransform dataTransform;
     private readonly string NationalityFilter;
 
-    public DictionaryRecordToJsonStruct(TrackList trackList, DictionaryRecord dictRecord, DateTime todayDate, DateTime latestRecordTime, DateTime latestBasicDataTime, string nationalityFilter) {
+    public DictionaryRecordToRecordList(TrackList trackList, DictionaryRecord dictRecord, DateTime todayDate, DateTime latestRecordTime, DateTime latestBasicDataTime, string nationalityFilter) {
         _trackList = trackList;
         DictRecord = dictRecord;
         TodayDate = todayDate;

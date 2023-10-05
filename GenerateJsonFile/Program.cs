@@ -62,14 +62,14 @@ class Program {
         );
         WriteJson(updateTimeResponse, "update-time.json");
 
-        List<VTuberFullData> lstAllVTuber = new DictionaryRecordToJsonStruct(trackList, dictRecord, DateTime.Today, latestRecordTime, latestBasicDataTime, "")
+        List<VTuberFullData> lstAllVTuber = new DictionaryRecordToRecordList(trackList, dictRecord, DateTime.Today, latestRecordTime, latestBasicDataTime, "")
             .AllWithFullData(liveVideos, lstDebutData);
         foreach (VTuberFullData vtuber in lstAllVTuber) {
             WriteJson(vtuber, $"vtubers/{vtuber.id.Value}.json");
         }
 
         foreach (var nationality in new List<(string, string)> { ("", "all"), ("TW", "TW"), ("HK", "HK"), ("MY", "MY") }) {
-            DictionaryRecordToJsonStruct transformer = new(trackList, dictRecord, DateTime.Today, latestRecordTime, latestBasicDataTime, nationality.Item1);
+            DictionaryRecordToRecordList transformer = new(trackList, dictRecord, DateTime.Today, latestRecordTime, latestBasicDataTime, nationality.Item1);
 
             foreach (var tuple in new List<(int?, string)> { (10, "10"), (null, "all") }) {
                 WriteJson(
