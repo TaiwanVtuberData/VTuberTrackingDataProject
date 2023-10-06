@@ -20,6 +20,7 @@ DictionaryRecordToRecordList lastMonthTransformer = GetDictionaryRecordToRecordL
     dataRepoPath: dataRepoPath, target: latestRecordTime, timeSpan: new TimeSpan(days: 30, hours: 0, minutes: 0, seconds: 0));
 
 WriteTrendingVTubers(todayTransformer, lastWeekTransformer, lastMonthTransformer);
+WriteYouTubeSubscriberCountToPopularity(todayTransformer, lastWeekTransformer, lastMonthTransformer);
 WriteYouTubeSubscriberCount(todayTransformer);
 WriteYouTubeSubscriberGrowth(todayTransformer);
 
@@ -86,6 +87,47 @@ static void WriteTrendingVTubers(
 
         StreamWriter writer = new($"trending_{sortOrder}.txt");
         writer.Write(channelTable.ToString(maxColumnLength: 11));
+        writer.Close();
+    }
+}
+
+
+static void WriteYouTubeSubscriberCountToPopularity(
+    DictionaryRecordToRecordList todayTransformer,
+    DictionaryRecordToRecordList lastWeekTransformer,
+    DictionaryRecordToRecordList lastMonthTransformer
+    ) {
+    foreach (TrendingVTuberSortOrder sortOrder
+in new List<TrendingVTuberSortOrder>
+{ TrendingVTuberSortOrder.livestream,
+        TrendingVTuberSortOrder.video,
+        TrendingVTuberSortOrder.combined }
+) {
+        List<VTuberSubscriberCountToPopularityData> todayVTuberList = todayTransformer.YouTubeSubscriberCountToPopularity(sortBy: sortOrder, count: null);
+        List<VTuberSubscriberCountToPopularityData> lastWeekVTuberList = lastWeekTransformer.YouTubeSubscriberCountToPopularity(sortBy: sortOrder, null);
+        List<VTuberSubscriberCountToPopularityData> lastMonthVTuberList = lastMonthTransformer.YouTubeSubscriberCountToPopularity(sortBy: sortOrder, null);
+
+        ChannelTable channelTable = new(valueHeader: "訂閱者黏著度",
+            sortByIncreasePercentage: false,
+            onlyShowValueChanges: false);
+
+        foreach (VTuberSubscriberCountToPopularityData vtuber in todayVTuberList) {
+            VTuberSubscriberCountToPopularityData? lastWeekVTuber = lastWeekVTuberList.FirstOrDefault(e => e.id == vtuber.id);
+            VTuberSubscriberCountToPopularityData? lastMonthVTuber = lastMonthVTuberList.FirstOrDefault(e => e.id == vtuber.id);
+
+            decimal todayValue = (vtuber?.YouTube?.popularity ?? 0);
+            decimal lastWeekValue = (lastWeekVTuber?.YouTube?.popularity ?? 0);
+            decimal lastMontuValue = (lastMonthVTuber?.YouTube?.popularity ?? 0);
+            channelTable.AddChannel(
+                channelName: vtuber?.name ?? "",
+                currentValue: todayValue,
+                lastWeekValue: lastWeekValue == 0m ? null : lastWeekValue,
+                lastMonthValue: lastMontuValue == 0m ? null : lastMontuValue,
+                isLesserThanLastWeek: lastWeekValue == 0m);
+        }
+
+        StreamWriter writer = new($"subscriber_count_to_{sortOrder}.txt");
+        writer.Write(channelTable.ToString(maxColumnLength: 9));
         writer.Close();
     }
 }

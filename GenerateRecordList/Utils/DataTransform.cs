@@ -67,6 +67,57 @@ public class DataTransform {
             popularity: record?.RecentVideoMedianViewCount ?? 0);
     }
 
+    public YouTubeSubscriberCountToPopularityData? ToYouTubeSubscriberCountToLivestreamPopularity(VTuberRecord.YouTubeData? input) {
+        if (input == null)
+            return null;
+
+        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        ulong? sub = basicData?.SubscriberCount;
+
+        VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
+
+        decimal subscriberCountToPopularity = (sub == null || sub == 0) ? 0m : (record?.RecentLivestreamMedianViewCount ?? 0) / (decimal)sub;
+
+        return new YouTubeSubscriberCountToPopularityData(
+            id: input.ChannelId,
+            subscriber: ToYouTubeCountType(input.hasValidRecord, sub),
+            popularity: subscriberCountToPopularity * 100);
+    }
+
+    public YouTubeSubscriberCountToPopularityData? ToYouTubeSubscriberCountToVideoPopularity(VTuberRecord.YouTubeData? input) {
+        if (input == null)
+            return null;
+
+        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        ulong? sub = basicData?.SubscriberCount;
+
+        VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
+
+        decimal subscriberCountToPopularity = (sub == null || sub == 0) ? 0m : (record?.RecentVideoMedianViewCount ?? 0) / (decimal)sub;
+
+        return new YouTubeSubscriberCountToPopularityData(
+            id: input.ChannelId,
+            subscriber: ToYouTubeCountType(input.hasValidRecord, sub),
+            popularity: subscriberCountToPopularity * 100);
+    }
+
+    public YouTubeSubscriberCountToPopularityData? ToYouTubeSubscriberCountToTotalPopularity(VTuberRecord.YouTubeData? input) {
+        if (input == null)
+            return null;
+
+        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        ulong? sub = basicData?.SubscriberCount;
+
+        VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
+
+        decimal subscriberCountToPopularity = (sub == null || sub == 0) ? 0m : (record?.RecentTotalMedianViewCount ?? 0) / (decimal)sub;
+
+        return new YouTubeSubscriberCountToPopularityData(
+            id: input.ChannelId,
+            subscriber: ToYouTubeCountType(input.hasValidRecord, sub),
+            popularity: subscriberCountToPopularity * 100);
+    }
+
     public ulong ToYouTubeTotalPopularity(VTuberRecord.YouTubeData? input) {
         if (input == null)
             return 0;

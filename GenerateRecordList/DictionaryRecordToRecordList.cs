@@ -392,6 +392,48 @@ public class DictionaryRecordToRecordList {
             .ToList();
     }
 
+    public List<VTuberSubscriberCountToPopularityData> YouTubeSubscriberCountToPopularity(TrendingVTuberSortOrder sortBy, int? count) {
+        List<VTuberSubscriberCountToPopularityData> rLst = new();
+
+        Func<VTuberRecord.YouTubeData?, YouTubeSubscriberCountToPopularityData?> youTubePopularityFunc = GetYouTubeSubscriberCountToPopularityFunction(sortBy);
+        Func<VTuberRecord.TwitchData?, TwitchPopularityData?> twitchPopularityFunc = GetTwitchPopularityFunction(sortBy);
+
+        foreach (KeyValuePair<VTuberId, VTuberRecord> vtuberStatPair in DictRecord
+            .Where(p => p.Value.Nationality.Contains(NationalityFilter))
+            .Where(p => p.Value?.YouTube?.GetBasicData(LatestBasicDataTime)?.SubscriberCount >= 2000)
+            ) {
+            VTuberRecord record = vtuberStatPair.Value;
+
+            VTuberSubscriberCountToPopularityData vTuberData = new(
+                id: record.Id,
+                activity: CommonActivityToJsonActivity(record.Activity),
+                name: record.DisplayName,
+                imgUrl: record.ImageUrl,
+                YouTube: youTubePopularityFunc(record.YouTube),
+                Twitch: twitchPopularityFunc(record.Twitch),
+                popularVideo: dataTransform.GetPopularVideo(record),
+                group: record.GroupName,
+                nationality: record.Nationality,
+                debutDate: record.DebutDate?.ToString(Constant.DATE_FORMAT)
+                );
+
+            rLst.Add(vTuberData);
+        }
+
+        return rLst
+            .OrderByDescending(e => (e.YouTube?.popularity ?? 0))
+            .Take(count ?? int.MaxValue)
+            .ToList();
+    }
+
+    private Func<VTuberRecord.YouTubeData?, YouTubeSubscriberCountToPopularityData?> GetYouTubeSubscriberCountToPopularityFunction(TrendingVTuberSortOrder sortBy) {
+        return sortBy switch {
+            TrendingVTuberSortOrder.livestream => (VTuberRecord.YouTubeData? input) => dataTransform.ToYouTubeSubscriberCountToLivestreamPopularity(input),
+            TrendingVTuberSortOrder.video => (VTuberRecord.YouTubeData? input) => dataTransform.ToYouTubeSubscriberCountToVideoPopularity(input),
+            _ => (VTuberRecord.YouTubeData? input) => dataTransform.ToYouTubeSubscriberCountToTotalPopularity(input),
+        };
+    }
+
     public List<GroupData> Groups() {
         List<GroupData> rLst = new();
 
