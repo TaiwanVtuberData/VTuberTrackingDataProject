@@ -109,7 +109,7 @@ public class DictionaryRecordToRecordList {
         return rLst;
     }
 
-    public List<VTuberGrowthData> GrowingVTubers(int? count) {
+    public List<VTuberGrowthData> GrowingVTubers(int? count, int growthLimit = 100) {
         Dictionary<VTuberId, YouTubeGrowthData> dictGrowth = new(DictRecord.Count);
 
         foreach (KeyValuePair<VTuberId, VTuberRecord> vtuberStatPair in DictRecord) {
@@ -138,7 +138,7 @@ public class DictionaryRecordToRecordList {
         foreach (KeyValuePair<VTuberId, YouTubeGrowthData> growthPair in dictGrowth
             .Where(p => p.Value.Nationality != null && p.Value.Nationality.Contains(NationalityFilter))
             .Where(p => p.Value.subscriber.tag == CountTag.has)
-            .Where(p => p.Value._7DaysGrowth.diff >= 100)
+            .Where(p => p.Value._7DaysGrowth.diff >= growthLimit)
             .Where(p => DictRecord[p.Key].YouTube != null)
             .OrderByDescending(p => ToGrowthPercentage(p.Value))
             .Take(count ?? int.MaxValue)) {
