@@ -21,6 +21,7 @@ DictionaryRecordToRecordList lastMonthTransformer = GetDictionaryRecordToRecordL
 
 WriteTrendingVTubers(todayTransformer, lastWeekTransformer, lastMonthTransformer);
 WriteYouTubeSubscriberCount(todayTransformer);
+WriteYouTubeSubscriberGrowth(todayTransformer);
 
 static DictionaryRecordToRecordList GetDictionaryRecordToRecordList(string dataRepoPath, DateTime target, TimeSpan timeSpan) {
     (_, DateTime latestRecordTime) = FileUtility.GetRecordAndDateDifference(dataRepoPath, "record", target, timeSpan);
@@ -116,6 +117,37 @@ static void WriteYouTubeSubscriberCount(
     }
 
     StreamWriter writer = new($"subscriber_count.txt");
+    writer.Write(channelTable.ToString(maxColumnLength: 13));
+    writer.Close();
+}
+
+static void WriteYouTubeSubscriberGrowth(
+    DictionaryRecordToRecordList todayTransformer
+    ) {
+    List<VTuberGrowthData> todayVTuberList = todayTransformer.GrowingVTubers(count: null);
+
+    ChannelTable channelTable = new(valueHeader: "(no_header)",
+        sortByIncreasePercentage: true,
+        onlyShowValueChanges: false);
+
+    foreach (VTuberGrowthData vtuber in todayVTuberList
+        .OrderByDescending(e => e?.YouTube?.subscriber.count)
+        ) {
+        decimal todayValue = vtuber?.YouTube?.subscriber.count ?? 0m;
+        decimal? lastWeekValue =
+            vtuber?.YouTube?._7DaysGrowth.recordType != GrowthRecordType.full ? null : (todayValue - (vtuber?.YouTube?._7DaysGrowth.diff ?? 0m));
+        decimal? lastMontuValue =
+            vtuber?.YouTube?._30DaysGrowth.recordType != GrowthRecordType.full ? null : (todayValue - (vtuber?.YouTube?._30DaysGrowth.diff ?? 0m));
+
+        channelTable.AddChannel(
+            channelName: vtuber?.name ?? "",
+            currentValue: todayValue,
+            lastWeekValue: lastWeekValue,
+            lastMonthValue: lastMontuValue,
+            isLesserThanLastWeek: vtuber?.YouTube?._7DaysGrowth.recordType != GrowthRecordType.full);
+    }
+
+    StreamWriter writer = new($"subscriber_count_growth.txt");
     writer.Write(channelTable.ToString(maxColumnLength: 13));
     writer.Close();
 }
