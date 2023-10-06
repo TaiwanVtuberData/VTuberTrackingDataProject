@@ -69,8 +69,8 @@ static DictionaryRecordToRecordList GetDictionaryRecordToRecordList(string dataR
     }
 
     DictionaryRecord dictRecord = new(trackList, excluedList, dictBasicData);
-    MiscUtils.FillRecord(ref dictRecord, trackList: trackList, recordDir: dataRepoPath, targetDate: latestBasicDataTime.Date, recentDays: 10);
-    MiscUtils.FillBasicData(ref dictRecord, trackList: trackList, basicDataDir: dataRepoPath, targetDate: latestBasicDataTime.Date, recentDays: 10);
+    MiscUtils.FillRecord(ref dictRecord, trackList: trackList, recordDir: dataRepoPath, targetDate: latestBasicDataTime.Date, recentDays: 35 - timeSpan.Days);
+    MiscUtils.FillBasicData(ref dictRecord, trackList: trackList, basicDataDir: dataRepoPath, targetDate: latestBasicDataTime.Date, recentDays: 35 - timeSpan.Days);
 
     return new(
         trackList: trackList,
