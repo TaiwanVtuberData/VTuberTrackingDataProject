@@ -126,7 +126,7 @@ in new List<TrendingVTuberSortOrder>
                 isLesserThanLastWeek: lastWeekValue == 0m);
         }
 
-        StreamWriter writer = new($"subscriber_count_to_{sortOrder}.txt");
+        StreamWriter writer = new($"subscriber_count_to_trending_{sortOrder}.txt");
         writer.Write(channelTable.ToString(maxColumnLength: 9));
         writer.Close();
     }
