@@ -193,7 +193,7 @@ static void WriteYouTubeSubscriberGrowth(
     ) {
     List<VTuberGrowthData> todayVTuberList = todayTransformer.GrowingVTubers(count: null);
 
-    ChannelTable channelTable = new(valueHeader: "(no_header)",
+    ChannelTable channelTable = new(valueHeader: "訂閱人數",
         sortByIncreasePercentage: true,
         onlyShowValueChanges: false);
 

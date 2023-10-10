@@ -12,6 +12,7 @@ class ChannelTable : DataTable {
         public const int remark = 4;
         // invisible column
         public const int increasedValueByWeek = 5;
+        public const int increasedPercengateByWeek = 6;
     }
 
     private readonly string NO_RECORD_STRING = "(無紀錄)";
@@ -37,6 +38,7 @@ class ChannelTable : DataTable {
         this.Columns.Add("上月增減", typeof(StringWithColor));
         this.Columns.Add("備註", typeof(StringWithColor));
         this.Columns.Add("Increased Value By Week(Do not print)", typeof(decimal));
+        this.Columns.Add("Increased Percentage By Week(Do not print)", typeof(string));
 
         SortByIncreasePercentage = sortByIncreasePercentage;
         OnlyShowValueChanges = onlyShowValueChanges;
@@ -83,14 +85,14 @@ class ChannelTable : DataTable {
                 lastMonthDifferenceColor = ColorCode.GREEN;
         }
 
-        decimal increaseVale;
+        decimal increaseValue;
         if (SortByIncreasePercentage) {
             if (currentValue != 0m)
-                increaseVale = (lastWeekDifference / currentValue) * 100;
+                increaseValue = (lastWeekDifference / currentValue) * 100;
             else
-                increaseVale = 0m;
+                increaseValue = 0m;
         } else {
-            increaseVale = lastWeekDifference;
+            increaseValue = lastWeekDifference;
         }
 
         ColorCode channelColor = ColorCode.NO_COLOR;
@@ -98,19 +100,15 @@ class ChannelTable : DataTable {
             channelColor = ColorCode.YELLOW;
         }
 
-        string valueString;
-        if (SortByIncreasePercentage) {
-            valueString = ToThisFormat(increaseVale, false) + '%';
-        } else {
-            valueString = ToThisFormat(currentValue, false);
-        }
+        string increasePercentageString = ToThisFormat(increaseValue, false) + '%';
 
         this.Rows.Add(new StringWithColor(channelName, channelColor),
-            valueString,
+            ToThisFormat(currentValue, false),
             new StringWithColor(lastWeekDifferenceString, lastWeekDifferenceColor),
             new StringWithColor(lastMonthDifferenceString, lastMonthDifferenceColor),
             new StringWithColor(remarkText, ColorCode.NO_COLOR),
-            increaseVale);
+            increaseValue,
+            increasePercentageString);
     }
 
     public string ToString(int maxColumnLength) {
@@ -174,67 +172,131 @@ class ChannelTable : DataTable {
                 rank++;
             }
         } else {
-            List<int> ColumnToPrintIndexes = new()
-            {
-                HeaderIndex.channelName,
-                HeaderIndex.valueCount,
-                HeaderIndex.lastWeekDifference,
-                HeaderIndex.lastMonthDifference,
-                HeaderIndex.remark,
-            };
-
-            List<int> columnsOccupySpace = GetColumnsOccupiedSpace(ColumnToPrintIndexes);
-
-            if (maxColumnLength > 0)
-                columnsOccupySpace[0] = maxColumnLength;
-
-            ans += HeaderString(rankSpace, columnsOccupySpace, ColumnToPrintIndexes);
-            ans += "\r\n"; // PCMan only accept \r\n new line
-
-            DataView dataView = this.DefaultView;
-
             if (SortByIncreasePercentage) {
-                dataView.Sort = "Increased Value By Week(Do not print) desc";
-            }
+                List<int> ColumnToPrintIndexes = new()
+                {
+                    HeaderIndex.channelName,
+                    HeaderIndex.valueCount,
+                    HeaderIndex.lastWeekDifference,
+                    HeaderIndex.lastMonthDifference,
+                    HeaderIndex.remark,
+                };
 
-            DataTable sortedTable = dataView.ToTable();
-            int rank = 1;
-            foreach (DataRow row in sortedTable.Rows) {
-                ans += GetRankString(rank, rankSpace);
+                List<int> columnsOccupySpace = GetColumnsOccupiedSpace(ColumnToPrintIndexes);
 
-                ans += rankChannelNameSpace;
-                ans += GetUnicodeAwarePaddedString(
-                    row[HeaderIndex.channelName].ToString(),
-                    columnsOccupySpace[0],
-                    Justify.left,
-                    ((StringWithColor)row[HeaderIndex.channelName]).Color);
-                ans += "  "; // 2 spaces
-                ans += GetUnicodeAwarePaddedString(
-                    row[HeaderIndex.valueCount].ToString(),
-                    columnsOccupySpace[1],
-                    Justify.right,
-                    ColorCode.NO_COLOR);
-                ans += "  "; // 2 spaces
-                ans += GetUnicodeAwarePaddedString(
-                    row[HeaderIndex.lastWeekDifference].ToString(),
-                    columnsOccupySpace[2],
-                    Justify.right,
-                    ((StringWithColor)row[HeaderIndex.lastWeekDifference]).Color);
-                ans += "  "; // 2 spaces
-                ans += GetUnicodeAwarePaddedString(
-                    row[HeaderIndex.lastMonthDifference].ToString(),
-                    columnsOccupySpace[3],
-                    Justify.right,
-                    ((StringWithColor)row[HeaderIndex.lastMonthDifference]).Color);
-                ans += "  "; // 2 spaces
-                ans += GetUnicodeAwarePaddedString(
-                    row[HeaderIndex.remark].ToString(),
-                    columnsOccupySpace[4],
-                    Justify.left,
-                    ((StringWithColor)row[HeaderIndex.remark]).Color);
+                if (maxColumnLength > 0) {
+                    columnsOccupySpace[0] = maxColumnLength;
+                }
+
+                ans += HeaderString(rankSpace, columnsOccupySpace, ColumnToPrintIndexes);
                 ans += "\r\n"; // PCMan only accept \r\n new line
 
-                rank++;
+                DataView dataView = this.DefaultView;
+                dataView.Sort = "Increased Value By Week(Do not print) desc";
+
+                DataTable sortedTable = dataView.ToTable();
+                int rank = 1;
+                foreach (DataRow row in sortedTable.Rows) {
+                    ans += GetUnicodeAwarePaddedString(
+                        row[HeaderIndex.increasedPercengateByWeek].ToString(),
+                        4,
+                        Justify.right,
+                        ColorCode.NO_COLOR);
+
+                    ans += rankChannelNameSpace;
+                    ans += GetUnicodeAwarePaddedString(
+                        row[HeaderIndex.channelName].ToString(),
+                        columnsOccupySpace[0],
+                        Justify.left,
+                        ((StringWithColor)row[HeaderIndex.channelName]).Color);
+                    ans += "  "; // 2 spaces
+                    ans += GetUnicodeAwarePaddedString(
+                        row[HeaderIndex.valueCount].ToString(),
+                        columnsOccupySpace[1],
+                        Justify.right,
+                        ColorCode.NO_COLOR);
+                    ans += "  "; // 2 spaces
+                    ans += GetUnicodeAwarePaddedString(
+                        row[HeaderIndex.lastWeekDifference].ToString(),
+                        columnsOccupySpace[2],
+                        Justify.right,
+                        ((StringWithColor)row[HeaderIndex.lastWeekDifference]).Color);
+                    ans += "  "; // 2 spaces
+                    ans += GetUnicodeAwarePaddedString(
+                        row[HeaderIndex.lastMonthDifference].ToString(),
+                        columnsOccupySpace[3],
+                        Justify.right,
+                        ((StringWithColor)row[HeaderIndex.lastMonthDifference]).Color);
+                    ans += "  "; // 2 spaces
+                    ans += GetUnicodeAwarePaddedString(
+                        row[HeaderIndex.remark].ToString(),
+                        columnsOccupySpace[4],
+                        Justify.left,
+                        ((StringWithColor)row[HeaderIndex.remark]).Color);
+                    ans += "\r\n"; // PCMan only accept \r\n new line
+
+                    rank++;
+                }
+            } else {
+                List<int> ColumnToPrintIndexes = new()
+                {
+                    HeaderIndex.channelName,
+                    HeaderIndex.valueCount,
+                    HeaderIndex.lastWeekDifference,
+                    HeaderIndex.lastMonthDifference,
+                    HeaderIndex.remark,
+                };
+
+                List<int> columnsOccupySpace = GetColumnsOccupiedSpace(ColumnToPrintIndexes);
+
+                if (maxColumnLength > 0) {
+                    columnsOccupySpace[0] = maxColumnLength;
+                }
+
+                ans += HeaderString(rankSpace, columnsOccupySpace, ColumnToPrintIndexes);
+                ans += "\r\n"; // PCMan only accept \r\n new line
+
+                DataView dataView = this.DefaultView;
+
+                DataTable sortedTable = dataView.ToTable();
+                int rank = 1;
+                foreach (DataRow row in sortedTable.Rows) {
+                    ans += GetRankString(rank, rankSpace);
+
+                    ans += rankChannelNameSpace;
+                    ans += GetUnicodeAwarePaddedString(
+                        row[HeaderIndex.channelName].ToString(),
+                        columnsOccupySpace[0],
+                        Justify.left,
+                        ((StringWithColor)row[HeaderIndex.channelName]).Color);
+                    ans += "  "; // 2 spaces
+                    ans += GetUnicodeAwarePaddedString(
+                        row[HeaderIndex.valueCount].ToString(),
+                        columnsOccupySpace[1],
+                        Justify.right,
+                        ColorCode.NO_COLOR);
+                    ans += "  "; // 2 spaces
+                    ans += GetUnicodeAwarePaddedString(
+                        row[HeaderIndex.lastWeekDifference].ToString(),
+                        columnsOccupySpace[2],
+                        Justify.right,
+                        ((StringWithColor)row[HeaderIndex.lastWeekDifference]).Color);
+                    ans += "  "; // 2 spaces
+                    ans += GetUnicodeAwarePaddedString(
+                        row[HeaderIndex.lastMonthDifference].ToString(),
+                        columnsOccupySpace[3],
+                        Justify.right,
+                        ((StringWithColor)row[HeaderIndex.lastMonthDifference]).Color);
+                    ans += "  "; // 2 spaces
+                    ans += GetUnicodeAwarePaddedString(
+                        row[HeaderIndex.remark].ToString(),
+                        columnsOccupySpace[4],
+                        Justify.left,
+                        ((StringWithColor)row[HeaderIndex.remark]).Color);
+                    ans += "\r\n"; // PCMan only accept \r\n new line
+
+                    rank++;
+                }
             }
         }
 
