@@ -166,7 +166,7 @@ class ChannelTable : DataTable {
                 ans += "  "; // 2 spaces
                 ans += GetUnicodeAwarePaddedString(
                     row[HeaderIndex.remark].ToString(),
-                    columnsOccupySpace[2],
+                    columnsOccupySpace[3],
                     Justify.left,
                     ((StringWithColor)row[HeaderIndex.remark]).Color);
                 ans += "\r\n"; // PCMan only accept \r\n new line
@@ -229,7 +229,7 @@ class ChannelTable : DataTable {
                 ans += "  "; // 2 spaces
                 ans += GetUnicodeAwarePaddedString(
                     row[HeaderIndex.remark].ToString(),
-                    columnsOccupySpace[2],
+                    columnsOccupySpace[4],
                     Justify.left,
                     ((StringWithColor)row[HeaderIndex.remark]).Color);
                 ans += "\r\n"; // PCMan only accept \r\n new line
@@ -304,11 +304,11 @@ class ChannelTable : DataTable {
         return input > MaxAnsiCode;
     }
 
-    private enum Justify {
+    public enum Justify {
         left,
         right
     }
-    private static string GetUnicodeAwarePaddedString(string str, int space, Justify justify, ColorCode colorCode) {
+    public static string GetUnicodeAwarePaddedString(string str, int space, Justify justify, ColorCode colorCode) {
         int strSpace = GetOccupiedSpace(str);
 
         char ESC_ASCII = (char)27;

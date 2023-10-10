@@ -9,6 +9,10 @@ public class TrackList {
         return internalDictionary.Values.GetEnumerator();
     }
 
+    public List<VTuberData> GetList() {
+        return internalDictionary.Values.ToList();
+    }
+
     public int GetCount() {
         return internalDictionary.Count;
     }
