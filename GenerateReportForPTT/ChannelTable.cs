@@ -9,21 +9,21 @@ class ChannelTable : DataTable {
         public const int valueCount = 1;
         public const int lastWeekDifference = 2;
         public const int lastMonthDifference = 3;
-        // 
-        public const int visibleCount = lastMonthDifference + 1;
-
-        public const int increasedValueByWeek = 4;
+        public const int remark = 4;
+        // invisible column
+        public const int increasedValueByWeek = 5;
     }
 
     private readonly string NO_RECORD_STRING = "(無紀錄)";
 
     private static readonly NumberFormatInfo FormatInfo = GetNumberFormatInfo();
     private static NumberFormatInfo GetNumberFormatInfo() {
-        NumberFormatInfo formatInfo = new();
-        formatInfo.PositiveSign = "+";
-        formatInfo.NegativeSign = "-";
-        formatInfo.NumberGroupSeparator = ",";
-        formatInfo.NumberGroupSizes = new int[] { 4 };
+        NumberFormatInfo formatInfo = new() {
+            PositiveSign = "+",
+            NegativeSign = "-",
+            NumberGroupSeparator = ",",
+            NumberGroupSizes = new int[] { 4 }
+        };
         return formatInfo;
     }
 
@@ -35,6 +35,7 @@ class ChannelTable : DataTable {
         this.Columns.Add(valueHeader, typeof(string));
         this.Columns.Add("上週增減", typeof(StringWithColor));
         this.Columns.Add("上月增減", typeof(StringWithColor));
+        this.Columns.Add("備註", typeof(StringWithColor));
         this.Columns.Add("Increased Value By Week(Do not print)", typeof(decimal));
 
         SortByIncreasePercentage = sortByIncreasePercentage;
@@ -55,9 +56,9 @@ class ChannelTable : DataTable {
         return ans;
     }
 
-    public void AddChannel(string channelName, decimal currentValue, decimal? lastWeekValue, decimal? lastMonthValue, bool isLesserThanLastWeek) {
-        // (空三格)(空二格)頻道名稱(至少空二格)觀看中位數(至少空二格)上週增減(至少空二格)上月增減
-        //      2.        香草奈若              1,5906            + 2630             + 5000
+    public void AddChannel(string channelName, decimal currentValue, decimal? lastWeekValue, decimal? lastMonthValue, bool isLesserThanLastWeek, string remarkText) {
+        // (空三格)(空二格)頻道名稱(至少空二格)觀看中位數(至少空二格)上週增減(至少空二格)上月增減(空二格)備註
+        //      2.        香草奈若              1,5906            + 2630             + 5000  24 天前首次直播
 
         decimal lastWeekDifference = (currentValue - lastWeekValue).GetValueOrDefault();
         decimal lastMonthDifference = (currentValue - lastMonthValue).GetValueOrDefault();
@@ -108,6 +109,7 @@ class ChannelTable : DataTable {
             valueString,
             new StringWithColor(lastWeekDifferenceString, lastWeekDifferenceColor),
             new StringWithColor(lastMonthDifferenceString, lastMonthDifferenceColor),
+            new StringWithColor(remarkText, ColorCode.NO_COLOR),
             increaseVale);
     }
 
@@ -124,6 +126,7 @@ class ChannelTable : DataTable {
                 HeaderIndex.channelName,
                 HeaderIndex.lastWeekDifference,
                 HeaderIndex.lastMonthDifference,
+                HeaderIndex.remark,
             };
 
             List<int> columnsOccupySpace = GetColumnsOccupiedSpace(ColumnToPrintIndexes);
@@ -160,6 +163,12 @@ class ChannelTable : DataTable {
                     columnsOccupySpace[2],
                     Justify.right,
                     ((StringWithColor)row[HeaderIndex.lastMonthDifference]).Color);
+                ans += "  "; // 2 spaces
+                ans += GetUnicodeAwarePaddedString(
+                    row[HeaderIndex.remark].ToString(),
+                    columnsOccupySpace[2],
+                    Justify.left,
+                    ((StringWithColor)row[HeaderIndex.remark]).Color);
                 ans += "\r\n"; // PCMan only accept \r\n new line
 
                 rank++;
@@ -171,6 +180,7 @@ class ChannelTable : DataTable {
                 HeaderIndex.valueCount,
                 HeaderIndex.lastWeekDifference,
                 HeaderIndex.lastMonthDifference,
+                HeaderIndex.remark,
             };
 
             List<int> columnsOccupySpace = GetColumnsOccupiedSpace(ColumnToPrintIndexes);
@@ -216,6 +226,12 @@ class ChannelTable : DataTable {
                     columnsOccupySpace[3],
                     Justify.right,
                     ((StringWithColor)row[HeaderIndex.lastMonthDifference]).Color);
+                ans += "  "; // 2 spaces
+                ans += GetUnicodeAwarePaddedString(
+                    row[HeaderIndex.remark].ToString(),
+                    columnsOccupySpace[2],
+                    Justify.left,
+                    ((StringWithColor)row[HeaderIndex.remark]).Color);
                 ans += "\r\n"; // PCMan only accept \r\n new line
 
                 rank++;

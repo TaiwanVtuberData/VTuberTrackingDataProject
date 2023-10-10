@@ -82,7 +82,8 @@ static void WriteTrendingVTubers(
                 currentValue: todayValue,
                 lastWeekValue: lastWeekValue == 0m ? null : lastWeekValue,
                 lastMonthValue: lastMontuValue == 0m ? null : lastMontuValue,
-                isLesserThanLastWeek: lastWeekValue == 0m);
+                isLesserThanLastWeek: lastWeekValue == 0m,
+                remarkText: "");
         }
 
         StreamWriter writer = new($"trending_{sortOrder}.txt");
@@ -123,7 +124,8 @@ in new List<TrendingVTuberSortOrder>
                 currentValue: todayValue,
                 lastWeekValue: lastWeekValue == 0m ? null : lastWeekValue,
                 lastMonthValue: lastMontuValue == 0m ? null : lastMontuValue,
-                isLesserThanLastWeek: lastWeekValue == 0m);
+                isLesserThanLastWeek: lastWeekValue == 0m,
+                remarkText: "");
         }
 
         StreamWriter writer = new($"subscriber_count_to_trending_{sortOrder}.txt");
@@ -155,7 +157,8 @@ static void WriteYouTubeSubscriberCount(
             currentValue: todayValue,
             lastWeekValue: lastWeekValue,
             lastMonthValue: lastMontuValue,
-            isLesserThanLastWeek: vtuber?.YouTube?._7DaysGrowth.recordType != GrowthRecordType.full);
+            isLesserThanLastWeek: vtuber?.YouTube?._7DaysGrowth.recordType != GrowthRecordType.full,
+            remarkText: "");
     }
 
     StreamWriter writer = new($"subscriber_count.txt");
@@ -186,7 +189,8 @@ static void WriteYouTubeSubscriberGrowth(
             currentValue: todayValue,
             lastWeekValue: lastWeekValue,
             lastMonthValue: lastMontuValue,
-            isLesserThanLastWeek: vtuber?.YouTube?._7DaysGrowth.recordType != GrowthRecordType.full);
+            isLesserThanLastWeek: vtuber?.YouTube?._7DaysGrowth.recordType != GrowthRecordType.full,
+            remarkText: "");
     }
 
     StreamWriter writer = new($"subscriber_count_growth.txt");
