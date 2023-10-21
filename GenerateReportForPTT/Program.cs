@@ -204,7 +204,7 @@ static void WriteYouTubeSubscriberGrowth(
 
         decimal todayValue = vtuber?.YouTube?.subscriber.count ?? 0m;
         decimal? lastWeekValue =
-            vtuber?.YouTube?._7DaysGrowth.recordType != GrowthRecordType.full ? null : (todayValue - (vtuber?.YouTube?._7DaysGrowth.diff ?? 0m));
+            vtuber?.YouTube?._7DaysGrowth.recordType == GrowthRecordType.none ? null : (todayValue - (vtuber?.YouTube?._7DaysGrowth.diff ?? 0m));
         decimal? lastMontuValue =
             vtuber?.YouTube?._30DaysGrowth.recordType != GrowthRecordType.full ? null : (todayValue - (vtuber?.YouTube?._30DaysGrowth.diff ?? 0m));
 
