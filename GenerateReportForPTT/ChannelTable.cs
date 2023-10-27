@@ -166,7 +166,8 @@ class ChannelTable : DataTable {
                     row[HeaderIndex.remark].ToString(),
                     columnsOccupySpace[3],
                     Justify.left,
-                    ((StringWithColor)row[HeaderIndex.remark]).Color);
+                    ((StringWithColor)row[HeaderIndex.remark]).Color,
+                    trimTrailing: true);
                 ans += "\r\n"; // PCMan only accept \r\n new line
 
                 rank++;
@@ -232,7 +233,8 @@ class ChannelTable : DataTable {
                         row[HeaderIndex.remark].ToString(),
                         columnsOccupySpace[4],
                         Justify.left,
-                        ((StringWithColor)row[HeaderIndex.remark]).Color);
+                        ((StringWithColor)row[HeaderIndex.remark]).Color,
+                        trimTrailing: true);
                     ans += "\r\n"; // PCMan only accept \r\n new line
 
                     rank++;
@@ -292,7 +294,8 @@ class ChannelTable : DataTable {
                         row[HeaderIndex.remark].ToString(),
                         columnsOccupySpace[4],
                         Justify.left,
-                        ((StringWithColor)row[HeaderIndex.remark]).Color);
+                        ((StringWithColor)row[HeaderIndex.remark]).Color,
+                        trimTrailing: true);
                     ans += "\r\n"; // PCMan only accept \r\n new line
 
                     rank++;
@@ -370,7 +373,7 @@ class ChannelTable : DataTable {
         left,
         right
     }
-    public static string GetUnicodeAwarePaddedString(string str, int space, Justify justify, ColorCode colorCode) {
+    public static string GetUnicodeAwarePaddedString(string str, int space, Justify justify, ColorCode colorCode, bool trimTrailing = false) {
         int strSpace = GetOccupiedSpace(str);
 
         char ESC_ASCII = (char)27;
@@ -389,10 +392,19 @@ class ChannelTable : DataTable {
         }
 
         int actualSpace = Math.Max(space - strSpace, 0);
-        return justify switch {
-            Justify.left => str + new string(' ', actualSpace),
-            Justify.right => new string(' ', actualSpace) + str,
-            _ => throw new Exception("Unhandled Justify style"),
-        };
+
+        if (trimTrailing) {
+            return justify switch {
+                Justify.left => str,
+                Justify.right => new string(' ', actualSpace) + str,
+                _ => throw new Exception("Unhandled Justify style"),
+            };
+        } else {
+            return justify switch {
+                Justify.left => str + new string(' ', actualSpace),
+                Justify.right => new string(' ', actualSpace) + str,
+                _ => throw new Exception("Unhandled Justify style"),
+            };
+        }
     }
 }
