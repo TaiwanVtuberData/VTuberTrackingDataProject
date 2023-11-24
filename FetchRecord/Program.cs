@@ -123,7 +123,7 @@ void fetchAllAndWrite(
     LiveVideosList liveVideosList = youTubeLiveVideosList.Insert(twitchLiveVideosList);
 
     log.Info("Start writing files");
-    writeFiles(lstRecord, topVideosList, liveVideosList, savePath, currentTime);
+    writeFiles(lstRecord, topVideosList, liveVideosList, savePath);
     log.Info("End writing files");
 }
 
@@ -257,9 +257,10 @@ ImmutableList<VTuberRecord> mergeRecord(
     return rLst.ToImmutableList();
 }
 
-void writeFiles(ImmutableList<VTuberRecord> lstRecord, TopVideosList topVideoList, LiveVideosList liveVideosList, string savePath, DateTimeOffset currentTime) {
-    log.Info($"currentTime: {currentTime}");
-    WriteFiles.WriteResult(lstRecord, currentTime, savePath);
-    WriteFiles.WriteTopVideosListResult(topVideoList, currentTime, savePath);
-    WriteFiles.WriteLiveVideosListResult(liveVideosList, currentTime, savePath);
+void writeFiles(ImmutableList<VTuberRecord> lstRecord, TopVideosList topVideoList, LiveVideosList liveVideosList, string savePath) {
+    DateTimeOffset currentDateTime = DateTimeOffset.Now;
+    log.Info($"currentDateTime: {currentDateTime}");
+    WriteFiles.WriteResult(lstRecord, currentDateTime, savePath);
+    WriteFiles.WriteTopVideosListResult(topVideoList, currentDateTime, savePath);
+    WriteFiles.WriteLiveVideosListResult(liveVideosList, currentDateTime, savePath);
 }
