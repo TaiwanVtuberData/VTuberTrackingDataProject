@@ -31,7 +31,7 @@ public sealed class VideoInformationMap : ClassMap<VideoInformation> {
     public VideoInformationMap() {
         Map(m => m.Id).Name("VTuber ID");
         Map(m => m.ViewCount).Name("View Count");
-        Map(m => m.Title).Name("Title");
+        Map(m => m.Title.ReplaceLineEndings(" ")).Name("Title");
         Map(m => m.PublishDateTime).Name("Publish Time");
         Map(m => m.Url).Name("URL");
         Map(m => m.ThumbnailUrl).Name("Thumbnail URL");

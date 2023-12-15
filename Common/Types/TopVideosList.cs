@@ -41,7 +41,7 @@ public class TopVideosList {
         Insert(new VideoInformation() {
             Id = new VTuberId(entryBlock[0]),
             ViewCount = ulong.Parse(entryBlock[1]),
-            Title = entryBlock[2],
+            Title = entryBlock[2].ReplaceLineEndings(" "),
             PublishDateTime = XmlConvert.ToDateTime(entryBlock[3], XmlDateTimeSerializationMode.Utc),
             Url = entryBlock[4],
             ThumbnailUrl = entryBlock[5],

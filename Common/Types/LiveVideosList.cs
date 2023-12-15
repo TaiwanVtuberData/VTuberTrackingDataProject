@@ -41,7 +41,6 @@ public class LiveVideosList : List<LiveVideoInformation> {
         TextFieldParser reader = new(csvFilePath) {
             HasFieldsEnclosedInQuotes = true,
             Delimiters = new string[] { "," },
-            CommentTokens = new string[] { "#" },
             TrimWhiteSpace = false,
             TextFieldType = FieldType.Delimited,
         };
@@ -115,7 +114,7 @@ public class LiveVideosList : List<LiveVideoInformation> {
     }
 
     private static Validation<ValidationError, string> ValidateTitle(string rawTitle) {
-        return rawTitle;
+        return rawTitle.ReplaceLineEndings(" ");
     }
 
     private static Validation<ValidationError, DateTime> ValidatePublishTime(string rawTime) {
