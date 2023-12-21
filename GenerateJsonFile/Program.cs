@@ -13,6 +13,13 @@ namespace GenerateJsonFile;
 
 class Program {
     private static string OUTPUT_PATH = "";
+
+    private static readonly JsonSerializerOptions jsonSerializerOptions = new() {
+        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+        WriteIndented = false,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+    };
+
     static void Main(string[] args) {
         string dataRepoPath = args.Length >= 1 ? args[0] : "/tw_vtuber";
         string debutRepoPath = args.Length >= 2 ? args[1] : "/tw_vtuber_debut";
@@ -259,13 +266,7 @@ class Program {
     }
 
     private static string GetJsonString(object obj) {
-        JsonSerializerOptions options = new() {
-            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-            WriteIndented = false,
-            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-        };
-
-        return JsonSerializer.Serialize(obj, options);
+        return JsonSerializer.Serialize(obj, jsonSerializerOptions);
     }
 
     private static void WriteJsonString(string jsonString, string nationality, string outputFilePath) {

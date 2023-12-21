@@ -6,12 +6,8 @@ using GenerateRecordList.Utils;
 
 namespace GenerateJsonFile;
 
-class TopVideosListToJsonStruct {
-    public readonly string NationalityFilter;
-
-    public TopVideosListToJsonStruct(string nationalityFilter) {
-        NationalityFilter = nationalityFilter;
-    }
+class TopVideosListToJsonStruct(string nationalityFilter) {
+    public readonly string NationalityFilter = nationalityFilter;
 
     class OwnerComparer : IEqualityComparer<VideoInformation> {
         public bool Equals(VideoInformation? x, VideoInformation? y) {
@@ -32,7 +28,7 @@ class TopVideosListToJsonStruct {
         }
     }
     public List<VideoPopularityData> Get(TopVideosList topVideoList, DictionaryRecord dictRecord, int count, bool allowDuplicate) {
-        List<VideoPopularityData> rLst = new();
+        List<VideoPopularityData> rLst = [];
 
         IEnumerable<VideoInformation> lstVideoInformation;
         if (allowDuplicate) {

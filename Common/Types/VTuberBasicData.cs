@@ -35,8 +35,8 @@ public readonly record struct VTuberBasicData(VTuberId Id, YouTubeData? YouTube,
     public static List<VTuberBasicData> ReadFromCsvAsList(string csvFilePath) {
         TextFieldParser reader = new(csvFilePath) {
             HasFieldsEnclosedInQuotes = true,
-            Delimiters = new string[] { "," },
-            CommentTokens = new string[] { "#" },
+            Delimiters = [","],
+            CommentTokens = ["#"],
             TrimWhiteSpace = false,
             TextFieldType = FieldType.Delimited,
         };
@@ -45,15 +45,15 @@ public readonly record struct VTuberBasicData(VTuberId Id, YouTubeData? YouTube,
         string[]? headerBlock = reader.ReadFields();
 
         if (headerBlock is null || headerBlock.Length != csvHeaderIndexs.Count)
-            return new();
+            return [];
 
-        List<VTuberBasicData> rLst = new();
+        List<VTuberBasicData> rLst = [];
 
         while (!reader.EndOfData) {
             string[]? entryBlock = reader.ReadFields();
 
             if (entryBlock is null) {
-                return new();
+                return [];
             }
 
             string id = entryBlock[csvHeaderIndexs["VTuber ID"]];

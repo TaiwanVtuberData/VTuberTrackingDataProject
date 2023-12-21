@@ -2,14 +2,10 @@
 using System.Xml;
 
 namespace Common.Types;
-public class TopVideosList {
+public class TopVideosList(int videoCount = 1000) {
 
-    readonly List<VideoInformation> InternalList;
-    readonly int MaxListCount;
-    public TopVideosList(int videoCount = 1000) {
-        MaxListCount = Math.Max(1, videoCount);
-        InternalList = new();
-    }
+    readonly List<VideoInformation> InternalList = [];
+    readonly int MaxListCount = Math.Max(1, videoCount);
 
     public IEnumerator<VideoInformation> GetEnumerator() {
         return InternalList.GetEnumerator();

@@ -131,8 +131,9 @@ public class VTuberStatistics {
     public static VTuberStatistics GenerateStatisticsByInterpolation(decimal preRatio, VTuberStatistics preStat, VTuberStatistics postStat) {
         decimal postRatio = 1m - preRatio;
 
-        VTuberStatistics rValue = new(preStat.Id.Value);
-        rValue.YouTube = CombineYouTubeStatistics(preRatio, preStat.YouTube, postStat.YouTube);
+        VTuberStatistics rValue = new(preStat.Id.Value) {
+            YouTube = CombineYouTubeStatistics(preRatio, preStat.YouTube, postStat.YouTube)
+        };
 
         rValue.Twitch.RecentMedianViewCount = (ulong)(preRatio * preStat.Twitch.RecentMedianViewCount + postRatio * postStat.Twitch.RecentMedianViewCount);
         rValue.Twitch.RecentPopularity = (ulong)(preRatio * preStat.Twitch.RecentPopularity + postRatio * postStat.Twitch.RecentPopularity);

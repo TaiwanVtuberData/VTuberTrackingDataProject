@@ -23,7 +23,7 @@ class ChannelTable : DataTable {
             PositiveSign = "+",
             NegativeSign = "-",
             NumberGroupSeparator = ",",
-            NumberGroupSizes = new int[] { 4 }
+            NumberGroupSizes = [4]
         };
         return formatInfo;
     }
@@ -119,13 +119,13 @@ class ChannelTable : DataTable {
         string ans = "";
 
         if (OnlyShowValueChanges) {
-            List<int> ColumnToPrintIndexes = new()
-            {
+            List<int> ColumnToPrintIndexes =
+            [
                 HeaderIndex.channelName,
                 HeaderIndex.lastWeekDifference,
                 HeaderIndex.lastMonthDifference,
                 HeaderIndex.remark,
-            };
+            ];
 
             List<int> columnsOccupySpace = GetColumnsOccupiedSpace(ColumnToPrintIndexes);
 
@@ -174,14 +174,14 @@ class ChannelTable : DataTable {
             }
         } else {
             if (SortByIncreasePercentage) {
-                List<int> ColumnToPrintIndexes = new()
-                {
+                List<int> ColumnToPrintIndexes =
+                [
                     HeaderIndex.channelName,
                     HeaderIndex.valueCount,
                     HeaderIndex.lastWeekDifference,
                     HeaderIndex.lastMonthDifference,
                     HeaderIndex.remark,
-                };
+                ];
 
                 List<int> columnsOccupySpace = GetColumnsOccupiedSpace(ColumnToPrintIndexes);
 
@@ -240,14 +240,14 @@ class ChannelTable : DataTable {
                     rank++;
                 }
             } else {
-                List<int> ColumnToPrintIndexes = new()
-                {
+                List<int> ColumnToPrintIndexes =
+                [
                     HeaderIndex.channelName,
                     HeaderIndex.valueCount,
                     HeaderIndex.lastWeekDifference,
                     HeaderIndex.lastMonthDifference,
                     HeaderIndex.remark,
-                };
+                ];
 
                 List<int> columnsOccupySpace = GetColumnsOccupiedSpace(ColumnToPrintIndexes);
 

@@ -41,8 +41,7 @@ public class Fetcher {
         foreach (KeyValuePair<YouTubeChannelId, YouTubeRecord.BasicRecord> keyValuePair in dictBasicRecord) {
             YouTubeChannelId channelId = keyValuePair.Key;
             YouTubeRecord.BasicRecord basicRecord = keyValuePair.Value;
-            YouTubeRecord.RecentRecordTuple? recentRecordTuple;
-            dictRecentRecordTuple.TryGetValue(channelId, out recentRecordTuple);
+            dictRecentRecordTuple.TryGetValue(channelId, out YouTubeRecord.RecentRecordTuple? recentRecordTuple);
 
             if (recentRecordTuple is null) {
                 continue;
@@ -97,7 +96,7 @@ public class Fetcher {
             );
 
     private ImmutableDictionary<YouTubeVideoId, DateTimeOffset> GetChannelRecentVideoList(Google.Apis.YouTube.v3.Data.Channel channelInfo) {
-        Dictionary<YouTubeVideoId, DateTimeOffset> rDict = new();
+        Dictionary<YouTubeVideoId, DateTimeOffset> rDict = [];
         int DAYS_LIMIT = 90;
 
         string uploadsListId = channelInfo.ContentDetails.RelatedPlaylists.Uploads;
@@ -136,9 +135,9 @@ public class Fetcher {
 
     private ChannelRecentViewRecord GetChannelRecentViewRecord(
         ImmutableDictionary<YouTubeChannelId, Google.Apis.YouTube.v3.Data.Channel> dictChannelInfo) {
-        Dictionary<YouTubeChannelId, YouTubeRecord.RecentRecordTuple> rDict = new();
+        Dictionary<YouTubeChannelId, YouTubeRecord.RecentRecordTuple> rDict = [];
         TopVideosList rTopVideosList = new();
-        LiveVideosList rLiveVideosList = new();
+        LiveVideosList rLiveVideosList = [];
 
         foreach (KeyValuePair<YouTubeChannelId, Google.Apis.YouTube.v3.Data.Channel> keyValuePair in dictChannelInfo) {
             YouTubeChannelId channelId = keyValuePair.Key;
@@ -150,9 +149,9 @@ public class Fetcher {
             ImmutableList<IdRequstString> lstIdRequest = Generate50IdsStringList(dictVideoIdAndTime.Keys.Map(e => e.Value).ToImmutableList());
 
             // The Tuple is video ID and video view count
-            List<Tuple<DateTimeOffset, YouTubeVideoId, ulong>> lstTotalViewCount = new();
-            List<Tuple<DateTimeOffset, YouTubeVideoId, ulong>> lstLivestreamViewCount = new();
-            List<Tuple<DateTimeOffset, YouTubeVideoId, ulong>> lstVideoViewCount = new();
+            List<Tuple<DateTimeOffset, YouTubeVideoId, ulong>> lstTotalViewCount = [];
+            List<Tuple<DateTimeOffset, YouTubeVideoId, ulong>> lstLivestreamViewCount = [];
+            List<Tuple<DateTimeOffset, YouTubeVideoId, ulong>> lstVideoViewCount = [];
             foreach (IdRequstString idRequst in lstIdRequest) {
                 VideosResource.ListRequest videosListRequest = youtubeService.Videos.List("id,snippet,statistics,liveStreamingDetails");
                 videosListRequest.Id = idRequst.Value;
@@ -264,7 +263,7 @@ public class Fetcher {
     }
 
     private static ImmutableList<IdRequstString> Generate50IdsStringList(IImmutableList<string> KeyList) {
-        List<IdRequstString> rLst = new();
+        List<IdRequstString> rLst = [];
 
         int index;
         // pack 50 ids into a string

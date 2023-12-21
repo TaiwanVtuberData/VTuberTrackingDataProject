@@ -62,7 +62,7 @@ public class Fetcher {
 
     private (bool Success, ulong MedianViewCount, ulong Popularity, ulong HighestViewCount, string HighestViewedVideoID, TopVideosList TopVideosList_)
         GetChannelRecentViewStatistic(string userId) {
-        List<Tuple<DateTimeOffset, string, ulong>> viewCountList = new();
+        List<Tuple<DateTimeOffset, string, ulong>> viewCountList = [];
 
         string afterCursor = "";
         TopVideosList topVideosList = new();
@@ -127,7 +127,7 @@ public class Fetcher {
     private LiveVideosList GetLiveVideosList(List<string> userIdList) {
         // LiveVideosList rLst = GetScheduleLiveVideosList(userId);
 
-        LiveVideosList rLst = new();
+        LiveVideosList rLst = [];
 
         List<LiveVideoInformation> livestreamList = GetActiveStreams(userIdList);
         rLst.AddRange(livestreamList);
@@ -178,7 +178,7 @@ public class Fetcher {
     }
 
     private LiveVideosList GetScheduleLiveVideosList(string broadcasterId) {
-        LiveVideosList rLst = new();
+        LiveVideosList rLst = [];
 
         GetChannelStreamScheduleResponse? getStreamsResponse = twitchAPI.GetChannelScheduledLivestreams(
             broadcasterId: broadcasterId,
@@ -186,13 +186,13 @@ public class Fetcher {
             );
 
         if (getStreamsResponse == null) {
-            return new();
+            return [];
         }
 
         TwitchLib.Api.Helix.Models.Schedule.ChannelStreamSchedule? schedule = getStreamsResponse.Schedule;
 
         if (schedule.Segments is null) {
-            return new();
+            return [];
         }
 
         foreach (var segment in schedule.Segments) {

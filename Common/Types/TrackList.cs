@@ -4,7 +4,7 @@ using Microsoft.VisualBasic.FileIO;
 
 namespace Common.Types;
 public class TrackList {
-    private Dictionary<VTuberId, VTuberData> internalDictionary = new();
+    private Dictionary<VTuberId, VTuberData> internalDictionary = [];
     public IEnumerator<VTuberData> GetEnumerator() {
         return internalDictionary.Values.GetEnumerator();
     }
@@ -56,8 +56,8 @@ public class TrackList {
     public static Validation<ValidationError, TrackList> LoadAndValidateDateAndActivity(string csvFilePath, DateOnly? todayDate) {
         TextFieldParser reader = new(csvFilePath) {
             HasFieldsEnclosedInQuotes = true,
-            Delimiters = new string[] { "," },
-            CommentTokens = new string[] { "#" },
+            Delimiters = [","],
+            CommentTokens = ["#"],
             TrimWhiteSpace = false,
             TextFieldType = FieldType.Delimited,
         };
@@ -74,7 +74,7 @@ public class TrackList {
         }
 
 
-        List<Validation<ValidationError, VTuberData>> lstResult = new();
+        List<Validation<ValidationError, VTuberData>> lstResult = [];
         while (!reader.EndOfData) {
             string[]? entryBlock = reader.ReadFields();
 
@@ -129,7 +129,7 @@ public class TrackList {
             .Select(p => p.Key)
             .ToList();
 
-        if (duplicateId.Any()) {
+        if (duplicateId.Count != 0) {
             return new ValidationError($"Duplicate IDs: {string.Join(", ", duplicateId)}");
         } else {
             return new OptionNone();
@@ -144,7 +144,7 @@ public class TrackList {
             .Select(p => p.Key)
             .ToList();
 
-        if (duplicateYouTubeIds.Any()) {
+        if (duplicateYouTubeIds.Count != 0) {
             return new ValidationError($"Duplicate YouTube channel IDs: {string.Join(", ", duplicateYouTubeIds)}");
         } else {
             return new OptionNone();
@@ -159,7 +159,7 @@ public class TrackList {
             .Select(p => p.Key)
             .ToList();
 
-        if (duplicateTwitchIds.Any()) {
+        if (duplicateTwitchIds.Count != 0) {
             return new ValidationError($"Duplicate Twitch channel IDs: {string.Join(", ", duplicateTwitchIds)}");
         } else {
             return new OptionNone();
@@ -174,7 +174,7 @@ public class TrackList {
             .Select(p => p.Key)
             .ToList();
 
-        if (duplicateTwitchName.Any()) {
+        if (duplicateTwitchName.Count != 0) {
             return new ValidationError($"Duplicate Twitch channel names: {string.Join(", ", duplicateTwitchName)}");
         } else {
             return new OptionNone();
@@ -524,7 +524,7 @@ public class TrackList {
     }
 
     public List<string> GetYouTubeChannelIdList() {
-        List<string> rList = new();
+        List<string> rList = [];
         foreach (KeyValuePair<VTuberId, VTuberData> keyValuePair in internalDictionary) {
             rList.Add(keyValuePair.Value.YouTubeChannelId);
         }
@@ -535,7 +535,7 @@ public class TrackList {
     }
 
     public List<string> GetTwitchChannelIdList() {
-        List<string> rList = new();
+        List<string> rList = [];
         foreach (KeyValuePair<VTuberId, VTuberData> keyValuePair in internalDictionary) {
             rList.Add(keyValuePair.Value.TwitchChannelId);
         }

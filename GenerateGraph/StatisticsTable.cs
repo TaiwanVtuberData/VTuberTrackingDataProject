@@ -11,7 +11,7 @@ class StatisticsTable : DataTable {
 
     public StatisticsTable(TrackList trackList, bool byGroup) {
         _TrackList = trackList;
-        _RowDateTime = new List<DateTime>();
+        _RowDateTime = [];
 
         if (byGroup) {
             foreach (string groupName in _TrackList.GetGroupNameList()) {
@@ -98,7 +98,7 @@ class StatisticsTable : DataTable {
 
         if (!youTubeSubscriberCountConstriant.HasValue) {
             foreach (DataColumn column in this.Columns) {
-                rList.Add(new VTuberId(column.ColumnName), new List<decimal>());
+                rList.Add(new VTuberId(column.ColumnName), []);
             }
         } else {
             DataRow lastRow = this.Rows[this.Rows.Count - 1];
@@ -111,7 +111,7 @@ class StatisticsTable : DataTable {
                     decimal value = Convert.ToDecimal(GetPropValue(statObj, "YouTube.Basic.SubscriberCount"));
 
                     if (value >= youTubeSubscriberCountConstriant)
-                        rList.Add(new VTuberId(column.ColumnName), new List<decimal>());
+                        rList.Add(new VTuberId(column.ColumnName), []);
                 }
 
                 index++;

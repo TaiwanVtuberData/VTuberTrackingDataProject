@@ -40,7 +40,7 @@ public class LiveVideosList : List<LiveVideoInformation> {
     public static Validation<ValidationError, List<LiveVideoInformation>> LoadAndValidate(string csvFilePath) {
         TextFieldParser reader = new(csvFilePath) {
             HasFieldsEnclosedInQuotes = true,
-            Delimiters = new string[] { "," },
+            Delimiters = [","],
             TrimWhiteSpace = false,
             TextFieldType = FieldType.Delimited,
         };
@@ -57,7 +57,7 @@ public class LiveVideosList : List<LiveVideoInformation> {
         }
 
 
-        List<Validation<ValidationError, LiveVideoInformation>> lstResult = new();
+        List<Validation<ValidationError, LiveVideoInformation>> lstResult = [];
         while (!reader.EndOfData) {
             string[]? entryBlock = reader.ReadFields();
 

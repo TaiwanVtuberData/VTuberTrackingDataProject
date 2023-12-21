@@ -12,12 +12,12 @@ public record DebutData(
     DateTime StartTime) {
     public static List<DebutData> ReadFromCsv(string csvFilePath) {
         if (!File.Exists(csvFilePath))
-            return new();
+            return [];
 
         TextFieldParser reader = new(csvFilePath) {
             HasFieldsEnclosedInQuotes = true,
-            Delimiters = new string[] { "," },
-            CommentTokens = new string[] { "#" },
+            Delimiters = [","],
+            CommentTokens = ["#"],
             TrimWhiteSpace = false,
             TextFieldType = FieldType.Delimited,
         };
@@ -26,15 +26,15 @@ public record DebutData(
         string[]? headerBlock = reader.ReadFields();
 
         if (headerBlock is null || headerBlock.Length != 4)
-            return new();
+            return [];
 
-        List<DebutData> rLst = new();
+        List<DebutData> rLst = [];
 
         while (!reader.EndOfData) {
             string[]? entryBlock = reader.ReadFields();
 
             if (entryBlock is null) {
-                return new();
+                return [];
             }
 
             rLst.Add(
