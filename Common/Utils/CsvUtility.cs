@@ -10,8 +10,8 @@ public class CsvUtility {
     public static List<VTuberStatistics> ReadStatisticsList(string filePath) {
         TextFieldParser reader = new(filePath) {
             HasFieldsEnclosedInQuotes = true,
-            Delimiters = new string[] { "," },
-            CommentTokens = new string[] { "#" },
+            Delimiters = [","],
+            CommentTokens = ["#"],
             TrimWhiteSpace = false,
             TextFieldType = FieldType.Delimited,
         };
@@ -20,13 +20,13 @@ public class CsvUtility {
         string[]? headerBlock = reader.ReadFields();
 
         if (headerBlock is null)
-            return new();
+            return [];
 
         VTuberStatistics.Version version = VTuberStatistics.GetVersion(headerBlock[0], headerBlock.Length);
         if (version == VTuberStatistics.Version.Unknown)
-            return new();
+            return [];
 
-        List<VTuberStatistics> rLst = new();
+        List<VTuberStatistics> rLst = [];
 
         while (!reader.EndOfData) {
             string[]? entryBlock = reader.ReadFields();

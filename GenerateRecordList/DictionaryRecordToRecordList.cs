@@ -25,7 +25,7 @@ public class DictionaryRecordToRecordList {
     }
 
     public List<VTuberFullData> AllWithFullData(LiveVideosList liveVideosList, List<DebutData> lstDebutData) {
-        List<Types.VTuberFullData> rLst = new();
+        List<VTuberFullData> rLst = [];
 
         foreach (KeyValuePair<VTuberId, VTuberRecord> vtuberStatPair in DictRecord) {
             VTuberRecord record = vtuberStatPair.Value;
@@ -82,7 +82,7 @@ public class DictionaryRecordToRecordList {
     }
 
     public List<Types.VTuberData> All(int? count) {
-        List<Types.VTuberData> rLst = new();
+        List<Types.VTuberData> rLst = [];
 
         foreach (KeyValuePair<VTuberId, VTuberRecord> vtuberStatPair in DictRecord
             .Where(p => p.Value.Nationality.Contains(NationalityFilter))
@@ -133,7 +133,7 @@ public class DictionaryRecordToRecordList {
             dictGrowth.Add(id, growthData);
         }
 
-        List<VTuberGrowthData> rLst = new();
+        List<VTuberGrowthData> rLst = [];
 
         foreach (KeyValuePair<VTuberId, YouTubeGrowthData> growthPair in dictGrowth
             .Where(p => p.Value.Nationality != null && p.Value.Nationality.Contains(NationalityFilter))
@@ -221,7 +221,7 @@ public class DictionaryRecordToRecordList {
             dictGrowth.Add(id, growthData);
         }
 
-        List<VTuberViewCountGrowthData> rLst = new();
+        List<VTuberViewCountGrowthData> rLst = [];
 
         foreach (KeyValuePair<VTuberId, YouTubeViewCountGrowthData> growthPair in dictGrowth
             .Where(p => p.Value.Nationality != null && p.Value.Nationality.Contains(NationalityFilter))
@@ -260,7 +260,7 @@ public class DictionaryRecordToRecordList {
     }
 
     public List<VTuberDebutData> DebutVTubers(uint daysBefore, uint daysAfter) {
-        List<VTuberDebutData> rLst = new();
+        List<VTuberDebutData> rLst = [];
 
         DateTime _30DaysBefore = TodayDate.AddDays(-daysBefore);
         DateTime _30DaysAfter = TodayDate.AddDays(daysAfter);
@@ -297,7 +297,7 @@ public class DictionaryRecordToRecordList {
     }
 
     public List<VTuberGraduateData> GraduateVTubers(uint daysBefore, uint daysAfter) {
-        List<VTuberGraduateData> rLst = new();
+        List<VTuberGraduateData> rLst = [];
 
         DateTime _30DaysBefore = TodayDate.AddDays(-daysBefore);
         DateTime _30DaysAfter = TodayDate.AddDays(daysAfter);
@@ -360,7 +360,7 @@ public class DictionaryRecordToRecordList {
     }
 
     public List<VTuberPopularityData> TrendingVTubers(TrendingVTuberSortOrder sortBy, int? count) {
-        List<VTuberPopularityData> rLst = new();
+        List<VTuberPopularityData> rLst = [];
 
         Func<VTuberRecord.YouTubeData?, YouTubePopularityData?> youTubePopularityFunc = GetYouTubePopularityFunction(sortBy);
         Func<VTuberRecord.TwitchData?, TwitchPopularityData?> twitchPopularityFunc = GetTwitchPopularityFunction(sortBy);
@@ -393,7 +393,7 @@ public class DictionaryRecordToRecordList {
     }
 
     public List<VTuberSubscriberCountToPopularityData> YouTubeSubscriberCountToPopularity(TrendingVTuberSortOrder sortBy, int? count) {
-        List<VTuberSubscriberCountToPopularityData> rLst = new();
+        List<VTuberSubscriberCountToPopularityData> rLst = [];
 
         Func<VTuberRecord.YouTubeData?, YouTubeSubscriberCountToPopularityData?> youTubePopularityFunc = GetYouTubeSubscriberCountToPopularityFunction(sortBy);
         Func<VTuberRecord.TwitchData?, TwitchPopularityData?> twitchPopularityFunc = GetTwitchPopularityFunction(sortBy);
@@ -435,13 +435,13 @@ public class DictionaryRecordToRecordList {
     }
 
     public List<GroupData> Groups() {
-        List<GroupData> rLst = new();
+        List<GroupData> rLst = [];
 
         foreach (string groupName in _trackList.GetGroupNameList()) {
             ulong totalPopularity = 0;
             ulong livestreamPopularity = 0;
             ulong videoPopularity = 0;
-            List<Types.VTuberData> lstMembers = new();
+            List<Types.VTuberData> lstMembers = [];
 
             foreach (KeyValuePair<VTuberId, VTuberRecord> vtuberStatPair in DictRecord
                 .Where(p => p.Value.Nationality.Contains(NationalityFilter))
@@ -492,10 +492,10 @@ public class DictionaryRecordToRecordList {
     }
 
     public Dictionary<string, List<Types.VTuberData>> GroupMembers() {
-        Dictionary<string, List<Types.VTuberData>> rDict = new();
+        Dictionary<string, List<Types.VTuberData>> rDict = [];
 
         foreach (string groupName in _trackList.GetGroupNameList()) {
-            List<Types.VTuberData> lstMembers = new();
+            List<Types.VTuberData> lstMembers = [];
 
             foreach (KeyValuePair<VTuberId, VTuberRecord> vtuberStatPair in DictRecord
                 .Where(p => p.Value.Nationality.Contains(NationalityFilter))

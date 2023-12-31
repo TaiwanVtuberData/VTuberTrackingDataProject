@@ -70,14 +70,14 @@ class Program {
 
     // Key: VTuber ID
     static Dictionary<VTuberId, VTuberBasicData> MergeDictionary(Dictionary<VTuberId, YouTubeData> mainDict, Dictionary<VTuberId, TwitchData> minorDict) {
-        Dictionary<VTuberId, VTuberBasicData> rDict = new();
+        Dictionary<VTuberId, VTuberBasicData> rDict = [];
 
         foreach (KeyValuePair<VTuberId, YouTubeData> pair in mainDict) {
             VTuberId VTuberId = pair.Key;
             YouTubeData youTubeData = pair.Value;
 
-            if (minorDict.ContainsKey(VTuberId)) {
-                rDict.Add(VTuberId, new VTuberBasicData(Id: VTuberId, YouTube: youTubeData, Twitch: minorDict[VTuberId]));
+            if (minorDict.TryGetValue(VTuberId, out TwitchData value)) {
+                rDict.Add(VTuberId, new VTuberBasicData(Id: VTuberId, YouTube: youTubeData, Twitch: value));
             } else {
                 rDict.Add(VTuberId, new VTuberBasicData(Id: VTuberId, YouTube: youTubeData, Twitch: null));
             }
@@ -157,7 +157,7 @@ class Program {
         TwitchLib.Api.Helix.Models.Users.GetUsers.GetUsersResponse? getUsersResponse = api.GetUsers(userIdList, log);
 
         if (getUsersResponse == null) {
-            return new();
+            return [];
         }
 
         Dictionary<string, TwitchData> rDict = new(getUsersResponse.Users.Length);

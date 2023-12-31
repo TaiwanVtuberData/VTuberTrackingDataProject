@@ -5,17 +5,12 @@ using GenerateRecordList.Types;
 using GenerateRecordList.Utils;
 
 namespace GenerateJsonFile;
-internal class LiveVideosListToJsonStruct {
-    public readonly string NationalityFilter;
-    public readonly DateTime CurrentTime;
-
-    public LiveVideosListToJsonStruct(string nationalityFilter, DateTime currentTime) {
-        NationalityFilter = nationalityFilter;
-        CurrentTime = currentTime;
-    }
+internal class LiveVideosListToJsonStruct(string nationalityFilter, DateTime currentTime) {
+    public readonly string NationalityFilter = nationalityFilter;
+    public readonly DateTime CurrentTime = currentTime;
 
     public List<LivestreamData> Get(LiveVideosList liveVideosList, List<DebutData> lstDebutData, DictionaryRecord dictRecord, bool noTitle) {
-        List<LivestreamData> rLst = new();
+        List<LivestreamData> rLst = [];
 
         List<VTuberId> lstValidVTubers = dictRecord.Keys.ToList();
 
@@ -69,7 +64,7 @@ internal class LiveVideosListToJsonStruct {
     }
 
     public List<LivestreamData> GetDebutToday(LiveVideosList liveVideosList, List<DebutData> lstDebutData, DictionaryRecord dictRecord, bool noTitle) {
-        List<LivestreamData> rLst = new();
+        List<LivestreamData> rLst = [];
 
         List<VTuberId> lstDebutVTubers =
             dictRecord.GetAboutToDebutList(DateOnly.FromDateTime(CurrentTime.ToLocalTime()))

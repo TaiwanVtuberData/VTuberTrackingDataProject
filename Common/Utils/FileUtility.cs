@@ -50,7 +50,7 @@ public class FileUtility {
         // year/month string is sortable
         string? latestMonthString = filtertedList.Max(e => e.Item2);
         if (latestMonthString is null) {
-            return new List<string>();
+            return [];
         }
 
         // add one more day just to be sure
@@ -77,7 +77,7 @@ public class FileUtility {
         );
 
     private static List<Tuple<FileInfo, DateTime>> GetFileInfoDateTimeListNotRecursive(string directory, string prefix) {
-        List<Tuple<FileInfo, DateTime>> fileInfoDateTimeList = new();
+        List<Tuple<FileInfo, DateTime>> fileInfoDateTimeList = [];
 
         // format: record_2021-02-21-21-52-13.csv
         string pattern = $"^{prefix}_(?<Date>[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]).csv$";
@@ -93,9 +93,15 @@ public class FileUtility {
             }
 
             string dateString = match.Groups["Date"].Value;
-            DateTime parsedDateTime;
-            if (!DateTime.TryParseExact(dateString, @"yyyy-MM-dd-HH-mm-ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedDateTime))
+            if (!DateTime.TryParseExact(
+                s: dateString,
+                format: @"yyyy-MM-dd-HH-mm-ss",
+                provider: CultureInfo.InvariantCulture,
+                style: DateTimeStyles.None,
+                result: out DateTime parsedDateTime)
+                ) {
                 continue;
+            }
             parsedDateTime = DateTime.SpecifyKind(parsedDateTime, DateTimeKind.Local);
 
             if (parsedDateTime > latestDateTime) {
@@ -137,9 +143,15 @@ public class FileUtility {
             }
 
             string dateString = match.Groups["Date"].Value;
-            DateTime parsedDateTime;
-            if (!DateTime.TryParseExact(dateString, @"yyyy-MM-dd-HH-mm-ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedDateTime))
+            if (!DateTime.TryParseExact(
+                s: dateString,
+                format: @"yyyy-MM-dd-HH-mm-ss",
+                provider: CultureInfo.InvariantCulture,
+                style: DateTimeStyles.None,
+                result: out DateTime parsedDateTime)
+                ) {
                 continue;
+            }
             parsedDateTime = DateTime.SpecifyKind(parsedDateTime, DateTimeKind.Local);
 
             if (parsedDateTime > latestDateTime) {
@@ -156,8 +168,8 @@ public class FileUtility {
         // format: record_2021-02-21-21-52-13.csv
         Regex fileNameRegex = new(pattern);
 
-        List<string> filePathList = new();
-        List<DateTime> dateTimeList = new();
+        List<string> filePathList = [];
+        List<DateTime> dateTimeList = [];
         foreach (string fileName in Directory.GetFiles(directory, "*.csv", System.IO.SearchOption.AllDirectories)) {
             FileInfo fileInfo = new(fileName);
 
@@ -168,9 +180,15 @@ public class FileUtility {
             }
 
             string dateString = match.Groups["Date"].Value;
-            DateTime parsedDateTime;
-            if (!DateTime.TryParseExact(dateString, @"yyyy-MM-dd-HH-mm-ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedDateTime))
+            if (!DateTime.TryParseExact(
+                s: dateString,
+                format: @"yyyy-MM-dd-HH-mm-ss",
+                provider: CultureInfo.InvariantCulture,
+                style: DateTimeStyles.None,
+                result: out DateTime parsedDateTime)
+                ) {
                 continue;
+            }
             parsedDateTime = DateTime.SpecifyKind(parsedDateTime, DateTimeKind.Local);
 
             filePathList.Add(fileName);
@@ -199,8 +217,8 @@ public class FileUtility {
     public static List<VTuberId> GetListFromCsv(string filePath) {
         TextFieldParser reader = new(filePath) {
             HasFieldsEnclosedInQuotes = true,
-            Delimiters = new string[] { "," },
-            CommentTokens = new string[] { "#" },
+            Delimiters = [","],
+            CommentTokens = ["#"],
             TrimWhiteSpace = false,
             TextFieldType = FieldType.Delimited,
         };
@@ -208,7 +226,7 @@ public class FileUtility {
         // consume header
         string[]? headerBlock = reader.ReadFields();
 
-        List<VTuberId> rList = new();
+        List<VTuberId> rList = [];
         while (!reader.EndOfData) {
             string[]? entryBlock = reader.ReadFields();
             if (entryBlock is null || entryBlock.Length != 1) {
@@ -224,8 +242,8 @@ public class FileUtility {
     public static Dictionary<string, string> GetDictFromCsv(string filePath) {
         TextFieldParser reader = new(filePath) {
             HasFieldsEnclosedInQuotes = true,
-            Delimiters = new string[] { "," },
-            CommentTokens = new string[] { "#" },
+            Delimiters = [","],
+            CommentTokens = ["#"],
             TrimWhiteSpace = false,
             TextFieldType = FieldType.Delimited,
         };
@@ -233,7 +251,7 @@ public class FileUtility {
         // consume header
         string[]? headerBlock = reader.ReadFields();
 
-        Dictionary<string, string> rDict = new();
+        Dictionary<string, string> rDict = [];
         while (!reader.EndOfData) {
             string[]? entryBlock = reader.ReadFields();
             if (entryBlock is null || entryBlock.Length != 2) {
@@ -254,7 +272,7 @@ public class FileUtility {
 
         TextFieldParser reader = new(filePath) {
             HasFieldsEnclosedInQuotes = true,
-            Delimiters = new string[] { "," },
+            Delimiters = [","],
             TrimWhiteSpace = false,
             TextFieldType = FieldType.Delimited,
         };

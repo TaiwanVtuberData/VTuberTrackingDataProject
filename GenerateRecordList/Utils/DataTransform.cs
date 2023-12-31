@@ -1,14 +1,9 @@
 ﻿using GenerateRecordList.Types;
 
 namespace GenerateRecordList.Utils;
-public class DataTransform {
-    private readonly DateTime LatestRecordTime;
-    private readonly DateTime LatestBasicDataTime;
-
-    public DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTime) {
-        LatestRecordTime = latestRecordTime;
-        LatestBasicDataTime = latestBasicDataTime;
-    }
+public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTime) {
+    private readonly DateTime LatestRecordTime = latestRecordTime;
+    private readonly DateTime LatestBasicDataTime = latestBasicDataTime;
 
     public YouTubeData? ToYouTubeData(VTuberRecord.YouTubeData? input) {
         if (input == null)

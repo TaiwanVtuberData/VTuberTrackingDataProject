@@ -137,7 +137,7 @@ public class DictionaryRecord : Dictionary<VTuberId, VTuberRecord> {
     }
 
     public List<VTuberRecord> GetAboutToDebutList(DateOnly date) {
-        List<VTuberRecord> rLst = new();
+        List<VTuberRecord> rLst = [];
         foreach (KeyValuePair<VTuberId, VTuberRecord> pair in this) {
             VTuberRecord record = pair.Value;
 

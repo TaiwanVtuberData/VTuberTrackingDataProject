@@ -60,43 +60,43 @@ static void WriteDateTimeStatistics(TrackList trackList, string recordDirectory,
     }
     statisticsTable.FillEmptyValueByInterpolation();
 
-    string[] names = {
+    string[] names = [
                 "YouTube.Basic.SubscriberCount",
-                "YouTube.Basic.ViewCount",
-                "YouTube.Recent.Total.MedianViewCount",
-                "YouTube.Recent.Total.Popularity",
-                "YouTube.Recent.Total.HighestViewCount",
-                "YouTube.Recent.Livestream.MedianViewCount",
-                "YouTube.Recent.Livestream.Popularity",
-                "YouTube.Recent.Livestream.HighestViewCount",
-                "YouTube.Recent.Video.MedianViewCount",
-                "YouTube.Recent.Video.Popularity",
-                "YouTube.Recent.Video.HighestViewCount",
-                "Twitch.FollowerCount",
-                "Twitch.RecentMedianViewCount",
-                "Twitch.RecentPopularity",
-                "Twitch.RecentHighestViewCount",
-                "Twitch.FollowerCountToMedianViewCount",
-                "CombinedRecentTotalStatistics.MedianViewCount",
-                "CombinedRecentTotalStatistics.Popularity",
-                "CombinedRecentLivestreamStatistics.MedianViewCount",
-                "CombinedRecentLivestreamStatistics.Popularity",
-                "CombinedRecentVideoStatistics.MedianViewCount",
-                "CombinedRecentVideoStatistics.Popularity",
-            };
+        "YouTube.Basic.ViewCount",
+        "YouTube.Recent.Total.MedianViewCount",
+        "YouTube.Recent.Total.Popularity",
+        "YouTube.Recent.Total.HighestViewCount",
+        "YouTube.Recent.Livestream.MedianViewCount",
+        "YouTube.Recent.Livestream.Popularity",
+        "YouTube.Recent.Livestream.HighestViewCount",
+        "YouTube.Recent.Video.MedianViewCount",
+        "YouTube.Recent.Video.Popularity",
+        "YouTube.Recent.Video.HighestViewCount",
+        "Twitch.FollowerCount",
+        "Twitch.RecentMedianViewCount",
+        "Twitch.RecentPopularity",
+        "Twitch.RecentHighestViewCount",
+        "Twitch.FollowerCountToMedianViewCount",
+        "CombinedRecentTotalStatistics.MedianViewCount",
+        "CombinedRecentTotalStatistics.Popularity",
+        "CombinedRecentLivestreamStatistics.MedianViewCount",
+        "CombinedRecentLivestreamStatistics.Popularity",
+        "CombinedRecentVideoStatistics.MedianViewCount",
+        "CombinedRecentVideoStatistics.Popularity",
+    ];
 
     foreach (string name in names) {
         WritelRecordCSV(trackList, statisticsTable, name, null, byGroup, writePrefix);
     }
 
-    string[] namesConstriant = {
+    string[] namesConstriant = [
                 "YouTube.SubscriberCountTo.Total.MedianViewCount",
-                "YouTube.SubscriberCountTo.Total.Popularity",
-                "YouTube.SubscriberCountTo.Livestream.MedianViewCount",
-                "YouTube.SubscriberCountTo.Livestream.Popularity",
-                "YouTube.SubscriberCountTo.Video.MedianViewCount",
-                "YouTube.SubscriberCountTo.Video.Popularity",
-            };
+        "YouTube.SubscriberCountTo.Total.Popularity",
+        "YouTube.SubscriberCountTo.Livestream.MedianViewCount",
+        "YouTube.SubscriberCountTo.Livestream.Popularity",
+        "YouTube.SubscriberCountTo.Video.MedianViewCount",
+        "YouTube.SubscriberCountTo.Video.Popularity",
+    ];
 
     foreach (string name in namesConstriant) {
         WritelRecordCSV(trackList, statisticsTable, name, 2000m, byGroup, writePrefix);
@@ -112,8 +112,8 @@ static Dictionary<VTuberId, VTuberStatistics> GetStatisticsDictionaryFromRecordC
 
     TextFieldParser reader = new(filePath) {
         HasFieldsEnclosedInQuotes = true,
-        Delimiters = new string[] { "," },
-        CommentTokens = new string[] { "#" },
+        Delimiters = [","],
+        CommentTokens = ["#"],
         TrimWhiteSpace = false,
         TextFieldType = FieldType.Delimited,
     };
@@ -122,13 +122,13 @@ static Dictionary<VTuberId, VTuberStatistics> GetStatisticsDictionaryFromRecordC
     string[]? headerBlock = reader.ReadFields();
 
     if (headerBlock is null)
-        return new();
+        return [];
 
     VTuberStatistics.Version version = VTuberStatistics.GetVersion(headerBlock[0], headerBlock.Length);
     if (version == VTuberStatistics.Version.Unknown)
-        return new();
+        return [];
 
-    Dictionary<VTuberId, VTuberStatistics> ans = new();
+    Dictionary<VTuberId, VTuberStatistics> ans = [];
     int entryCount = 0;
     int groupEntryCount = 0;
     while (!reader.EndOfData) {
@@ -153,16 +153,17 @@ static Dictionary<VTuberId, VTuberStatistics> GetStatisticsDictionaryFromRecordC
 
             groupEntryCount++;
 
-            if (!ans.ContainsKey(groupName))
+            if (ans.TryGetValue(groupName, out VTuberStatistics? value)) {
+                value.Add(headerBlock, entryBlock);
+            } else {
                 ans.Add(groupName, new VTuberStatistics(headerBlock, entryBlock));
-            else
-                ans[groupName].Add(headerBlock, entryBlock);
+            }
         }
     }
 
     if (byGroup) {
         if (groupEntryCount <= trackList.GetVtuberWithGroupCount() * 0.7)
-            return new();
+            return [];
     }
 
     return ans;

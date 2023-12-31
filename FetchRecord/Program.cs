@@ -44,7 +44,7 @@ try {
 log.Info("End program");
 
 void mainProcess() {
-    string[] defaultArgs = new string[] {
+    string[] defaultArgs = [
         "./DATA/YOUTUBE_API_KEY",
         "./DATA/TWITCH_CLIENT_ID",
         "./DATA/TWITCH_SECRET",
@@ -52,7 +52,7 @@ void mainProcess() {
         "./DATA/EXCLUDE_LIST.csv",
         ".",
         FetchType.All.ToString(),
-    };
+    ];
 
     // this code block is only used to print read args
     {
@@ -147,7 +147,7 @@ void fetchTwitchLivestreamsAndWrite(
     ImmutableList<YouTubeChannelId> lstYouTubeChannelId = trackList.GetYouTubeChannelIdList().Map(e => new YouTubeChannelId(e)).ToImmutableList();
     log.Info($"Channel count: {lstYouTubeChannelId.Count}");
 
-    Dictionary<VTuberId, YouTubeRecord> rDict = new();
+    Dictionary<VTuberId, YouTubeRecord> rDict = [];
     TopVideosList rVideosList;
     LiveVideosList rLiveVideosList;
 
@@ -192,13 +192,13 @@ void fetchTwitchLivestreamsAndWrite(
 }
 
 (Dictionary<VTuberId, TwitchStatistics>, TopVideosList, LiveVideosList) fetchTwitchRecord(FetchTwitchStatistics.Fetcher twitchDataFetcher, TrackList trackList) {
-    Dictionary<VTuberId, TwitchStatistics> rDict = new();
+    Dictionary<VTuberId, TwitchStatistics> rDict = [];
     TopVideosList rVideosList = new();
-    LiveVideosList rLiveVideosList = new();
+    LiveVideosList rLiveVideosList = [];
 
-    Dictionary<string, TwitchStatistics> statisticDict = new();
+    Dictionary<string, TwitchStatistics> statisticDict = [];
     TopVideosList twitchTopVideoList = new();
-    LiveVideosList twitchLiveVideosList = new();
+    LiveVideosList twitchLiveVideosList = [];
     twitchDataFetcher.GetAll(trackList.GetTwitchChannelIdList().ToHashSet(), out statisticDict, out twitchTopVideoList, out twitchLiveVideosList);
 
     foreach (KeyValuePair<string, TwitchStatistics> keyValuePair in statisticDict) {

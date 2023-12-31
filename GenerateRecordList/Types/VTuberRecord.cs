@@ -25,12 +25,12 @@ public class VTuberRecord {
             ulong RecentPopularity,
             ulong HighestViewCount,
             string HighestViewedVideoId);
-        private readonly Dictionary<DateTime, Record> DictRecord = new();
+        private readonly Dictionary<DateTime, Record> DictRecord = [];
 
         public record BasicData(
             ulong SubscriberCount,
             ulong TotalViewCount);
-        private readonly Dictionary<DateTime, BasicData> DictBasicData = new();
+        private readonly Dictionary<DateTime, BasicData> DictBasicData = [];
 
         public void AddRecord(DateTime recordTime, Record record) {
             DictRecord.Add(recordTime, record);
@@ -41,10 +41,11 @@ public class VTuberRecord {
         }
 
         public Record? GetRecord(DateTime TargetDateTime) {
-            if (!DictRecord.ContainsKey(TargetDateTime))
+            if (DictRecord.TryGetValue(TargetDateTime, out Record? value)) {
+                return value;
+            } else {
                 return null;
-
-            return DictRecord[TargetDateTime];
+            }
         }
 
         public Dictionary<DateTime, BasicData>.KeyCollection GetBasicDataDateTimes() {
@@ -52,10 +53,11 @@ public class VTuberRecord {
         }
 
         public BasicData? GetBasicData(DateTime TargetDateTime) {
-            if (!DictBasicData.ContainsKey(TargetDateTime))
+            if (DictBasicData.TryGetValue(TargetDateTime, out BasicData? value)) {
+                return value;
+            } else {
                 return null;
-
-            return DictBasicData[TargetDateTime];
+            }
         }
     }
     public YouTubeData? YouTube { get; set; }
@@ -70,11 +72,11 @@ public class VTuberRecord {
             ulong RecentPopularity,
             ulong HighestViewCount,
             string HighestViewedVideoId);
-        private readonly Dictionary<DateTime, Record> DictRecord = new();
+        private readonly Dictionary<DateTime, Record> DictRecord = [];
 
         public record BasicData(
             ulong FollowerCount);
-        private readonly Dictionary<DateTime, BasicData> DictBasicData = new();
+        private readonly Dictionary<DateTime, BasicData> DictBasicData = [];
 
         public void AddRecord(DateTime recordTime, Record record) {
             DictRecord.Add(recordTime, record);
@@ -85,17 +87,19 @@ public class VTuberRecord {
         }
 
         public Record? GetRecord(DateTime TargetDateTime) {
-            if (!DictRecord.ContainsKey(TargetDateTime))
+            if (DictRecord.TryGetValue(TargetDateTime, out Record? value)) {
+                return value;
+            } else {
                 return null;
-
-            return DictRecord[TargetDateTime];
+            }
         }
 
         public BasicData? GetBasicData(DateTime TargetDateTime) {
-            if (!DictBasicData.ContainsKey(TargetDateTime))
+            if (DictBasicData.TryGetValue(TargetDateTime, out BasicData? value)) {
+                return value;
+            } else {
                 return null;
-
-            return DictBasicData[TargetDateTime];
+            }
         }
     }
     public TwitchData? Twitch { get; set; }
