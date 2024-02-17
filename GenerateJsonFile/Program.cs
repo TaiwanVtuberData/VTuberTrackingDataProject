@@ -68,14 +68,14 @@ class Program {
         );
         WriteJson(updateTimeResponse, "update-time.json");
 
-        List<VTuberFullData> lstAllVTuber = new DictionaryRecordToRecordList(trackList, dictRecord, DateTime.Today, latestRecordTime, latestBasicDataTime, "")
+        List<VTuberFullData> lstAllVTuber = new DictionaryRecordToRecordList(trackList, dictRecord, DateOnly.FromDateTime(DateTime.Today), latestRecordTime, latestBasicDataTime, "")
             .AllWithFullData(liveVideos, lstDebutData);
         foreach (VTuberFullData vtuber in lstAllVTuber) {
             WriteJson(vtuber, $"vtubers/{vtuber.id.Value}.json");
         }
 
         foreach (var nationality in new List<(string, string)> { ("", "all"), ("TW", "TW"), ("HK", "HK"), ("MY", "MY") }) {
-            DictionaryRecordToRecordList transformer = new(trackList, dictRecord, DateTime.Today, latestRecordTime, latestBasicDataTime, nationality.Item1);
+            DictionaryRecordToRecordList transformer = new(trackList, dictRecord, DateOnly.FromDateTime(DateTime.Today), latestRecordTime, latestBasicDataTime, nationality.Item1);
 
             foreach (var tuple in new List<(int?, string)> { (10, "10"), (null, "all") }) {
                 WriteJson(
@@ -114,6 +114,13 @@ class Program {
                     transformer.DebutVTubers(daysBefore: tuple.Item1, daysAfter: tuple.Item2),
                     nationality.Item2,
                     $"debut-vtubers/{tuple.Item3}.json");
+            }
+
+            foreach (var tuple in new List<(uint, uint, string)> { (0, 7, "next-7-days"), (30, 30, "recent") }) {
+                WriteJson(
+                    transformer.AnniversaryVTubers(daysBefore: tuple.Item1, daysAfter: tuple.Item2),
+                    nationality.Item2,
+                    $"anniversary-vtubers/{tuple.Item3}.json");
             }
 
             foreach (var tuple in new List<(uint, uint, string)> { (0, 7, "next-7-days"), (30, 30, "recent") }) {
@@ -187,7 +194,6 @@ class Program {
         Directory.CreateDirectory(outputFolder);
     }
 
-
     private static void WriteJson(UpdateTimeResponse updateTimeWrapper, string outputFilePath) {
         WriteJsonString(
             GetJsonString(updateTimeWrapper),
@@ -195,6 +201,7 @@ class Program {
             outputFilePath
            );
     }
+
     private static void WriteJson(VTuberFullData vTuberFullData, string outputFilePath) {
         WriteJsonString(
             GetJsonString(new SingleVTuberFullDataResponse(VTuber: vTuberFullData)),
@@ -233,6 +240,13 @@ class Program {
     private static void WriteJson(List<VTuberDebutData> lstVTuberData, string nationality, string outputFilePath) {
         WriteJsonString(
             GetJsonString(new VTuberDebutDataResponse(VTubers: lstVTuberData)),
+            nationality,
+            outputFilePath);
+    }
+
+    private static void WriteJson(List<VTuberAnniversaryData> lstVTuberData, string nationality, string outputFilePath) {
+        WriteJsonString(
+            GetJsonString(new VTuberAnniversaryDataResponse(VTubers: lstVTuberData)),
             nationality,
             outputFilePath);
     }

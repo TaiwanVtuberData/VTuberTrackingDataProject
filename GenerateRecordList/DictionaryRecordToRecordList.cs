@@ -8,13 +8,13 @@ namespace GenerateRecordList;
 public class DictionaryRecordToRecordList {
     private readonly TrackList _trackList;
     private readonly DictionaryRecord DictRecord;
-    private readonly DateTime TodayDate;
+    private readonly DateOnly TodayDate;
     private readonly DateTime LatestRecordTime;
     private readonly DateTime LatestBasicDataTime;
     private readonly DataTransform dataTransform;
     private readonly string NationalityFilter;
 
-    public DictionaryRecordToRecordList(TrackList trackList, DictionaryRecord dictRecord, DateTime todayDate, DateTime latestRecordTime, DateTime latestBasicDataTime, string nationalityFilter) {
+    public DictionaryRecordToRecordList(TrackList trackList, DictionaryRecord dictRecord, DateOnly todayDate, DateTime latestRecordTime, DateTime latestBasicDataTime, string nationalityFilter) {
         _trackList = trackList;
         DictRecord = dictRecord;
         TodayDate = todayDate;
@@ -262,14 +262,14 @@ public class DictionaryRecordToRecordList {
     public List<VTuberDebutData> DebutVTubers(uint daysBefore, uint daysAfter) {
         List<VTuberDebutData> rLst = [];
 
-        DateTime _30DaysBefore = TodayDate.AddDays(-daysBefore);
-        DateTime _30DaysAfter = TodayDate.AddDays(daysAfter);
+        DateOnly dateBefore = TodayDate.AddDays(-(int)daysBefore);
+        DateOnly dateAfter = TodayDate.AddDays((int)daysAfter);
 
 
         foreach (KeyValuePair<VTuberId, VTuberRecord> vtuberStatPair in DictRecord
             .Where(p => p.Value.Nationality.Contains(NationalityFilter))
             .Where(p => p.Value.DebutDate.HasValue)
-            .Where(p => IsBetween(p.Value.DebutDate, _30DaysBefore, _30DaysAfter))
+            .Where(p => TimeUtils.IsBetween(p.Value.DebutDate, dateBefore, dateAfter))
             .OrderByDescending(p => p.Value.DebutDate)) {
             VTuberRecord record = vtuberStatPair.Value;
 
@@ -296,16 +296,65 @@ public class DictionaryRecordToRecordList {
         return rLst;
     }
 
+    public List<VTuberAnniversaryData> AnniversaryVTubers(uint daysBefore, uint daysAfter) {
+        List<VTuberAnniversaryData> rLst = [];
+
+        DateOnly dateBefore = TodayDate.AddDays(-(int)daysBefore);
+        DateOnly dateAfter = TodayDate.AddDays((int)daysAfter);
+
+        foreach (KeyValuePair<VTuberId, VTuberRecord> vtuberStatPair in DictRecord
+            .Where(p => p.Value.Nationality.Contains(NationalityFilter))
+            .Where(p => p.Value.DebutDate.HasValue)
+            // only active VTubers are listed
+            .Where(p => p.Value.Activity == Common.Types.Activity.Active)
+            .OrderByDescending(p => p.Value.DebutDate)) {
+            VTuberRecord record = vtuberStatPair.Value;
+
+            if (record.DebutDate is null) {
+                continue;
+            }
+
+            if (TimeUtils.GetAnniversaryYearByRange(
+                maybeDate: record.DebutDate,
+                dateBefore: dateBefore,
+                dateAfter: dateAfter,
+                anniversaryYearCount: out uint anniversaryYearCount
+                )) {
+                // if true, do nothing
+            } else {
+                continue;
+            }
+
+            VTuberAnniversaryData vTuberData = new(
+                id: record.Id,
+                activity: CommonActivityToJsonActivity(record.Activity),
+                name: record.DisplayName,
+                imgUrl: record.ImageUrl,
+                YouTube: dataTransform.ToYouTubeData(record.YouTube),
+                Twitch: dataTransform.ToTwitchData(record.Twitch),
+                popularVideo: dataTransform.GetPopularVideo(record),
+                group: record.GroupName,
+                nationality: record.Nationality,
+                debutDate: record.DebutDate.Value.ToString(Constant.DATE_FORMAT),
+                anniversaryYearCount: anniversaryYearCount
+                );
+
+            rLst.Add(vTuberData);
+        }
+
+        return rLst;
+    }
+
     public List<VTuberGraduateData> GraduateVTubers(uint daysBefore, uint daysAfter) {
         List<VTuberGraduateData> rLst = [];
 
-        DateTime _30DaysBefore = TodayDate.AddDays(-daysBefore);
-        DateTime _30DaysAfter = TodayDate.AddDays(daysAfter);
+        DateOnly dateBefore = TodayDate.AddDays(-(int)daysBefore);
+        DateOnly dateAfter = TodayDate.AddDays((int)daysAfter);
 
         foreach (KeyValuePair<VTuberId, VTuberRecord> vtuberStatPair in DictRecord
             .Where(p => p.Value.Nationality.Contains(NationalityFilter))
             .Where(p => p.Value.GraduationDate.HasValue)
-            .Where(p => IsBetween(p.Value.GraduationDate, _30DaysBefore, _30DaysAfter))
+            .Where(p => TimeUtils.IsBetween(p.Value.GraduationDate, dateBefore, dateAfter))
             .OrderByDescending(p => p.Value.GraduationDate)) {
             VTuberRecord record = vtuberStatPair.Value;
 
@@ -556,12 +605,5 @@ public class DictionaryRecordToRecordList {
 
         // subscriber should be HasCountType now
         return growthData.subscriber.count.HasValue ? ((growthData._7DaysGrowth.diff) / growthData.subscriber.count.Value) : decimal.MinValue;
-    }
-
-    private static bool IsBetween(DateOnly? date, DateTime _30DaysBefore, DateTime _30DaysAfter) {
-        if (date.HasValue)
-            return _30DaysBefore <= date.Value.ToDateTime(TimeOnly.MinValue) && date.Value.ToDateTime(TimeOnly.MinValue) < _30DaysAfter;
-
-        return false;
     }
 }
