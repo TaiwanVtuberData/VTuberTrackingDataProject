@@ -336,6 +336,7 @@ public class DictionaryRecordToRecordList {
                 group: record.GroupName,
                 nationality: record.Nationality,
                 debutDate: record.DebutDate.Value.ToString(Constant.DATE_FORMAT),
+                debutDateOfTheYear: record.DebutDate.Value.ToString(Constant.DATE_OF_THE_YEAR_FORMAT),
                 anniversaryYearCount: anniversaryYearCount
                 );
 

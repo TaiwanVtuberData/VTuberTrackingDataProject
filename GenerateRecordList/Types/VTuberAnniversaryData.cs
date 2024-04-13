@@ -15,6 +15,7 @@ public record VTuberAnniversaryData(
     string? group,
     string? nationality,
     string debutDate,
+    string debutDateOfTheYear,
     uint anniversaryYearCount);
 
 public record VTuberAnniversaryDataResponse(
