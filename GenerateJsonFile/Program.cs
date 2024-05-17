@@ -8,7 +8,6 @@ using GenerateRecordList.Utils;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
-using System.Web;
 
 namespace GenerateJsonFile;
 
@@ -138,7 +137,7 @@ class Program {
 
             Dictionary<string, List<GenerateRecordList.Types.VTuberData>> dictGroupVTuberData = transformer.GroupMembers();
             foreach (KeyValuePair<string, List<GenerateRecordList.Types.VTuberData>> entry in dictGroupVTuberData) {
-                string outputDir = $"groups/{HttpUtility.UrlEncode(entry.Key)}";
+                string outputDir = $"groups/{entry.Key}";
                 WriteJson(
                     entry.Value,
                     nationality.Item2,
