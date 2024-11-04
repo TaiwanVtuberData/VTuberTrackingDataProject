@@ -59,7 +59,7 @@ class Program
             currentAdvertisementDetail
         );
 
-        ClearAndCreateDirectory(OUTPUT_DIRECTORY);
+        ClearAndCreateDirectory(Path.Combine(OUTPUT_DIRECTORY, "api"));
 
         string outputFilePath = Path.Combine(
             OUTPUT_DIRECTORY,
