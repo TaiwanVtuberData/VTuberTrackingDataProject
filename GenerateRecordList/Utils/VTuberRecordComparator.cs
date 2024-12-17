@@ -2,13 +2,25 @@
 using GenerateRecordList.Types;
 
 namespace GenerateRecordList.Utils;
-public class VTuberRecordComparator {
-    public class YouTubeSubscriberCount(DateTime targetDateTime) : IComparer<KeyValuePair<string, VTuberRecord>> {
+
+public class VTuberRecordComparator
+{
+    public class YouTubeSubscriberCount(DateTime targetDateTime)
+        : IComparer<KeyValuePair<string, VTuberRecord>>
+    {
         readonly DateTime TargetDateTime = targetDateTime;
 
-        public int Compare(KeyValuePair<string, VTuberRecord> lhs, KeyValuePair<string, VTuberRecord> rhs) {
-            VTuberRecord.YouTubeData.BasicData? lhsData = lhs.Value.YouTube?.GetBasicData(TargetDateTime);
-            VTuberRecord.YouTubeData.BasicData? rhsData = rhs.Value.YouTube?.GetBasicData(TargetDateTime);
+        public int Compare(
+            KeyValuePair<string, VTuberRecord> lhs,
+            KeyValuePair<string, VTuberRecord> rhs
+        )
+        {
+            VTuberRecord.YouTubeData.BasicData? lhsData = lhs.Value.YouTube?.GetBasicData(
+                TargetDateTime
+            );
+            VTuberRecord.YouTubeData.BasicData? rhsData = rhs.Value.YouTube?.GetBasicData(
+                TargetDateTime
+            );
 
             ulong lhsYouTubeSub = lhsData?.SubscriberCount ?? 0;
             ulong rhsYouTubeSub = rhsData?.SubscriberCount ?? 0;
@@ -17,12 +29,22 @@ public class VTuberRecordComparator {
         }
     }
 
-    public class TwitcheFollowerCount(DateTime targetDateTime) : IComparer<KeyValuePair<string, VTuberRecord>> {
+    public class TwitcheFollowerCount(DateTime targetDateTime)
+        : IComparer<KeyValuePair<string, VTuberRecord>>
+    {
         readonly DateTime TargetDateTime = targetDateTime;
 
-        public int Compare(KeyValuePair<string, VTuberRecord> lhs, KeyValuePair<string, VTuberRecord> rhs) {
-            VTuberRecord.TwitchData.BasicData? lhsData = lhs.Value.Twitch?.GetBasicData(TargetDateTime);
-            VTuberRecord.TwitchData.BasicData? rhsData = rhs.Value.Twitch?.GetBasicData(TargetDateTime);
+        public int Compare(
+            KeyValuePair<string, VTuberRecord> lhs,
+            KeyValuePair<string, VTuberRecord> rhs
+        )
+        {
+            VTuberRecord.TwitchData.BasicData? lhsData = lhs.Value.Twitch?.GetBasicData(
+                TargetDateTime
+            );
+            VTuberRecord.TwitchData.BasicData? rhsData = rhs.Value.Twitch?.GetBasicData(
+                TargetDateTime
+            );
 
             ulong lhsTwitchFollower = lhsData?.FollowerCount ?? 0;
             ulong rhsTwitchFollower = rhsData?.FollowerCount ?? 0;
@@ -31,23 +53,35 @@ public class VTuberRecordComparator {
         }
     }
 
-    public class CombinedCount(DateTime targetDateTime) : IComparer<KeyValuePair<VTuberId, VTuberRecord>> {
-        readonly DateTime TargetDateTime = targetDateTime;
+    public class CombinedCount(DateTimeOffset targetDateTime)
+        : IComparer<KeyValuePair<VTuberId, VTuberRecord>>
+    {
+        readonly DateTimeOffset TargetDateTime = targetDateTime;
 
-        public int Compare(KeyValuePair<VTuberId, VTuberRecord> lhs, KeyValuePair<VTuberId, VTuberRecord> rhs) {
-            VTuberRecord.YouTubeData.BasicData? lhsYouTubeRecord = lhs.Value.YouTube?.GetBasicData(TargetDateTime);
-            VTuberRecord.YouTubeData.BasicData? rhsYouTubeRecord = rhs.Value.YouTube?.GetBasicData(TargetDateTime);
+        public int Compare(
+            KeyValuePair<VTuberId, VTuberRecord> lhs,
+            KeyValuePair<VTuberId, VTuberRecord> rhs
+        )
+        {
+            VTuberRecord.YouTubeData.BasicData? lhsYouTubeRecord = lhs.Value.YouTube?.GetBasicData(
+                TargetDateTime
+            );
+            VTuberRecord.YouTubeData.BasicData? rhsYouTubeRecord = rhs.Value.YouTube?.GetBasicData(
+                TargetDateTime
+            );
 
             ulong lhsYouTubeSub = lhsYouTubeRecord?.SubscriberCount ?? 0;
             ulong rhsYouTubeSub = rhsYouTubeRecord?.SubscriberCount ?? 0;
 
-
-            VTuberRecord.TwitchData.BasicData? lhsTwitchRecord = lhs.Value.Twitch?.GetBasicData(TargetDateTime);
-            VTuberRecord.TwitchData.BasicData? rhsTwitchRecord = rhs.Value.Twitch?.GetBasicData(TargetDateTime);
+            VTuberRecord.TwitchData.BasicData? lhsTwitchRecord = lhs.Value.Twitch?.GetBasicData(
+                TargetDateTime
+            );
+            VTuberRecord.TwitchData.BasicData? rhsTwitchRecord = rhs.Value.Twitch?.GetBasicData(
+                TargetDateTime
+            );
 
             ulong lhsTwitchFollower = lhsTwitchRecord?.FollowerCount ?? 0;
             ulong rhsTwitchFollower = rhsTwitchRecord?.FollowerCount ?? 0;
-
 
             ulong lhsCombinedCount = lhsYouTubeSub + lhsTwitchFollower;
             ulong rhsCombinedCount = rhsYouTubeSub + rhsTwitchFollower;
@@ -56,18 +90,32 @@ public class VTuberRecordComparator {
         }
     }
 
-    public class CombinedViewCount(DateTime targetDateTime) : IComparer<KeyValuePair<VTuberId, VTuberRecord>> {
+    public class CombinedViewCount(DateTime targetDateTime)
+        : IComparer<KeyValuePair<VTuberId, VTuberRecord>>
+    {
         readonly DateTime TargetDateTime = targetDateTime;
 
-        public int Compare(KeyValuePair<VTuberId, VTuberRecord> lhs, KeyValuePair<VTuberId, VTuberRecord> rhs) {
-            VTuberRecord.YouTubeData.Record? lhsYouTubeRecord = lhs.Value.YouTube?.GetRecord(TargetDateTime);
-            VTuberRecord.YouTubeData.Record? rhsYouTubeRecord = rhs.Value.YouTube?.GetRecord(TargetDateTime);
+        public int Compare(
+            KeyValuePair<VTuberId, VTuberRecord> lhs,
+            KeyValuePair<VTuberId, VTuberRecord> rhs
+        )
+        {
+            VTuberRecord.YouTubeData.Record? lhsYouTubeRecord = lhs.Value.YouTube?.GetRecord(
+                TargetDateTime
+            );
+            VTuberRecord.YouTubeData.Record? rhsYouTubeRecord = rhs.Value.YouTube?.GetRecord(
+                TargetDateTime
+            );
 
             ulong lhsYouTubeView = lhsYouTubeRecord?.RecentTotalMedianViewCount ?? 0;
             ulong rhsYouTubeView = rhsYouTubeRecord?.RecentTotalMedianViewCount ?? 0;
 
-            VTuberRecord.TwitchData.Record? lhsTwitchRecord = lhs.Value.Twitch?.GetRecord(TargetDateTime);
-            VTuberRecord.TwitchData.Record? rhsTwitchRecord = rhs.Value.Twitch?.GetRecord(TargetDateTime);
+            VTuberRecord.TwitchData.Record? lhsTwitchRecord = lhs.Value.Twitch?.GetRecord(
+                TargetDateTime
+            );
+            VTuberRecord.TwitchData.Record? rhsTwitchRecord = rhs.Value.Twitch?.GetRecord(
+                TargetDateTime
+            );
 
             ulong lhsTwitchView = lhsTwitchRecord?.RecentMedianViewCount ?? 0;
             ulong rhsTwitchView = rhsTwitchRecord?.RecentMedianViewCount ?? 0;

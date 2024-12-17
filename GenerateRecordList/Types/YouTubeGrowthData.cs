@@ -5,7 +5,5 @@ public record YouTubeGrowthData(
     BaseCountType subscriber,
     GrowthData _7DaysGrowth,
     GrowthData _30DaysGrowth,
-    string? Nationality)
-    : YouTubeData(
-        id: id,
-        subscriber: subscriber);
+    string? Nationality
+) : YouTubeData(id: id, subscriber: subscriber);

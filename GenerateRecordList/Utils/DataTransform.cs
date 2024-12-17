@@ -1,11 +1,14 @@
 ﻿using GenerateRecordList.Types;
 
 namespace GenerateRecordList.Utils;
-public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTime) {
-    private readonly DateTime LatestRecordTime = latestRecordTime;
-    private readonly DateTime LatestBasicDataTime = latestBasicDataTime;
 
-    public YouTubeData? ToYouTubeData(VTuberRecord.YouTubeData? input) {
+public class DataTransform(DateTimeOffset latestRecordTime, DateTimeOffset latestBasicDataTime)
+{
+    private readonly DateTimeOffset LatestRecordTime = latestRecordTime;
+    private readonly DateTimeOffset LatestBasicDataTime = latestBasicDataTime;
+
+    public YouTubeData? ToYouTubeData(VTuberRecord.YouTubeData? input)
+    {
         if (input == null)
             return null;
 
@@ -14,10 +17,12 @@ public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTi
 
         return new YouTubeData(
             id: input.ChannelId,
-            subscriber: ToYouTubeCountType(input.hasValidRecord, sub));
+            subscriber: ToYouTubeCountType(input.hasValidRecord, sub)
+        );
     }
 
-    public YouTubePopularityData? ToYouTubeTotalPopularityData(VTuberRecord.YouTubeData? input) {
+    public YouTubePopularityData? ToYouTubeTotalPopularityData(VTuberRecord.YouTubeData? input)
+    {
         if (input == null)
             return null;
 
@@ -29,10 +34,12 @@ public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTi
         return new YouTubePopularityData(
             id: input.ChannelId,
             subscriber: ToYouTubeCountType(input.hasValidRecord, sub),
-            popularity: record?.RecentTotalMedianViewCount ?? 0);
+            popularity: record?.RecentTotalMedianViewCount ?? 0
+        );
     }
 
-    public YouTubePopularityData? ToYouTubeLivestreamPopularityData(VTuberRecord.YouTubeData? input) {
+    public YouTubePopularityData? ToYouTubeLivestreamPopularityData(VTuberRecord.YouTubeData? input)
+    {
         if (input == null)
             return null;
 
@@ -44,10 +51,12 @@ public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTi
         return new YouTubePopularityData(
             id: input.ChannelId,
             subscriber: ToYouTubeCountType(input.hasValidRecord, sub),
-            popularity: record?.RecentLivestreamMedianViewCount ?? 0);
+            popularity: record?.RecentLivestreamMedianViewCount ?? 0
+        );
     }
 
-    public YouTubePopularityData? ToYouTubeVideoPopularityData(VTuberRecord.YouTubeData? input) {
+    public YouTubePopularityData? ToYouTubeVideoPopularityData(VTuberRecord.YouTubeData? input)
+    {
         if (input == null)
             return null;
 
@@ -59,10 +68,14 @@ public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTi
         return new YouTubePopularityData(
             id: input.ChannelId,
             subscriber: ToYouTubeCountType(input.hasValidRecord, sub),
-            popularity: record?.RecentVideoMedianViewCount ?? 0);
+            popularity: record?.RecentVideoMedianViewCount ?? 0
+        );
     }
 
-    public YouTubeSubscriberCountToPopularityData? ToYouTubeSubscriberCountToLivestreamPopularity(VTuberRecord.YouTubeData? input) {
+    public YouTubeSubscriberCountToPopularityData? ToYouTubeSubscriberCountToLivestreamPopularity(
+        VTuberRecord.YouTubeData? input
+    )
+    {
         if (input == null)
             return null;
 
@@ -71,15 +84,22 @@ public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTi
 
         VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
 
-        decimal subscriberCountToPopularity = (sub == null || sub == 0) ? 0m : (record?.RecentLivestreamMedianViewCount ?? 0) / (decimal)sub;
+        decimal subscriberCountToPopularity =
+            (sub == null || sub == 0)
+                ? 0m
+                : (record?.RecentLivestreamMedianViewCount ?? 0) / (decimal)sub;
 
         return new YouTubeSubscriberCountToPopularityData(
             id: input.ChannelId,
             subscriber: ToYouTubeCountType(input.hasValidRecord, sub),
-            popularity: subscriberCountToPopularity * 100);
+            popularity: subscriberCountToPopularity * 100
+        );
     }
 
-    public YouTubeSubscriberCountToPopularityData? ToYouTubeSubscriberCountToVideoPopularity(VTuberRecord.YouTubeData? input) {
+    public YouTubeSubscriberCountToPopularityData? ToYouTubeSubscriberCountToVideoPopularity(
+        VTuberRecord.YouTubeData? input
+    )
+    {
         if (input == null)
             return null;
 
@@ -88,15 +108,22 @@ public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTi
 
         VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
 
-        decimal subscriberCountToPopularity = (sub == null || sub == 0) ? 0m : (record?.RecentVideoMedianViewCount ?? 0) / (decimal)sub;
+        decimal subscriberCountToPopularity =
+            (sub == null || sub == 0)
+                ? 0m
+                : (record?.RecentVideoMedianViewCount ?? 0) / (decimal)sub;
 
         return new YouTubeSubscriberCountToPopularityData(
             id: input.ChannelId,
             subscriber: ToYouTubeCountType(input.hasValidRecord, sub),
-            popularity: subscriberCountToPopularity * 100);
+            popularity: subscriberCountToPopularity * 100
+        );
     }
 
-    public YouTubeSubscriberCountToPopularityData? ToYouTubeSubscriberCountToTotalPopularity(VTuberRecord.YouTubeData? input) {
+    public YouTubeSubscriberCountToPopularityData? ToYouTubeSubscriberCountToTotalPopularity(
+        VTuberRecord.YouTubeData? input
+    )
+    {
         if (input == null)
             return null;
 
@@ -105,15 +132,20 @@ public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTi
 
         VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
 
-        decimal subscriberCountToPopularity = (sub == null || sub == 0) ? 0m : (record?.RecentTotalMedianViewCount ?? 0) / (decimal)sub;
+        decimal subscriberCountToPopularity =
+            (sub == null || sub == 0)
+                ? 0m
+                : (record?.RecentTotalMedianViewCount ?? 0) / (decimal)sub;
 
         return new YouTubeSubscriberCountToPopularityData(
             id: input.ChannelId,
             subscriber: ToYouTubeCountType(input.hasValidRecord, sub),
-            popularity: subscriberCountToPopularity * 100);
+            popularity: subscriberCountToPopularity * 100
+        );
     }
 
-    public ulong ToYouTubeTotalPopularity(VTuberRecord.YouTubeData? input) {
+    public ulong ToYouTubeTotalPopularity(VTuberRecord.YouTubeData? input)
+    {
         if (input == null)
             return 0;
 
@@ -122,7 +154,8 @@ public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTi
         return record?.RecentTotalMedianViewCount ?? 0;
     }
 
-    public ulong ToYouTubeLivestreamPopularity(VTuberRecord.YouTubeData? input) {
+    public ulong ToYouTubeLivestreamPopularity(VTuberRecord.YouTubeData? input)
+    {
         if (input == null)
             return 0;
 
@@ -131,16 +164,18 @@ public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTi
         return record?.RecentLivestreamMedianViewCount ?? 0;
     }
 
-    public ulong ToYouTubeVideoPopularity(VTuberRecord.YouTubeData? input) {
+    public ulong ToYouTubeVideoPopularity(VTuberRecord.YouTubeData? input)
+    {
         if (input == null)
             return 0;
 
         VTuberRecord.YouTubeData.Record? record = input.GetRecord(LatestRecordTime);
 
         return record?.RecentVideoMedianViewCount ?? 0;
-
     }
-    public BaseCountType ToYouTubeSubscriber(VTuberRecord.YouTubeData? input) {
+
+    public BaseCountType ToYouTubeSubscriber(VTuberRecord.YouTubeData? input)
+    {
         if (input == null)
             return new NoCountType();
 
@@ -150,7 +185,8 @@ public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTi
         return ToYouTubeCountType(input.hasValidRecord, sub);
     }
 
-    public ulong ToYouTubeTotalViewCount(VTuberRecord.YouTubeData? input) {
+    public ulong ToYouTubeTotalViewCount(VTuberRecord.YouTubeData? input)
+    {
         if (input == null)
             return 0;
 
@@ -159,20 +195,22 @@ public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTi
         return basicData?.TotalViewCount ?? 0;
     }
 
-    public TwitchData? ToTwitchData(VTuberRecord.TwitchData? input) {
+    public TwitchData? ToTwitchData(VTuberRecord.TwitchData? input)
+    {
         if (input == null)
             return null;
-
 
         VTuberRecord.TwitchData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
         ulong? follower = basicData?.FollowerCount;
 
         return new TwitchData(
             id: input.ChannelName,
-            follower: ToTwitchCountType(input.hasValidRecord, follower));
+            follower: ToTwitchCountType(input.hasValidRecord, follower)
+        );
     }
 
-    public TwitchPopularityData? ToTwitchPopularityData(VTuberRecord.TwitchData? input) {
+    public TwitchPopularityData? ToTwitchPopularityData(VTuberRecord.TwitchData? input)
+    {
         if (input == null)
             return null;
 
@@ -185,10 +223,12 @@ public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTi
         return new TwitchPopularityData(
             id: input.ChannelName,
             follower: ToTwitchCountType(input.hasValidRecord, follower),
-            popularity: popularity);
-
+            popularity: popularity
+        );
     }
-    public ulong ToTwitchPopularity(VTuberRecord.TwitchData? input) {
+
+    public ulong ToTwitchPopularity(VTuberRecord.TwitchData? input)
+    {
         if (input == null)
             return 0;
 
@@ -197,29 +237,34 @@ public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTi
         return record?.RecentMedianViewCount ?? 0;
     }
 
-    public ulong ToCombinedTotalPopularity(VTuberRecord? input) {
+    public ulong ToCombinedTotalPopularity(VTuberRecord? input)
+    {
         if (input == null)
             return 0;
 
         return ToYouTubeTotalPopularity(input.YouTube) + ToTwitchPopularity(input.Twitch);
     }
 
-    public ulong ToCombinedLivestreamPopulairty(VTuberRecord? input) {
+    public ulong ToCombinedLivestreamPopulairty(VTuberRecord? input)
+    {
         if (input == null)
             return 0;
 
         return ToYouTubeLivestreamPopularity(input.YouTube) + ToTwitchPopularity(input.Twitch);
     }
 
-    public ulong ToCombinedVideoPopulairty(VTuberRecord? input) {
+    public ulong ToCombinedVideoPopulairty(VTuberRecord? input)
+    {
         if (input == null)
             return 0;
 
         return ToYouTubeVideoPopularity(input.YouTube);
     }
 
-    public VideoInfo? GetPopularVideo(VTuberRecord vtuberRecord) {
-        if (vtuberRecord.YouTube == null && vtuberRecord.Twitch == null) {
+    public VideoInfo? GetPopularVideo(VTuberRecord vtuberRecord)
+    {
+        if (vtuberRecord.YouTube == null && vtuberRecord.Twitch == null)
+        {
             return null;
         }
 
@@ -228,38 +273,51 @@ public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTi
         string YouTubeVideoId = "";
         string TwitchVideoId = "";
 
-        if (vtuberRecord.YouTube != null) {
-            VTuberRecord.YouTubeData.Record? YTRecord = vtuberRecord.YouTube.GetRecord(LatestRecordTime);
+        if (vtuberRecord.YouTube != null)
+        {
+            VTuberRecord.YouTubeData.Record? YTRecord = vtuberRecord.YouTube.GetRecord(
+                LatestRecordTime
+            );
 
-            if (YTRecord != null) {
+            if (YTRecord != null)
+            {
                 YouTubeVideoViewCount = YTRecord.HighestViewCount;
                 YouTubeVideoId = YTRecord.HighestViewedVideoId;
             }
         }
 
+        if (vtuberRecord.Twitch != null)
+        {
+            VTuberRecord.TwitchData.Record? TwitchRecord = vtuberRecord.Twitch.GetRecord(
+                LatestRecordTime
+            );
 
-        if (vtuberRecord.Twitch != null) {
-            VTuberRecord.TwitchData.Record? TwitchRecord = vtuberRecord.Twitch.GetRecord(LatestRecordTime);
-
-            if (TwitchRecord != null) {
+            if (TwitchRecord != null)
+            {
                 TwitchVideoViewCount = TwitchRecord.HighestViewCount;
                 TwitchVideoId = TwitchRecord.HighestViewedVideoId;
             }
         }
 
-        if (YouTubeVideoViewCount == 0 && TwitchVideoViewCount == 0) {
+        if (YouTubeVideoViewCount == 0 && TwitchVideoViewCount == 0)
+        {
             return null;
         }
 
-        if (YouTubeVideoViewCount > TwitchVideoViewCount) {
+        if (YouTubeVideoViewCount > TwitchVideoViewCount)
+        {
             return new VideoInfo(type: VideoType.YouTube, id: YouTubeVideoId);
-        } else {
+        }
+        else
+        {
             return new VideoInfo(type: VideoType.Twitch, id: TwitchVideoId);
         }
     }
 
-    private static BaseCountType ToYouTubeCountType(bool hasValidRecord, ulong? subCount) {
-        if (subCount.HasValue && hasValidRecord) {
+    private static BaseCountType ToYouTubeCountType(bool hasValidRecord, ulong? subCount)
+    {
+        if (subCount.HasValue && hasValidRecord)
+        {
             if (subCount == 0)
                 return new HiddenCountType();
 
@@ -269,8 +327,10 @@ public class DataTransform(DateTime latestRecordTime, DateTime latestBasicDataTi
         return new NoCountType();
     }
 
-    private static BaseCountType ToTwitchCountType(bool hasValidRecord, ulong? followerCount) {
-        if (followerCount.HasValue && hasValidRecord) {
+    private static BaseCountType ToTwitchCountType(bool hasValidRecord, ulong? followerCount)
+    {
+        if (followerCount.HasValue && hasValidRecord)
+        {
             return new HasCountType(_count: followerCount.Value);
         }
 
