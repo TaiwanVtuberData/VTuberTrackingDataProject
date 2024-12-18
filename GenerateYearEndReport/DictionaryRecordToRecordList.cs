@@ -112,6 +112,90 @@ public class DictionaryRecordToRecordList(
         return rLst;
     }
 
+    public List<YearEndVTuberViewCountGrowthData> VTubersViewCountChange(
+        int? count,
+        GrowingVTubersFilterOption growingVTubersFilterOption
+    )
+    {
+        Dictionary<VTuberId, YearEndYouTubeViewCountGrowthData> dictGrowth = new(DictRecord.Count);
+
+        foreach (KeyValuePair<VTuberId, VTuberRecord> vtuberStatPair in DictRecord)
+        {
+            VTuberId id = vtuberStatPair.Key;
+            VTuberRecord record = vtuberStatPair.Value;
+
+            if (record.YouTube == null)
+            {
+                continue;
+            }
+
+            if (!MatchFilter(record.DebutDate, growingVTubersFilterOption))
+            {
+                continue;
+            }
+
+            DictionaryRecord.GrowthResult _365DaysResult = DictRecord.GetYouTubeViewCountGrowth(
+                id,
+                days: 365,
+                daysLimit: 1
+            );
+
+            YearEndYouTubeViewCountGrowthData growthData =
+                new(
+                    id: record.YouTube.ChannelId,
+                    totalViewCount: dataTransform.ToYouTubeTotalViewCount(record.YouTube),
+                    _365DaysGrowth: new GrowthData(
+                        diff: _365DaysResult.Growth,
+                        recordType: GetGrowthResultToString(_365DaysResult.GrowthType)
+                    ),
+                    Nationality: record.Nationality
+                );
+
+            dictGrowth.Add(id, growthData);
+        }
+
+        List<YearEndVTuberViewCountGrowthData> rLst = [];
+
+        foreach (
+            KeyValuePair<VTuberId, YearEndYouTubeViewCountGrowthData> growthPair in dictGrowth
+                .Where(p =>
+                    p.Value.Nationality != null && p.Value.Nationality.Contains(NationalityFilter)
+                )
+                .Where(p => p.Value.totalViewCount != 0)
+                .Where(p => p.Value._365DaysGrowth.diff >= 0)
+                .Where(p => DictRecord[p.Key].YouTube != null)
+                .OrderByDescending(p => p.Value._365DaysGrowth.diff)
+                .Take(count ?? int.MaxValue)
+        )
+        {
+            VTuberId id = growthPair.Key;
+            YearEndYouTubeViewCountGrowthData youTubeGrowthData = growthPair.Value;
+
+            VTuberRecord record = DictRecord[id];
+
+            YearEndVTuberViewCountGrowthData vTuberData =
+                new(
+                    id: record.Id,
+                    activity: CommonActivityToJsonActivity(record.Activity),
+                    name: record.DisplayName,
+                    imgUrl: record.ImageUrl,
+                    YouTube: new YearEndYouTubeViewCountGrowthData(
+                        id: youTubeGrowthData.id,
+                        totalViewCount: youTubeGrowthData.totalViewCount,
+                        _365DaysGrowth: youTubeGrowthData._365DaysGrowth,
+                        Nationality: null
+                    ),
+                    Twitch: dataTransform.ToTwitchData(record.Twitch),
+                    group: record.GroupName,
+                    nationality: record.Nationality
+                );
+
+            rLst.Add(vTuberData);
+        }
+
+        return rLst;
+    }
+
     private static bool MatchFilter(
         DateOnly? debutDate,
         GrowingVTubersFilterOption growingVTubersFilterOption

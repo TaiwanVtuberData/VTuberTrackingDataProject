@@ -37,6 +37,16 @@ public class DataTransform(DateTimeOffset latestRecordTime, DateTimeOffset lates
         );
     }
 
+    public ulong ToYouTubeTotalViewCount(VTuberRecord.YouTubeData? input)
+    {
+        if (input == null)
+            return 0;
+
+        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+
+        return basicData?.TotalViewCount ?? 0;
+    }
+
     private static BaseCountType ToYouTubeCountType(bool hasValidRecord, ulong? subCount)
     {
         if (subCount.HasValue && hasValidRecord)

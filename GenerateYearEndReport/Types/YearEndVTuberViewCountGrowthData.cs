@@ -1,19 +1,21 @@
 ﻿using System.Text.Json.Serialization;
 using Common.Types.Basic;
 using Common.Utils;
+using GenerateRecordList.Types;
 
-namespace GenerateRecordList.Types;
+namespace GenerateYearEndReport.Types;
 
-public record VTuberViewCountGrowthData(
+public record YearEndVTuberViewCountGrowthData(
     [property: JsonConverter(typeof(VTuberIdJsonConverter))] VTuberId id,
     Activity activity,
     string name,
     string? imgUrl,
-    YouTubeViewCountGrowthData? YouTube,
+    YearEndYouTubeViewCountGrowthData? YouTube,
     TwitchData? Twitch,
-    VideoInfo? popularVideo,
     string? group,
     string? nationality
 );
 
-public record VTuberViewCountChangeDataResponse(List<VTuberViewCountGrowthData> VTubers);
+public record YearEndVTuberViewCountChangeDataResponse(
+    List<YearEndVTuberViewCountGrowthData> VTubers
+);
