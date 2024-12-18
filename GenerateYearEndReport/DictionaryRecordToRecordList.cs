@@ -187,7 +187,8 @@ public class DictionaryRecordToRecordList(
                     ),
                     Twitch: dataTransform.ToTwitchData(record.Twitch),
                     group: record.GroupName,
-                    nationality: record.Nationality
+                    nationality: record.Nationality,
+                    debutDate: record.DebutDate?.ToString(Constant.DATE_FORMAT)
                 );
 
             rLst.Add(vTuberData);

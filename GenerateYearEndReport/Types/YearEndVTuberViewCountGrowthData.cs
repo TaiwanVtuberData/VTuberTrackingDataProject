@@ -13,7 +13,8 @@ public record YearEndVTuberViewCountGrowthData(
     YearEndYouTubeViewCountGrowthData? YouTube,
     TwitchData? Twitch,
     string? group,
-    string? nationality
+    string? nationality,
+    string? debutDate
 );
 
 public record YearEndVTuberViewCountChangeDataResponse(
