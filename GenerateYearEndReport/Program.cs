@@ -33,16 +33,23 @@ class Program
         string? CURRENT_TIME = Environment.GetEnvironmentVariable("CURRENT_TIME");
         Console.WriteLine($"CURRENT_TIME: {CURRENT_TIME}");
 
+        string? DEBUT_DATE_THRESHOLD = Environment.GetEnvironmentVariable("DEBUT_DATE_THRESHOLD");
+        Console.WriteLine($"DEBUT_DATE_THRESHOLD: {DEBUT_DATE_THRESHOLD}");
+
         string? DATA_REPO_DIRECTORY = Environment.GetEnvironmentVariable("DATA_REPO_DIRECTORY");
         Console.WriteLine($"DATA_REPO_DIRECTORY: {DATA_REPO_DIRECTORY}");
 
         string? OUTPUT_DIRECTORY = Environment.GetEnvironmentVariable("OUTPUT_DIRECTORY");
         Console.WriteLine($"OUTPUT_DIRECTORY: {OUTPUT_DIRECTORY}");
 
-        if (CURRENT_TIME == null || DATA_REPO_DIRECTORY == null || OUTPUT_DIRECTORY == null)
+        if (
+            CURRENT_TIME == null
+            || DEBUT_DATE_THRESHOLD == null | DATA_REPO_DIRECTORY == null
+            || OUTPUT_DIRECTORY == null
+        )
         {
             Console.WriteLine(
-                "Environment variables [CURRENT_TIME], [DATA_REPO_DIRECTORY] and/or [OUTPUT_DIRECTORY] missing. Abort program."
+                "Environment variables [CURRENT_TIME], [DEBUT_DATE_THRESHOLD], [DATA_REPO_DIRECTORY] and/or [OUTPUT_DIRECTORY] missing. Abort program."
             );
             return;
         }
@@ -71,6 +78,21 @@ class Program
             return;
         }
         Console.WriteLine($"Current Time is [{currentTime}].");
+
+        if (
+            !DateOnly.TryParseExact(
+                s: DEBUT_DATE_THRESHOLD,
+                format: @"yyyy-MM-dd",
+                result: out DateOnly debutDateThreshold
+            )
+        )
+        {
+            Console.WriteLine(
+                $"DEBUT_DATE_THRESHOLD [{DEBUT_DATE_THRESHOLD}] format ivaild. Expected: [yyyy-MM-dd]. Abort program."
+            );
+            return;
+        }
+        Console.WriteLine($"Debut Date Threshold is [{debutDateThreshold}].");
 
         // load data
 
@@ -109,14 +131,14 @@ class Program
             ref dictRecord,
             recordDir: DATA_REPO_DIRECTORY,
             targetTime: latestRecordTime,
-            recentDays: 370
+            recentDays: 365
         );
 
         MiscUtils.FillBasicDataOnlyNecessary(
             ref dictRecord,
             basicDataDir: DATA_REPO_DIRECTORY,
             targetTime: latestBasicDataTime,
-            recentDays: 370
+            recentDays: 365
         );
 
         // write result as JSON
@@ -146,10 +168,34 @@ class Program
             )
             {
                 WriteJson(
-                    transformer.GrowingVTubers(count: tuple.Item1),
+                    transformer.GrowingVTubers(
+                        count: tuple.Item1,
+                        growingVTubersFilterOption: new DictionaryRecordToRecordList.GrowingVTubersFilterOption(
+                            DictionaryRecordToRecordList.FilterOption.Before,
+                            debutDateThreshold
+                        )
+                    ),
                     OUTPUT_DIRECTORY,
                     nationality.Item2,
-                    $"growing-vtubers/{tuple.Item2}.json"
+                    $"growing-established-vtubers/{tuple.Item2}.json"
+                );
+            }
+
+            foreach (
+                var tuple in new List<(int?, string)> { (10, "10"), (100, "100"), (null, "all") }
+            )
+            {
+                WriteJson(
+                    transformer.GrowingVTubers(
+                        count: tuple.Item1,
+                        growingVTubersFilterOption: new DictionaryRecordToRecordList.GrowingVTubersFilterOption(
+                            DictionaryRecordToRecordList.FilterOption.AfterOrEqual,
+                            debutDateThreshold
+                        )
+                    ),
+                    OUTPUT_DIRECTORY,
+                    nationality.Item2,
+                    $"growing-new-vtubers/{tuple.Item2}.json"
                 );
             }
         }

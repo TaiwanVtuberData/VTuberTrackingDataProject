@@ -23,7 +23,18 @@ public class DictionaryRecordToRecordList(
     private readonly DataTransform dataTransform = new(latestRecordTime, latestBasicDataTime);
     private readonly string NationalityFilter = nationalityFilter;
 
-    public List<YearEndVTuberGrowthData> GrowingVTubers(int? count)
+    public enum FilterOption
+    {
+        Before,
+        AfterOrEqual,
+    }
+
+    public record GrowingVTubersFilterOption(FilterOption FilterOption, DateOnly DebutDate) { }
+
+    public List<YearEndVTuberGrowthData> GrowingVTubers(
+        int? count,
+        GrowingVTubersFilterOption growingVTubersFilterOption
+    )
     {
         Dictionary<VTuberId, YearEndYouTubeGrowthData> dictGrowth = new(DictRecord.Count);
 
@@ -33,6 +44,11 @@ public class DictionaryRecordToRecordList(
             VTuberRecord record = vtuberStatPair.Value;
 
             if (record.YouTube == null)
+            {
+                continue;
+            }
+
+            if (!MatchFilter(record.DebutDate, growingVTubersFilterOption))
             {
                 continue;
             }
@@ -94,6 +110,34 @@ public class DictionaryRecordToRecordList(
         }
 
         return rLst;
+    }
+
+    private static bool MatchFilter(
+        DateOnly? debutDate,
+        GrowingVTubersFilterOption growingVTubersFilterOption
+    )
+    {
+        // consider VTubers without debut date to be before any date
+        if (debutDate == null)
+        {
+            switch (growingVTubersFilterOption.FilterOption)
+            {
+                case FilterOption.Before:
+                    return true;
+                case FilterOption.AfterOrEqual:
+                    return false;
+            }
+        }
+
+        switch (growingVTubersFilterOption.FilterOption)
+        {
+            case FilterOption.Before:
+                return debutDate < growingVTubersFilterOption.DebutDate;
+            case FilterOption.AfterOrEqual:
+                return debutDate >= growingVTubersFilterOption.DebutDate;
+        }
+
+        return false;
     }
 
     private static GrowthRecordType GetGrowthResultToString(DictionaryRecord.GrowthType growthType)

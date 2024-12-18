@@ -1,4 +1,5 @@
-﻿using Common.Types;
+﻿using System.Collections.Generic;
+using Common.Types;
 using Common.Types.Basic;
 using Common.Utils;
 using GenerateRecordList.Types;
@@ -70,29 +71,22 @@ public class MiscUtils
             recentDays: recentDays
         );
 
-        foreach (Tuple<FileInfo, DateTimeOffset> fileInfoDateTime in csvFileList)
+        List<Tuple<FileInfo, DateTimeOffset>> csvFileListOfInterest =
+        [
+            csvFileList.MinBy(e => e.Item2),
+            csvFileList.Find(e => e.Item2 == targetTime),
+            FindClosestDateTime(csvFileList, targetTime.AddDays(-recentDays), TimeSpan.FromDays(0)),
+        ];
+
+        foreach (
+            Tuple<FileInfo, DateTimeOffset> fileInfoDateTime in csvFileListOfInterest.ToHashSet()
+        )
         {
-            if (fileInfoDateTime.Item2 == targetTime)
-            {
-                Dictionary<VTuberId, VTuberStatistics> dictStatistics =
-                    CsvUtility.ReadStatisticsDictionary(fileInfoDateTime.Item1.FullName);
+            Dictionary<VTuberId, VTuberStatistics> dictStatistics =
+                CsvUtility.ReadStatisticsDictionary(fileInfoDateTime.Item1.FullName);
 
-                dictRecord.AppendStatistic(fileInfoDateTime.Item2, dictStatistics);
-                dictRecord.AppendBasicData(fileInfoDateTime.Item2, dictStatistics);
-            }
-
-            TimeSpan duration = fileInfoDateTime.Item2 - targetTime;
-            if (
-                TimeSpan.FromDays(-recentDays) < duration
-                && duration < TimeSpan.FromDays(-recentDays + 15)
-            )
-            {
-                Dictionary<VTuberId, VTuberStatistics> dictStatistics =
-                    CsvUtility.ReadStatisticsDictionary(fileInfoDateTime.Item1.FullName);
-
-                dictRecord.AppendStatistic(fileInfoDateTime.Item2, dictStatistics);
-                dictRecord.AppendBasicData(fileInfoDateTime.Item2, dictStatistics);
-            }
+            dictRecord.AppendStatistic(fileInfoDateTime.Item2, dictStatistics);
+            dictRecord.AppendBasicData(fileInfoDateTime.Item2, dictStatistics);
         }
     }
 
@@ -138,29 +132,45 @@ public class MiscUtils
             recentDays: recentDays
         );
 
-        foreach (Tuple<FileInfo, DateTimeOffset> fileInfoDateTime in csvFileList)
+        List<Tuple<FileInfo, DateTimeOffset>> csvFileListOfInterest =
+        [
+            csvFileList.MinBy(e => e.Item2),
+            csvFileList.Find(e => e.Item2 == targetTime),
+            FindClosestDateTime(csvFileList, targetTime, TimeSpan.FromDays(-recentDays)),
+        ];
+
+        foreach (
+            Tuple<FileInfo, DateTimeOffset> fileInfoDateTime in csvFileListOfInterest.ToHashSet()
+        )
         {
-            if (fileInfoDateTime.Item2 == targetTime)
+            Dictionary<VTuberId, VTuberBasicData> dictBasicData = VTuberBasicData.ReadFromCsv(
+                fileInfoDateTime.Item1.FullName
+            );
+
+            dictRecord.AppendBasicData(fileInfoDateTime.Item2, dictBasicData);
+        }
+    }
+
+    private static Tuple<FileInfo, DateTimeOffset> FindClosestDateTime(
+        List<Tuple<FileInfo, DateTimeOffset>> csvFileList,
+        DateTimeOffset target,
+        TimeSpan timeSpan
+    )
+    {
+        TimeSpan minTimeSpan = TimeSpan.MaxValue;
+        int minIndex = -1;
+        for (int i = 0; i < csvFileList.Count; i++)
+        {
+            TimeSpan timeDifference = (
+                timeSpan - (target - csvFileList[i].Item2).Duration()
+            ).Duration();
+            if (minTimeSpan > timeDifference)
             {
-                Dictionary<VTuberId, VTuberBasicData> dictBasicData = VTuberBasicData.ReadFromCsv(
-                    fileInfoDateTime.Item1.FullName
-                );
-
-                dictRecord.AppendBasicData(fileInfoDateTime.Item2, dictBasicData);
-            }
-
-            TimeSpan duration = fileInfoDateTime.Item2 - targetTime;
-            if (
-                TimeSpan.FromDays(-recentDays) < duration
-                && duration < TimeSpan.FromDays(-recentDays + 15)
-            )
-            {
-                Dictionary<VTuberId, VTuberBasicData> dictBasicData = VTuberBasicData.ReadFromCsv(
-                    fileInfoDateTime.Item1.FullName
-                );
-
-                dictRecord.AppendBasicData(fileInfoDateTime.Item2, dictBasicData);
+                minTimeSpan = timeDifference;
+                minIndex = i;
             }
         }
+
+        return csvFileList[minIndex];
     }
 }
