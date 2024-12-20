@@ -662,8 +662,8 @@ public class DictionaryRecordToRecordList
                     continue;
 
                 totalPopularity += dataTransform.ToCombinedTotalPopularity(record);
-                livestreamPopularity += dataTransform.ToCombinedLivestreamPopulairty(record);
-                videoPopularity += dataTransform.ToCombinedVideoPopulairty(record);
+                livestreamPopularity += dataTransform.ToCombinedLivestreamPopularity(record);
+                videoPopularity += dataTransform.ToCombinedVideoPopularity(record);
 
                 Types.VTuberData vTuberData =
                     new(

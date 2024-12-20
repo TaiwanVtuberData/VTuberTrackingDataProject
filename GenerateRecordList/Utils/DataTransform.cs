@@ -245,7 +245,7 @@ public class DataTransform(DateTimeOffset latestRecordTime, DateTimeOffset lates
         return ToYouTubeTotalPopularity(input.YouTube) + ToTwitchPopularity(input.Twitch);
     }
 
-    public ulong ToCombinedLivestreamPopulairty(VTuberRecord? input)
+    public ulong ToCombinedLivestreamPopularity(VTuberRecord? input)
     {
         if (input == null)
             return 0;
@@ -253,7 +253,7 @@ public class DataTransform(DateTimeOffset latestRecordTime, DateTimeOffset lates
         return ToYouTubeLivestreamPopularity(input.YouTube) + ToTwitchPopularity(input.Twitch);
     }
 
-    public ulong ToCombinedVideoPopulairty(VTuberRecord? input)
+    public ulong ToCombinedVideoPopularity(VTuberRecord? input)
     {
         if (input == null)
             return 0;

@@ -299,6 +299,77 @@ public class DictionaryRecord : Dictionary<VTuberId, VTuberRecord>
         }
     }
 
+    public GrowthResult GetTwitchFollowerCountGrowth(VTuberId id, int days, int daysLimit)
+    {
+        // at least one(1) day interval
+        daysLimit = Math.Max(1, daysLimit);
+
+        VTuberRecord.TwitchData? twitchData = this[id].Twitch;
+        if (twitchData == null)
+            return new GrowthResult();
+
+        Dictionary<DateTimeOffset, VTuberRecord.TwitchData.BasicData>.KeyCollection lstDateTime =
+            twitchData.GetBasicDataDateTimes();
+        if (lstDateTime.Count <= 0)
+            return new GrowthResult();
+
+        DateTimeOffset latestDateTime = lstDateTime.Max();
+        DateTimeOffset earliestDateTime = lstDateTime.Min();
+        DateTimeOffset targetDateTime = latestDateTime - TimeSpan.FromDays(days);
+        DateTimeOffset foundDateTime = lstDateTime.Aggregate(
+            (x, y) => (x - targetDateTime).Duration() < (y - targetDateTime).Duration() ? x : y
+        );
+
+        VTuberRecord.TwitchData.BasicData? targetBasicData = twitchData.GetBasicData(foundDateTime);
+        ulong targetFollowerCount = targetBasicData?.FollowerCount ?? 0;
+        // previously 0 follower count doesn't count as growth
+        if (targetFollowerCount == 0)
+        {
+            return new GrowthResult();
+        }
+
+        VTuberRecord.TwitchData.BasicData? currentBasicData = twitchData.GetBasicData(
+            latestDateTime
+        );
+        ulong currentFollowerCount = currentBasicData?.FollowerCount ?? 0;
+
+        // return result
+        long rGrowth = (long)currentFollowerCount - (long)targetFollowerCount;
+
+        decimal rGrowthRate;
+        if (currentFollowerCount != 0)
+            rGrowthRate = (decimal)rGrowth / currentFollowerCount;
+        else
+            rGrowthRate = 0m;
+
+        TimeSpan foundTimeDifference = (foundDateTime - targetDateTime).Duration();
+        if (foundTimeDifference < TimeSpan.FromDays(1))
+        {
+            return new GrowthResult
+            {
+                GrowthType = GrowthType.Found,
+                Growth = rGrowth,
+                GrowthRate = rGrowthRate,
+            };
+        }
+        else if (
+            foundTimeDifference
+            < new TimeSpan(days: (days - daysLimit), hours: 0, minutes: 0, seconds: 0)
+        )
+        {
+            return new GrowthResult
+            {
+                GrowthType = GrowthType.NotExact,
+                Growth = rGrowth,
+                GrowthRate = rGrowthRate,
+            };
+        }
+        else
+        {
+            return new GrowthResult();
+        }
+    }
+
     public GrowthResult GetYouTubeViewCountGrowth(VTuberId id, int days, int daysLimit)
     {
         // at least one(1) day interval

@@ -168,7 +168,7 @@ class Program
             )
             {
                 WriteJson(
-                    transformer.GrowingVTubers(
+                    transformer.YouTubeGrowingVTubers(
                         count: tuple.Item1,
                         growingVTubersFilterOption: new DictionaryRecordToRecordList.GrowingVTubersFilterOption(
                             DictionaryRecordToRecordList.FilterOption.Before,
@@ -177,11 +177,11 @@ class Program
                     ),
                     OUTPUT_DIRECTORY,
                     nationality.Item2,
-                    $"growing-vtubers/established/{tuple.Item2}.json"
+                    $"growing-vtubers/youtube/established/{tuple.Item2}.json"
                 );
 
                 WriteJson(
-                    transformer.GrowingVTubers(
+                    transformer.YouTubeGrowingVTubers(
                         count: tuple.Item1,
                         growingVTubersFilterOption: new DictionaryRecordToRecordList.GrowingVTubersFilterOption(
                             DictionaryRecordToRecordList.FilterOption.AfterOrEqual,
@@ -190,11 +190,11 @@ class Program
                     ),
                     OUTPUT_DIRECTORY,
                     nationality.Item2,
-                    $"growing-vtubers/new/{tuple.Item2}.json"
+                    $"growing-vtubers/youtube/new/{tuple.Item2}.json"
                 );
 
                 WriteJson(
-                    transformer.VTubersViewCountChange(
+                    transformer.TwitchGrowingVTubers(
                         count: tuple.Item1,
                         growingVTubersFilterOption: new DictionaryRecordToRecordList.GrowingVTubersFilterOption(
                             DictionaryRecordToRecordList.FilterOption.Before,
@@ -203,11 +203,11 @@ class Program
                     ),
                     OUTPUT_DIRECTORY,
                     nationality.Item2,
-                    $"vtubers-view-count-change/established/{tuple.Item2}.json"
+                    $"growing-vtubers/twitch/established/{tuple.Item2}.json"
                 );
 
                 WriteJson(
-                    transformer.VTubersViewCountChange(
+                    transformer.TwitchGrowingVTubers(
                         count: tuple.Item1,
                         growingVTubersFilterOption: new DictionaryRecordToRecordList.GrowingVTubersFilterOption(
                             DictionaryRecordToRecordList.FilterOption.AfterOrEqual,
@@ -216,7 +216,33 @@ class Program
                     ),
                     OUTPUT_DIRECTORY,
                     nationality.Item2,
-                    $"vtubers-view-count-change/new/{tuple.Item2}.json"
+                    $"growing-vtubers/twitch/new/{tuple.Item2}.json"
+                );
+
+                WriteJson(
+                    transformer.YouTubeVTubersViewCountChange(
+                        count: tuple.Item1,
+                        growingVTubersFilterOption: new DictionaryRecordToRecordList.GrowingVTubersFilterOption(
+                            DictionaryRecordToRecordList.FilterOption.Before,
+                            debutDateThreshold
+                        )
+                    ),
+                    OUTPUT_DIRECTORY,
+                    nationality.Item2,
+                    $"vtubers-view-count-change/youtube/established/{tuple.Item2}.json"
+                );
+
+                WriteJson(
+                    transformer.YouTubeVTubersViewCountChange(
+                        count: tuple.Item1,
+                        growingVTubersFilterOption: new DictionaryRecordToRecordList.GrowingVTubersFilterOption(
+                            DictionaryRecordToRecordList.FilterOption.AfterOrEqual,
+                            debutDateThreshold
+                        )
+                    ),
+                    OUTPUT_DIRECTORY,
+                    nationality.Item2,
+                    $"vtubers-view-count-change/youtube/new/{tuple.Item2}.json"
                 );
             }
         }
@@ -234,14 +260,14 @@ class Program
     }
 
     private static void WriteJson(
-        List<YearEndVTuberGrowthData> lstVTuberData,
+        List<YearEndVTuberYouTubeGrowthData> lstVTuberData,
         string outputDirectory,
         string nationality,
         string outputFilePath
     )
     {
         WriteJsonString(
-            GetJsonString(new YearEndVTuberGrowthDataResponse(VTubers: lstVTuberData)),
+            GetJsonString(new YearEndVTuberYouTubeGrowthDataResponse(VTubers: lstVTuberData)),
             outputDirectory,
             nationality,
             outputFilePath
@@ -249,7 +275,22 @@ class Program
     }
 
     private static void WriteJson(
-        List<YearEndVTuberViewCountGrowthData> lstVTuberData,
+        List<YearEndVTuberTwitchGrowthData> lstVTuberData,
+        string outputDirectory,
+        string nationality,
+        string outputFilePath
+    )
+    {
+        WriteJsonString(
+            GetJsonString(new YearEndVTuberTwitchGrowthDataResponse(VTubers: lstVTuberData)),
+            outputDirectory,
+            nationality,
+            outputFilePath
+        );
+    }
+
+    private static void WriteJson(
+        List<YearEndVTuberYouTubeViewCountGrowthData> lstVTuberData,
         string outputDirectory,
         string nationality,
         string outputFilePath

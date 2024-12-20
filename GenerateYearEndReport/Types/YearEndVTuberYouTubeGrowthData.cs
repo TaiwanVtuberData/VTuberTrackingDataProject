@@ -5,18 +5,16 @@ using GenerateRecordList.Types;
 
 namespace GenerateYearEndReport.Types;
 
-public record YearEndVTuberViewCountGrowthData(
+public record YearEndVTuberYouTubeGrowthData(
     [property: JsonConverter(typeof(VTuberIdJsonConverter))] VTuberId id,
     Activity activity,
     string name,
     string? imgUrl,
-    YearEndYouTubeViewCountGrowthData? YouTube,
+    YearEndYouTubeGrowthData? YouTube,
     TwitchData? Twitch,
     string? group,
     string? nationality,
     string? debutDate
 );
 
-public record YearEndVTuberViewCountChangeDataResponse(
-    List<YearEndVTuberViewCountGrowthData> VTubers
-);
+public record YearEndVTuberYouTubeGrowthDataResponse(List<YearEndVTuberYouTubeGrowthData> VTubers);

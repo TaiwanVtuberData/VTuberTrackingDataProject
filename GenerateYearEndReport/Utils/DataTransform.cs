@@ -23,6 +23,31 @@ public class DataTransform(DateTimeOffset latestRecordTime, DateTimeOffset lates
         return ToYouTubeCountType(input.hasValidRecord, sub);
     }
 
+    public YouTubeData? ToYouTubeData(VTuberRecord.YouTubeData? input)
+    {
+        if (input == null)
+            return null;
+
+        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        ulong? sub = basicData?.SubscriberCount;
+
+        return new YouTubeData(
+            id: input.ChannelId,
+            subscriber: ToYouTubeCountType(input.hasValidRecord, sub)
+        );
+    }
+
+    public BaseCountType ToTwitchFollower(VTuberRecord.TwitchData? input)
+    {
+        if (input == null)
+            return new NoCountType();
+
+        VTuberRecord.TwitchData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        ulong? follower = basicData?.FollowerCount ?? null;
+
+        return ToTwitchCountType(input.hasValidRecord, follower);
+    }
+
     public TwitchData? ToTwitchData(VTuberRecord.TwitchData? input)
     {
         if (input == null)

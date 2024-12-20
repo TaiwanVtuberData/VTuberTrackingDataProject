@@ -131,6 +131,11 @@ public class VTuberRecord
                 return null;
             }
         }
+
+        public Dictionary<DateTimeOffset, BasicData>.KeyCollection GetBasicDataDateTimes()
+        {
+            return DictBasicData.Keys;
+        }
     }
 
     public TwitchData? Twitch { get; set; }
