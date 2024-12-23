@@ -30,8 +30,11 @@ class Program
 
     static void Main()
     {
-        string? CURRENT_TIME = Environment.GetEnvironmentVariable("CURRENT_TIME");
-        Console.WriteLine($"CURRENT_TIME: {CURRENT_TIME}");
+        string? START_TIME = Environment.GetEnvironmentVariable("START_TIME");
+        Console.WriteLine($"START_TIME: {START_TIME}");
+
+        string? END_TIME = Environment.GetEnvironmentVariable("END_TIME");
+        Console.WriteLine($"END_TIME: {END_TIME}");
 
         string? DEBUT_DATE_THRESHOLD = Environment.GetEnvironmentVariable("DEBUT_DATE_THRESHOLD");
         Console.WriteLine($"DEBUT_DATE_THRESHOLD: {DEBUT_DATE_THRESHOLD}");
@@ -43,13 +46,14 @@ class Program
         Console.WriteLine($"OUTPUT_DIRECTORY: {OUTPUT_DIRECTORY}");
 
         if (
-            CURRENT_TIME == null
+            START_TIME == null
+            || END_TIME == null
             || DEBUT_DATE_THRESHOLD == null | DATA_REPO_DIRECTORY == null
             || OUTPUT_DIRECTORY == null
         )
         {
             Console.WriteLine(
-                "Environment variables [CURRENT_TIME], [DEBUT_DATE_THRESHOLD], [DATA_REPO_DIRECTORY] and/or [OUTPUT_DIRECTORY] missing. Abort program."
+                "Environment variables [START_TIME], [END_TIME], [DEBUT_DATE_THRESHOLD], [DATA_REPO_DIRECTORY] and/or [OUTPUT_DIRECTORY] missing. Abort program."
             );
             return;
         }
@@ -64,20 +68,40 @@ class Program
 
         if (
             !DateTimeOffset.TryParseExact(
-                input: CURRENT_TIME,
+                input: START_TIME,
                 format: @"yyyy-MM-ddTHH:mm:ss",
                 formatProvider: CultureInfo.InvariantCulture,
                 styles: DateTimeStyles.AssumeLocal,
-                result: out DateTimeOffset currentTime
+                result: out DateTimeOffset startTime
             )
         )
         {
             Console.WriteLine(
-                $"CURRENT_TIME [{CURRENT_TIME}] format ivaild. Expected: [yyyy-MM-ddTHH-mm-ss]. Abort program."
+                $"START_TIME [{START_TIME}] format invalid. Expected: [yyyy-MM-ddTHH-mm-ss]. Abort program."
             );
             return;
         }
-        Console.WriteLine($"Current Time is [{currentTime}].");
+        Console.WriteLine($"Start Time is [{startTime}].");
+
+        if (
+            !DateTimeOffset.TryParseExact(
+                input: END_TIME,
+                format: @"yyyy-MM-ddTHH:mm:ss",
+                formatProvider: CultureInfo.InvariantCulture,
+                styles: DateTimeStyles.AssumeLocal,
+                result: out DateTimeOffset endTime
+            )
+        )
+        {
+            Console.WriteLine(
+                $"END_TIME [{END_TIME}] format invalid. Expected: [yyyy-MM-ddTHH-mm-ss]. Abort program."
+            );
+            return;
+        }
+        Console.WriteLine($"End Time is [{endTime}].");
+
+        int recentDays = (endTime - startTime).Days;
+        Console.WriteLine($"endTime - startTime is [{recentDays}].");
 
         if (
             !DateOnly.TryParseExact(
@@ -88,7 +112,7 @@ class Program
         )
         {
             Console.WriteLine(
-                $"DEBUT_DATE_THRESHOLD [{DEBUT_DATE_THRESHOLD}] format ivaild. Expected: [yyyy-MM-dd]. Abort program."
+                $"DEBUT_DATE_THRESHOLD [{DEBUT_DATE_THRESHOLD}] format invalid. Expected: [yyyy-MM-dd]. Abort program."
             );
             return;
         }
@@ -96,14 +120,14 @@ class Program
 
         // load data
 
-        List<VTuberId> excluedList = FileUtility.GetListFromCsv(
+        List<VTuberId> excludeList = FileUtility.GetListFromCsv(
             Path.Combine(DATA_REPO_DIRECTORY, "DATA/EXCLUDE_LIST.csv")
         );
 
         TrackList trackList =
             new(
                 Path.Combine(DATA_REPO_DIRECTORY, "DATA/TW_VTUBER_TRACK_LIST.csv"),
-                lstExcludeId: excluedList,
+                lstExcludeId: excludeList,
                 throwOnValidationFail: true
             );
 
@@ -111,7 +135,7 @@ class Program
             FileUtility.GetLatestRecord(
                 directory: DATA_REPO_DIRECTORY,
                 prefix: "basic-data",
-                beforeDateTime: currentTime
+                beforeDateTime: endTime
             );
 
         Dictionary<VTuberId, VTuberBasicData> dictBasicData = VTuberBasicData.ReadFromCsv(
@@ -121,24 +145,24 @@ class Program
         (_, DateTimeOffset latestRecordTime) = FileUtility.GetLatestRecord(
             directory: DATA_REPO_DIRECTORY,
             prefix: "record",
-            beforeDateTime: currentTime
+            beforeDateTime: endTime
         );
 
         // generate data
-        DictionaryRecord dictRecord = new(trackList, excluedList, dictBasicData);
+        DictionaryRecord dictRecord = new(trackList, excludeList, dictBasicData);
 
         MiscUtils.FillRecordOnlyNecessary(
             ref dictRecord,
             recordDir: DATA_REPO_DIRECTORY,
             targetTime: latestRecordTime,
-            recentDays: 365
+            recentDays: recentDays
         );
 
         MiscUtils.FillBasicDataOnlyNecessary(
             ref dictRecord,
             basicDataDir: DATA_REPO_DIRECTORY,
             targetTime: latestBasicDataTime,
-            recentDays: 365
+            recentDays: recentDays
         );
 
         // write result as JSON
