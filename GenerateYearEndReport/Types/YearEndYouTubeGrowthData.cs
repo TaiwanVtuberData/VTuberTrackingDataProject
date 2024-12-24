@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GenerateRecordList.Types;
+﻿using GenerateRecordList.Types;
 
 namespace GenerateYearEndReport.Types;
 
 public record YearEndYouTubeGrowthData(
     string id,
     BaseCountType subscriber,
-    GrowthData _365DaysGrowth,
+    GrowthData _1YearGrowth,
     string? Nationality
 ) : YouTubeData(id: id, subscriber: subscriber);

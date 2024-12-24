@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Immutable;
-using System.Globalization;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Unicode;
-using Common.Types;
+﻿using Common.Types;
 using Common.Types.Basic;
 using Common.Utils;
 using GenerateRecordList.Types;
 using GenerateRecordList.Utils;
 using GenerateYearEndReport;
 using GenerateYearEndReport.Types;
-using LanguageExt;
+using System.Globalization;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Unicode;
 
 class Program
 {
@@ -194,6 +191,7 @@ class Program
                 WriteJson(
                     transformer.YouTubeGrowingVTubers(
                         count: tuple.Item1,
+                        recentDays: recentDays,
                         growingVTubersFilterOption: new DictionaryRecordToRecordList.GrowingVTubersFilterOption(
                             DictionaryRecordToRecordList.FilterOption.Before,
                             debutDateThreshold
@@ -207,6 +205,7 @@ class Program
                 WriteJson(
                     transformer.YouTubeGrowingVTubers(
                         count: tuple.Item1,
+                        recentDays: recentDays,
                         growingVTubersFilterOption: new DictionaryRecordToRecordList.GrowingVTubersFilterOption(
                             DictionaryRecordToRecordList.FilterOption.AfterOrEqual,
                             debutDateThreshold
@@ -220,6 +219,7 @@ class Program
                 WriteJson(
                     transformer.TwitchGrowingVTubers(
                         count: tuple.Item1,
+                        recentDays: recentDays,
                         growingVTubersFilterOption: new DictionaryRecordToRecordList.GrowingVTubersFilterOption(
                             DictionaryRecordToRecordList.FilterOption.Before,
                             debutDateThreshold
@@ -233,6 +233,7 @@ class Program
                 WriteJson(
                     transformer.TwitchGrowingVTubers(
                         count: tuple.Item1,
+                        recentDays: recentDays,
                         growingVTubersFilterOption: new DictionaryRecordToRecordList.GrowingVTubersFilterOption(
                             DictionaryRecordToRecordList.FilterOption.AfterOrEqual,
                             debutDateThreshold
@@ -246,6 +247,7 @@ class Program
                 WriteJson(
                     transformer.YouTubeVTubersViewCountChange(
                         count: tuple.Item1,
+                        recentDays: recentDays,
                         growingVTubersFilterOption: new DictionaryRecordToRecordList.GrowingVTubersFilterOption(
                             DictionaryRecordToRecordList.FilterOption.Before,
                             debutDateThreshold
@@ -259,6 +261,7 @@ class Program
                 WriteJson(
                     transformer.YouTubeVTubersViewCountChange(
                         count: tuple.Item1,
+                        recentDays: recentDays,
                         growingVTubersFilterOption: new DictionaryRecordToRecordList.GrowingVTubersFilterOption(
                             DictionaryRecordToRecordList.FilterOption.AfterOrEqual,
                             debutDateThreshold

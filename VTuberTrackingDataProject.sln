@@ -27,7 +27,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GenerateRecordListTest", "G
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GenerateAdvertisement", "GenerateAdvertisement\GenerateAdvertisement.csproj", "{73C494DB-A705-41D8-A805-DCE129EA798F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenerateYearEndReport", "GenerateYearEndReport\GenerateYearEndReport.csproj", "{6B5C4F08-EB89-4085-AB34-168B8A0E30FA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GenerateYearEndReport", "GenerateYearEndReport\GenerateYearEndReport.csproj", "{6B5C4F08-EB89-4085-AB34-168B8A0E30FA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

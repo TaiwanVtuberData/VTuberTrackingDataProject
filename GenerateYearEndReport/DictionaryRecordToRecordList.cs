@@ -33,6 +33,7 @@ public class DictionaryRecordToRecordList(
 
     public List<YearEndVTuberYouTubeGrowthData> YouTubeGrowingVTubers(
         int? count,
+        int recentDays,
         GrowingVTubersFilterOption growingVTubersFilterOption
     )
     {
@@ -53,16 +54,16 @@ public class DictionaryRecordToRecordList(
                 continue;
             }
 
-            DictionaryRecord.GrowthResult _365DaysResult =
-                DictRecord.GetYouTubeSubscriberCountGrowth(id, days: 365, daysLimit: 1);
+            DictionaryRecord.GrowthResult _1YearResult =
+                DictRecord.GetYouTubeSubscriberCountGrowth(id, days: recentDays, daysLimit: 1);
 
             YearEndYouTubeGrowthData growthData =
                 new(
                     id: record.YouTube.ChannelId,
                     subscriber: dataTransform.ToYouTubeSubscriber(record.YouTube),
-                    _365DaysGrowth: new GrowthData(
-                        diff: _365DaysResult.Growth,
-                        recordType: GetGrowthResultToString(_365DaysResult.GrowthType)
+                    _1YearGrowth: new GrowthData(
+                        diff: _1YearResult.Growth,
+                        recordType: GetGrowthResultToString(_1YearResult.GrowthType)
                     ),
                     Nationality: record.Nationality
                 );
@@ -79,7 +80,7 @@ public class DictionaryRecordToRecordList(
                 )
                 .Where(p => p.Value.subscriber.tag == CountTag.has)
                 .Where(p => DictRecord[p.Key].YouTube != null)
-                .OrderByDescending(p => p.Value._365DaysGrowth.diff)
+                .OrderByDescending(p => p.Value._1YearGrowth.diff)
                 .Take(count ?? int.MaxValue)
         )
         {
@@ -97,7 +98,7 @@ public class DictionaryRecordToRecordList(
                     YouTube: new YearEndYouTubeGrowthData(
                         id: youTubeGrowthData.id,
                         subscriber: youTubeGrowthData.subscriber,
-                        _365DaysGrowth: youTubeGrowthData._365DaysGrowth,
+                        _1YearGrowth: youTubeGrowthData._1YearGrowth,
                         Nationality: null
                     ),
                     Twitch: dataTransform.ToTwitchData(record.Twitch),
@@ -114,6 +115,7 @@ public class DictionaryRecordToRecordList(
 
     public List<YearEndVTuberTwitchGrowthData> TwitchGrowingVTubers(
         int? count,
+        int recentDays,
         GrowingVTubersFilterOption growingVTubersFilterOption
     )
     {
@@ -134,9 +136,9 @@ public class DictionaryRecordToRecordList(
                 continue;
             }
 
-            DictionaryRecord.GrowthResult _365DaysResult = DictRecord.GetTwitchFollowerCountGrowth(
+            DictionaryRecord.GrowthResult _1YearResult = DictRecord.GetTwitchFollowerCountGrowth(
                 id,
-                days: 365,
+                days: recentDays,
                 daysLimit: 1
             );
 
@@ -144,9 +146,9 @@ public class DictionaryRecordToRecordList(
                 new(
                     id: record.Twitch.ChannelId,
                     follower: dataTransform.ToTwitchFollower(record.Twitch),
-                    _365DaysGrowth: new GrowthData(
-                        diff: _365DaysResult.Growth,
-                        recordType: GetGrowthResultToString(_365DaysResult.GrowthType)
+                    _1YearGrowth: new GrowthData(
+                        diff: _1YearResult.Growth,
+                        recordType: GetGrowthResultToString(_1YearResult.GrowthType)
                     ),
                     Nationality: record.Nationality
                 );
@@ -163,7 +165,7 @@ public class DictionaryRecordToRecordList(
                 )
                 .Where(p => p.Value.follower.tag == CountTag.has)
                 .Where(p => DictRecord[p.Key].YouTube != null)
-                .OrderByDescending(p => p.Value._365DaysGrowth.diff)
+                .OrderByDescending(p => p.Value._1YearGrowth.diff)
                 .Take(count ?? int.MaxValue)
         )
         {
@@ -182,7 +184,7 @@ public class DictionaryRecordToRecordList(
                     Twitch: new YearEndTwitchGrowthData(
                         id: twitchGrowthData.id,
                         follower: twitchGrowthData.follower,
-                        _365DaysGrowth: twitchGrowthData._365DaysGrowth,
+                        _1YearGrowth: twitchGrowthData._1YearGrowth,
                         Nationality: null
                     ),
                     group: record.GroupName,
@@ -198,6 +200,7 @@ public class DictionaryRecordToRecordList(
 
     public List<YearEndVTuberYouTubeViewCountGrowthData> YouTubeVTubersViewCountChange(
         int? count,
+        int recentDays,
         GrowingVTubersFilterOption growingVTubersFilterOption
     )
     {
@@ -218,9 +221,9 @@ public class DictionaryRecordToRecordList(
                 continue;
             }
 
-            DictionaryRecord.GrowthResult _365DaysResult = DictRecord.GetYouTubeViewCountGrowth(
+            DictionaryRecord.GrowthResult _1YearResult = DictRecord.GetYouTubeViewCountGrowth(
                 id,
-                days: 365,
+                days: recentDays,
                 daysLimit: 1
             );
 
@@ -228,9 +231,9 @@ public class DictionaryRecordToRecordList(
                 new(
                     id: record.YouTube.ChannelId,
                     totalViewCount: dataTransform.ToYouTubeTotalViewCount(record.YouTube),
-                    _365DaysGrowth: new GrowthData(
-                        diff: _365DaysResult.Growth,
-                        recordType: GetGrowthResultToString(_365DaysResult.GrowthType)
+                    _1YearGrowth: new GrowthData(
+                        diff: _1YearResult.Growth,
+                        recordType: GetGrowthResultToString(_1YearResult.GrowthType)
                     ),
                     Nationality: record.Nationality
                 );
@@ -246,9 +249,9 @@ public class DictionaryRecordToRecordList(
                     p.Value.Nationality != null && p.Value.Nationality.Contains(NationalityFilter)
                 )
                 .Where(p => p.Value.totalViewCount != 0)
-                .Where(p => p.Value._365DaysGrowth.diff >= 0)
+                .Where(p => p.Value._1YearGrowth.diff >= 0)
                 .Where(p => DictRecord[p.Key].YouTube != null)
-                .OrderByDescending(p => p.Value._365DaysGrowth.diff)
+                .OrderByDescending(p => p.Value._1YearGrowth.diff)
                 .Take(count ?? int.MaxValue)
         )
         {
@@ -266,7 +269,7 @@ public class DictionaryRecordToRecordList(
                     YouTube: new YearEndYouTubeViewCountGrowthData(
                         id: youTubeGrowthData.id,
                         totalViewCount: youTubeGrowthData.totalViewCount,
-                        _365DaysGrowth: youTubeGrowthData._365DaysGrowth,
+                        _1YearGrowth: youTubeGrowthData._1YearGrowth,
                         Nationality: null
                     ),
                     Twitch: dataTransform.ToTwitchData(record.Twitch),
