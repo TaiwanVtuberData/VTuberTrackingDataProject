@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
@@ -28,10 +29,13 @@ class Program
         string? OUTPUT_DIRECTORY = Environment.GetEnvironmentVariable("OUTPUT_DIRECTORY");
         Console.WriteLine($"OUTPUT_DIRECTORY: {OUTPUT_DIRECTORY}");
 
-        if (SCHEDULE_CSV_PATH == null || OUTPUT_DIRECTORY == null)
+        string? TARGET_TIME = Environment.GetEnvironmentVariable("TARGET_TIME");
+        Console.WriteLine($"TARGET_TIME: {TARGET_TIME}");
+
+        if (SCHEDULE_CSV_PATH == null || OUTPUT_DIRECTORY == null || TARGET_TIME == null)
         {
             Console.WriteLine(
-                "Environment variables [SCHEDULE_CSV_PATH] and/or [OUTPUT_DIRECTORY] missing. Abort program."
+                "Environment variables [SCHEDULE_CSV_PATH], [OUTPUT_DIRECTORY] and/or [TARGET_TIME] missing. Abort program."
             );
             return;
         }
@@ -44,15 +48,29 @@ class Program
             return;
         }
 
-        DateTimeOffset currentTime = DateTimeOffset.Now;
-        Console.WriteLine($"Current Time is [{currentTime}].");
+        if (
+            !DateTimeOffset.TryParseExact(
+                input: TARGET_TIME,
+                format: @"yyyy-MM-ddTHH:mm:ss",
+                formatProvider: CultureInfo.InvariantCulture,
+                styles: DateTimeStyles.AssumeLocal,
+                result: out DateTimeOffset targetTime
+            )
+        )
+        {
+            Console.WriteLine(
+                $"START_TIME [{TARGET_TIME}] format invalid. Expected: [yyyy-MM-ddTHH-mm-ss]. Abort program."
+            );
+            return;
+        }
+        Console.WriteLine($"TargetTime Time is [{targetTime}].");
 
         ImmutableList<AdvertisementDetail> advertisementDetailList =
             GetAdvertisementDetailListOrThrow(SCHEDULE_CSV_PATH);
 
         Option<AdvertisementDetail> currentAdvertisementDetail = GetCurrentAdvertisementDetail(
             advertisementDetailList,
-            currentTime
+            targetTime
         );
 
         AdvertisementResponse response = OptionAdvertisementDetailToAdvertisementResponse(
