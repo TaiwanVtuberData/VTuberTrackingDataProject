@@ -32,10 +32,10 @@ class Program
         string? TARGET_TIME = Environment.GetEnvironmentVariable("TARGET_TIME");
         Console.WriteLine($"TARGET_TIME: {TARGET_TIME}");
 
-        if (SCHEDULE_CSV_PATH == null || OUTPUT_DIRECTORY == null || TARGET_TIME == null)
+        if (SCHEDULE_CSV_PATH == null || OUTPUT_DIRECTORY == null)
         {
             Console.WriteLine(
-                "Environment variables [SCHEDULE_CSV_PATH], [OUTPUT_DIRECTORY] and/or [TARGET_TIME] missing. Abort program."
+                "Environment variables [SCHEDULE_CSV_PATH], and/or [OUTPUT_DIRECTORY] missing. Abort program."
             );
             return;
         }
@@ -48,18 +48,25 @@ class Program
             return;
         }
 
-        if (
+        DateTimeOffset targetTime;
+
+        if (TARGET_TIME == null)
+        {
+            targetTime = DateTimeOffset.Now;
+            Console.WriteLine($"TARGET_TIME is null. Use current time instead.");
+        }
+        else if (
             !DateTimeOffset.TryParseExact(
                 input: TARGET_TIME,
                 format: @"yyyy-MM-ddTHH:mm:ss",
                 formatProvider: CultureInfo.InvariantCulture,
                 styles: DateTimeStyles.AssumeLocal,
-                result: out DateTimeOffset targetTime
+                result: out targetTime
             )
         )
         {
             Console.WriteLine(
-                $"START_TIME [{TARGET_TIME}] format invalid. Expected: [yyyy-MM-ddTHH-mm-ss]. Abort program."
+                $"TARGET_TIME [{TARGET_TIME}] format invalid. Expected: [yyyy-MM-ddTHH-mm-ss]. Abort program."
             );
             return;
         }
@@ -183,6 +190,9 @@ class Program
 
     private static string GetJsonString(object obj)
     {
-        return JsonSerializer.Serialize(obj, jsonSerializerOptions);
+        string payload = JsonSerializer.Serialize(obj, jsonSerializerOptions);
+
+        // WORKAROUND: replace all unicode & character to actual &
+        return payload.Replace("\\u0026", "&");
     }
 }
