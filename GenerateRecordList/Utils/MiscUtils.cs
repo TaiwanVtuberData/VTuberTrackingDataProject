@@ -49,11 +49,8 @@ public class MiscUtils
             Dictionary<VTuberId, VTuberStatistics> dictStatistics =
                 CsvUtility.ReadStatisticsDictionary(fileInfoDateTime.Item1.FullName);
 
-            if (dictStatistics.Count >= trackList.GetCount() * 0.5)
-            {
-                dictRecord.AppendStatistic(fileInfoDateTime.Item2, dictStatistics);
-                dictRecord.AppendBasicData(fileInfoDateTime.Item2, dictStatistics);
-            }
+            dictRecord.AppendStatistic(fileInfoDateTime.Item2, dictStatistics);
+            dictRecord.AppendBasicData(fileInfoDateTime.Item2, dictStatistics);
         }
     }
 
@@ -111,10 +108,7 @@ public class MiscUtils
                 fileInfoDateTime.Item1.FullName
             );
 
-            if (dictBasicData.Count >= trackList.GetCount() * 0.5)
-            {
-                dictRecord.AppendBasicData(fileInfoDateTime.Item2, dictBasicData);
-            }
+            dictRecord.AppendBasicData(fileInfoDateTime.Item2, dictBasicData);
         }
     }
 
