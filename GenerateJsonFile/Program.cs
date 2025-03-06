@@ -13,7 +13,7 @@ namespace GenerateJsonFile;
 
 class Program
 {
-    private static string OUTPUT_PATH = "";
+    private static string? OUTPUT_PATH = "";
 
     private static readonly JsonSerializerOptions jsonSerializerOptions =
         new()
@@ -30,37 +30,51 @@ class Program
 
     static void Main(string[] args)
     {
-        string dataRepoPath = args.Length >= 1 ? args[0] : "/tw_vtuber";
-        OUTPUT_PATH = args.Length >= 3 ? args[2] : "/out/api/v2";
+        string? DATA_REPO_PATH = Environment.GetEnvironmentVariable("DATA_REPO_PATH");
+        Console.WriteLine($"DATA_REPO_PATH: {DATA_REPO_PATH}");
+
+        OUTPUT_PATH = Environment.GetEnvironmentVariable("OUTPUT_PATH");
+        Console.WriteLine($"OUTPUT_PATH: {OUTPUT_PATH}");
+
+        if (DATA_REPO_PATH == null || OUTPUT_PATH == null)
+        {
+            Console.WriteLine(
+                "Environment variables [DATA_REPO_PATH], and/or [OUTPUT_PATH] missing. Abort program."
+            );
+            return;
+        }
 
         DateTimeOffset now = DateTimeOffset.Now;
 
-        (_, DateTimeOffset latestRecordTime) = FileUtility.GetLatestRecord(dataRepoPath, "record");
+        (_, DateTimeOffset latestRecordTime) = FileUtility.GetLatestRecord(
+            DATA_REPO_PATH,
+            "record"
+        );
 
         List<VTuberId> excludeList = FileUtility.GetListFromCsv(
-            Path.Combine(dataRepoPath, "DATA/EXCLUDE_LIST.csv")
+            Path.Combine(DATA_REPO_PATH, "DATA/EXCLUDE_LIST.csv")
         );
         TrackList trackList =
             new(
-                Path.Combine(dataRepoPath, "DATA/TW_VTUBER_TRACK_LIST.csv"),
+                Path.Combine(DATA_REPO_PATH, "DATA/TW_VTUBER_TRACK_LIST.csv"),
                 lstExcludeId: excludeList,
                 ignoreGraduated: false,
                 throwOnValidationFail: true
             );
 
         (string latestBasicDataFilePath, DateTimeOffset latestBasicDataTime) =
-            FileUtility.GetLatestRecord(dataRepoPath, "basic-data");
+            FileUtility.GetLatestRecord(DATA_REPO_PATH, "basic-data");
         Dictionary<VTuberId, VTuberBasicData> dictBasicData = VTuberBasicData.ReadFromCsv(
             latestBasicDataFilePath
         );
 
         (string latestLivestreamsFilePath, DateTimeOffset latestLivestreamsDateTime) =
-            FileUtility.GetLatestRecord(dataRepoPath, "livestreams");
+            FileUtility.GetLatestRecord(DATA_REPO_PATH, "livestreams");
         LiveVideosList liveVideos =
             new(latestLivestreamsFilePath, clearGarbage: true, throwOnValidationFail: true);
 
         (string latestTwitchLivestreamsFilePath, DateTimeOffset latestTwitchLivestreamsDateTime) =
-            FileUtility.GetLatestRecord(dataRepoPath, "twitch-livestreams");
+            FileUtility.GetLatestRecord(DATA_REPO_PATH, "twitch-livestreams");
         LiveVideosList twitchLiveVideos =
             new(latestTwitchLivestreamsFilePath, clearGarbage: true, throwOnValidationFail: true);
 
@@ -80,14 +94,14 @@ class Program
         MiscUtils.FillRecord(
             ref dictRecord,
             trackList: trackList,
-            recordDir: dataRepoPath,
+            recordDir: DATA_REPO_PATH,
             targetDate: latestBasicDataTime.Date,
             recentDays: 35
         );
         MiscUtils.FillBasicData(
             ref dictRecord,
             trackList: trackList,
-            basicDataDir: dataRepoPath,
+            basicDataDir: DATA_REPO_PATH,
             targetDate: latestBasicDataTime.Date,
             recentDays: 35
         );
@@ -260,7 +274,7 @@ class Program
                 WriteJson(entry.Value, nationality.Item2, $"{outputDir}/vtubers.json");
             }
 
-            (string latestFilePath, _) = FileUtility.GetLatestRecord(dataRepoPath, "top-videos");
+            (string latestFilePath, _) = FileUtility.GetLatestRecord(DATA_REPO_PATH, "top-videos");
             TopVideosList topVideoList = FileUtility.GetTopVideoList(latestFilePath);
 
             TopVideosListToJsonStruct videoTransformer = new(nationality.Item1);
