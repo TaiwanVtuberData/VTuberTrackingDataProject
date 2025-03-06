@@ -13,7 +13,7 @@ namespace GenerateJsonFile;
 
 class Program
 {
-    private static string? OUTPUT_PATH = "";
+    private static string OUTPUT_PATH = "";
 
     private static readonly JsonSerializerOptions jsonSerializerOptions =
         new()
@@ -33,16 +33,17 @@ class Program
         string? DATA_REPO_PATH = Environment.GetEnvironmentVariable("DATA_REPO_PATH");
         Console.WriteLine($"DATA_REPO_PATH: {DATA_REPO_PATH}");
 
-        OUTPUT_PATH = Environment.GetEnvironmentVariable("OUTPUT_PATH");
+        string? OUTPUT_PATH_TEMP = Environment.GetEnvironmentVariable("OUTPUT_PATH");
         Console.WriteLine($"OUTPUT_PATH: {OUTPUT_PATH}");
 
-        if (DATA_REPO_PATH == null || OUTPUT_PATH == null)
+        if (DATA_REPO_PATH == null || OUTPUT_PATH_TEMP == null)
         {
             Console.WriteLine(
                 "Environment variables [DATA_REPO_PATH], and/or [OUTPUT_PATH] missing. Abort program."
             );
             return;
         }
+        OUTPUT_PATH = OUTPUT_PATH_TEMP;
 
         DateTimeOffset now = DateTimeOffset.Now;
 
