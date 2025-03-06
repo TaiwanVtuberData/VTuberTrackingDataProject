@@ -135,7 +135,7 @@ public class DictionaryRecordToRecordList
             DictionaryRecord.GrowthResult _7DaysResult = DictRecord.GetYouTubeSubscriberCountGrowth(
                 id,
                 days: 7,
-                daysLimit: 1
+                daysLimit: 2
             );
             DictionaryRecord.GrowthResult _30DaysResult =
                 DictRecord.GetYouTubeSubscriberCountGrowth(id, days: 30, daysLimit: 7);
@@ -251,7 +251,7 @@ public class DictionaryRecordToRecordList
             DictionaryRecord.GrowthResult _7DaysResult = DictRecord.GetYouTubeViewCountGrowth(
                 id,
                 days: 7,
-                daysLimit: 1
+                daysLimit: 2
             );
             DictionaryRecord.GrowthResult _30DaysResult = DictRecord.GetYouTubeViewCountGrowth(
                 id,
