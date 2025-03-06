@@ -13,7 +13,6 @@ internal class LiveVideosListToJsonStruct(string nationalityFilter, DateTimeOffs
 
     public List<LivestreamData> Get(
         LiveVideosList liveVideosList,
-        List<DebutData> lstDebutData,
         DictionaryRecord dictRecord,
         bool noTitle
     )
@@ -52,43 +51,11 @@ internal class LiveVideosListToJsonStruct(string nationalityFilter, DateTimeOffs
             rLst.Add(livestreamsData);
         }
 
-        foreach (DebutData debutData in lstDebutData)
-        {
-            if (rLst.Where(e => e.videoUrl == debutData.VideoUrl).Any())
-            {
-                continue;
-            }
-
-            if (!dictRecord.ContainsKey(debutData.Id))
-            {
-                continue;
-            }
-
-            VTuberRecord record = dictRecord[debutData.Id];
-
-            if (record.Nationality.Contains(NationalityFilter))
-            {
-                LivestreamData livestreamsData =
-                    new(
-                        id: record.Id,
-                        name: record.DisplayName,
-                        imgUrl: record.ImageUrl,
-                        title: null,
-                        videoUrl: debutData.VideoUrl,
-                        thumbnailUrl: debutData.ThumbnailUrl,
-                        startTime: MiscUtils.ToIso8601UtcString(debutData.StartTime)
-                    );
-
-                rLst.Add(livestreamsData);
-            }
-        }
-
         return rLst;
     }
 
     public List<LivestreamData> GetDebutToday(
         LiveVideosList liveVideosList,
-        List<DebutData> lstDebutData,
         DictionaryRecord dictRecord,
         bool noTitle
     )
@@ -128,37 +95,6 @@ internal class LiveVideosListToJsonStruct(string nationalityFilter, DateTimeOffs
                 );
 
             rLst.Add(livestreamsData);
-        }
-
-        foreach (DebutData debutData in lstDebutData)
-        {
-            if (rLst.Where(e => e.videoUrl == debutData.VideoUrl).Any())
-            {
-                continue;
-            }
-
-            if (!dictRecord.ContainsKey(debutData.Id))
-            {
-                continue;
-            }
-
-            VTuberRecord record = dictRecord[debutData.Id];
-
-            if (record.Nationality.Contains(NationalityFilter))
-            {
-                LivestreamData livestreamsData =
-                    new(
-                        id: record.Id,
-                        name: record.DisplayName,
-                        imgUrl: record.ImageUrl,
-                        title: null,
-                        videoUrl: debutData.VideoUrl,
-                        thumbnailUrl: debutData.ThumbnailUrl,
-                        startTime: MiscUtils.ToIso8601UtcString(debutData.StartTime)
-                    );
-
-                rLst.Add(livestreamsData);
-            }
         }
 
         return rLst;

@@ -31,20 +31,19 @@ class Program
     static void Main(string[] args)
     {
         string dataRepoPath = args.Length >= 1 ? args[0] : "/tw_vtuber";
-        string debutRepoPath = args.Length >= 2 ? args[1] : "/tw_vtuber_debut";
         OUTPUT_PATH = args.Length >= 3 ? args[2] : "/out/api/v2";
 
         DateTimeOffset now = DateTimeOffset.Now;
 
         (_, DateTimeOffset latestRecordTime) = FileUtility.GetLatestRecord(dataRepoPath, "record");
 
-        List<VTuberId> excluedList = FileUtility.GetListFromCsv(
+        List<VTuberId> excludeList = FileUtility.GetListFromCsv(
             Path.Combine(dataRepoPath, "DATA/EXCLUDE_LIST.csv")
         );
         TrackList trackList =
             new(
                 Path.Combine(dataRepoPath, "DATA/TW_VTUBER_TRACK_LIST.csv"),
-                lstExcludeId: excluedList,
+                lstExcludeId: excludeList,
                 ignoreGraduated: false,
                 throwOnValidationFail: true
             );
@@ -60,10 +59,10 @@ class Program
         LiveVideosList liveVideos =
             new(latestLivestreamsFilePath, clearGarbage: true, throwOnValidationFail: true);
 
-        (string latestTwitchLivetreamsFilePath, DateTimeOffset latestTwitchLivestreamsDateTime) =
+        (string latestTwitchLivestreamsFilePath, DateTimeOffset latestTwitchLivestreamsDateTime) =
             FileUtility.GetLatestRecord(dataRepoPath, "twitch-livestreams");
         LiveVideosList twitchLiveVideos =
-            new(latestTwitchLivetreamsFilePath, clearGarbage: true, throwOnValidationFail: true);
+            new(latestTwitchLivestreamsFilePath, clearGarbage: true, throwOnValidationFail: true);
 
         // if latestTwitchLivestreamsDateTime is after latestLivestreamsDateTime
         // then clear Twitch Livestreams in liveVideos and insert newest twitchLiveVideos
@@ -72,16 +71,12 @@ class Program
             liveVideos = ClearTwitchLiveVideos(liveVideos).Insert(twitchLiveVideos);
         }
 
-        List<DebutData> lstDebutData = DebutData.ReadFromCsv(
-            Path.Combine(debutRepoPath, $"{now.ToLocalTime():yyyy-MM-dd}.csv")
-        );
-
         if (latestBasicDataTime < latestRecordTime)
         {
             latestBasicDataTime = latestRecordTime;
         }
 
-        DictionaryRecord dictRecord = new(trackList, excluedList, dictBasicData);
+        DictionaryRecord dictRecord = new(trackList, excludeList, dictBasicData);
         MiscUtils.FillRecord(
             ref dictRecord,
             trackList: trackList,
@@ -118,7 +113,7 @@ class Program
             latestRecordTime,
             latestBasicDataTime,
             ""
-        ).AllWithFullData(liveVideos, lstDebutData);
+        ).AllWithFullData(liveVideos);
         foreach (VTuberFullData vtuber in lstAllVTuber)
         {
             WriteJson(vtuber, $"vtubers/{vtuber.id.Value}.json");
@@ -286,35 +281,25 @@ class Program
                 new(nationality.Item1, currentTime: now);
 
             WriteJson(
-                liveVideosTransformer.Get(liveVideos, lstDebutData, dictRecord, noTitle: false),
+                liveVideosTransformer.Get(liveVideos, dictRecord, noTitle: false),
                 nationality.Item2,
                 "livestreams/all.json"
             );
 
             WriteJson(
-                liveVideosTransformer.Get(liveVideos, lstDebutData, dictRecord, noTitle: true),
+                liveVideosTransformer.Get(liveVideos, dictRecord, noTitle: true),
                 nationality.Item2,
                 "livestreams/all-no-title.json"
             );
 
             WriteJson(
-                liveVideosTransformer.GetDebutToday(
-                    liveVideos,
-                    lstDebutData,
-                    dictRecord,
-                    noTitle: false
-                ),
+                liveVideosTransformer.GetDebutToday(liveVideos, dictRecord, noTitle: false),
                 nationality.Item2,
                 "livestreams/debut.json"
             );
 
             WriteJson(
-                liveVideosTransformer.GetDebutToday(
-                    liveVideos,
-                    lstDebutData,
-                    dictRecord,
-                    noTitle: true
-                ),
+                liveVideosTransformer.GetDebutToday(liveVideos, dictRecord, noTitle: true),
                 nationality.Item2,
                 "livestreams/debut-no-title.json"
             );

@@ -33,10 +33,7 @@ public class DictionaryRecordToRecordList
         NationalityFilter = nationalityFilter;
     }
 
-    public List<VTuberFullData> AllWithFullData(
-        LiveVideosList liveVideosList,
-        List<DebutData> lstDebutData
-    )
+    public List<VTuberFullData> AllWithFullData(LiveVideosList liveVideosList)
     {
         List<VTuberFullData> rLst = [];
 
@@ -60,27 +57,6 @@ public class DictionaryRecordToRecordList
                 ))
                 .OrderBy(e => e.startTime)
                 .ToList();
-
-            foreach (DebutData debutData in lstDebutData)
-            {
-                if (livestreams.Where(e => e.videoUrl == debutData.VideoUrl).Any())
-                {
-                    continue;
-                }
-
-                if (debutData.Id == record.Id)
-                {
-                    VTuberLivestreamData livestreamsData =
-                        new(
-                            title: null,
-                            videoUrl: debutData.VideoUrl,
-                            thumbnailUrl: debutData.ThumbnailUrl,
-                            startTime: MiscUtils.ToIso8601UtcString(debutData.StartTime)
-                        );
-
-                    livestreams.Add(livestreamsData);
-                }
-            }
 
             VTuberFullData vTuberData =
                 new(
