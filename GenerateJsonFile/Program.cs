@@ -45,6 +45,7 @@ class Program
             new(
                 Path.Combine(dataRepoPath, "DATA/TW_VTUBER_TRACK_LIST.csv"),
                 lstExcludeId: excluedList,
+                ignoreGraduated: false,
                 throwOnValidationFail: true
             );
 

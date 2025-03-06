@@ -44,7 +44,11 @@ void mainProcess()
     FetchYouTubeStatistics.Fetcher youtubeDataFetcher = new(CONFIG.YouTubeApiKey, CURRENT_TIME);
     FetchTwitchStatistics.Fetcher twitchDataFetcher = new(CONFIG.TwitchCredential, CURRENT_TIME);
 
-    TrackList trackList = createTrackList(CONFIG.ExcludeListPath, CONFIG.TrackListPath);
+    TrackList trackList = createTrackList(
+        CONFIG.ExcludeListPath,
+        CONFIG.TrackListPath,
+        CONFIG.IgnoreType
+    );
 
     switch (CONFIG.FetchType)
     {
@@ -68,11 +72,20 @@ void mainProcess()
     }
 }
 
-TrackList createTrackList(string excludeListPath, string trackListPath)
+TrackList createTrackList(string excludeListPath, string trackListPath, IgnoreType ignoreType)
 {
     List<VTuberId> excludeList = FileUtility.GetListFromCsv(excludeListPath);
+    log.Info($"excludeList from {excludeListPath}: {excludeList}");
+
+    bool ignoreGraduated = ignoreType == IgnoreType.Graduated;
+
     TrackList trackList =
-        new(csvFilePath: trackListPath, lstExcludeId: excludeList, throwOnValidationFail: true);
+        new(
+            csvFilePath: trackListPath,
+            lstExcludeId: excludeList,
+            ignoreGraduated: ignoreGraduated,
+            throwOnValidationFail: true
+        );
     log.Info($"trackList.GetCount(): {trackList.GetCount()}");
 
     return trackList;

@@ -12,9 +12,14 @@ string csvDirectory = GetCsvDirectory("./CsvDirectory");
 string excludeListPath = Path.Combine(csvDirectory, "./DATA/EXCLUDE_LIST.csv");
 string trackListPath = Path.Combine(csvDirectory, "./DATA/TW_VTUBER_TRACK_LIST.csv");
 
-List<VTuberId> excluedList = FileUtility.GetListFromCsv(excludeListPath);
+List<VTuberId> excludeList = FileUtility.GetListFromCsv(excludeListPath);
 TrackList trackList =
-    new(csvFilePath: trackListPath, lstExcludeId: excluedList, throwOnValidationFail: true);
+    new(
+        csvFilePath: trackListPath,
+        lstExcludeId: excludeList,
+        ignoreGraduated: false,
+        throwOnValidationFail: true
+    );
 
 WriteDateTimeStatistics(trackList, csvDirectory, recentDays, byGroup: false, "Individual");
 WriteDateTimeStatistics(trackList, csvDirectory, recentDays, byGroup: true, "Group");
@@ -114,7 +119,7 @@ static void WriteDateTimeStatistics(
         WritelRecordCSV(trackList, statisticsTable, name, null, byGroup, writePrefix);
     }
 
-    string[] namesConstriant =
+    string[] namesConstraint =
     [
         "YouTube.SubscriberCountTo.Total.MedianViewCount",
         "YouTube.SubscriberCountTo.Total.Popularity",
@@ -124,7 +129,7 @@ static void WriteDateTimeStatistics(
         "YouTube.SubscriberCountTo.Video.Popularity",
     ];
 
-    foreach (string name in namesConstriant)
+    foreach (string name in namesConstraint)
     {
         WritelRecordCSV(trackList, statisticsTable, name, 2000m, byGroup, writePrefix);
     }
@@ -219,7 +224,7 @@ static void WritelRecordCSV(
     TrackList trackList,
     StatisticsTable statisticsTable,
     string writeColumnName,
-    decimal? subConstriant,
+    decimal? subConstraint,
     bool byGroup,
     string writePrefix
 )
@@ -231,7 +236,7 @@ static void WritelRecordCSV(
 
     Dictionary<VTuberId, List<decimal>> statisticsDict = statisticsTable.GetStatisticDictByField(
         writeColumnName,
-        subConstriant
+        subConstraint
     );
 
     using StreamWriter file =

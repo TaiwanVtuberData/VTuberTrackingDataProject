@@ -13,6 +13,7 @@ internal record Config
     public string ExcludeListPath { get; init; }
     public string SavePath { get; init; }
     public FetchType FetchType { get; init; }
+    public IgnoreType IgnoreType { get; init; }
 
     public Config()
     {
@@ -37,6 +38,9 @@ internal record Config
         string? FETCH_TYPE = Environment.GetEnvironmentVariable("FETCH_TYPE");
         log.Info($"FETCH_TYPE: {FETCH_TYPE}");
 
+        string? IGNORE_TYPE = Environment.GetEnvironmentVariable("IGNORE_TYPE");
+        log.Info($"IGNORE_TYPE: {IGNORE_TYPE}");
+
         if (
             YOUTUBE_API_KEY_PATH == null
             || TWITCH_CLIENT_ID_PATH == null
@@ -45,6 +49,7 @@ internal record Config
             || EXCLUDE_LIST_PATH == null
             || SAVE_PATH == null
             || FETCH_TYPE == null
+            || IGNORE_TYPE == null
         )
         {
             log.Error("Some environment variables are not set in Config.");
@@ -61,5 +66,6 @@ internal record Config
         this.ExcludeListPath = EXCLUDE_LIST_PATH;
         this.SavePath = SAVE_PATH;
         this.FetchType = (FetchType)Enum.Parse(typeof(FetchType), FETCH_TYPE);
+        this.IgnoreType = (IgnoreType)Enum.Parse(typeof(IgnoreType), IGNORE_TYPE);
     }
 }

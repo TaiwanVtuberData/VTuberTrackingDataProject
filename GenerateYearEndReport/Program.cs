@@ -1,14 +1,14 @@
-﻿using Common.Types;
+﻿using System.Globalization;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Unicode;
+using Common.Types;
 using Common.Types.Basic;
 using Common.Utils;
 using GenerateRecordList.Types;
 using GenerateRecordList.Utils;
 using GenerateYearEndReport;
 using GenerateYearEndReport.Types;
-using System.Globalization;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Unicode;
 
 class Program
 {
@@ -125,6 +125,7 @@ class Program
             new(
                 Path.Combine(DATA_REPO_DIRECTORY, "DATA/TW_VTUBER_TRACK_LIST.csv"),
                 lstExcludeId: excludeList,
+                ignoreGraduated: false,
                 throwOnValidationFail: true
             );
 
