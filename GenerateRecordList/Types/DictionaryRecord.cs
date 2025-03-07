@@ -9,7 +9,7 @@ public class DictionaryRecord : Dictionary<VTuberId, VTuberRecord>
 {
     public DictionaryRecord(
         TrackList trackList,
-        List<VTuberId> excluedList,
+        List<VTuberId> excludeList,
         Dictionary<VTuberId, VTuberBasicData> dictBasicData
     )
     {
@@ -17,7 +17,7 @@ public class DictionaryRecord : Dictionary<VTuberId, VTuberRecord>
 
         foreach (VTuberId id in lstId)
         {
-            if (excluedList.Contains(id))
+            if (excludeList.Contains(id))
             {
                 continue;
             }
@@ -249,7 +249,7 @@ public class DictionaryRecord : Dictionary<VTuberId, VTuberRecord>
             (x, y) => (x - targetDateTime).Duration() < (y - targetDateTime).Duration() ? x : y
         );
 
-        VTuberRecord.YouTubeData.BasicData? targetBasicData = youTubeData.GetBasicData(
+        VTuberRecord.YouTubeData.BasicData? targetBasicData = youTubeData.GetBasicDataOrLatest(
             foundDateTime
         );
         ulong targetSubscriberCount = targetBasicData?.SubscriberCount ?? 0;
@@ -257,7 +257,7 @@ public class DictionaryRecord : Dictionary<VTuberId, VTuberRecord>
         if (targetSubscriberCount == 0)
             return new GrowthResult();
 
-        VTuberRecord.YouTubeData.BasicData? currentBasicData = youTubeData.GetBasicData(
+        VTuberRecord.YouTubeData.BasicData? currentBasicData = youTubeData.GetBasicDataOrLatest(
             latestDateTime
         );
         ulong currentSubscriberCount = currentBasicData?.SubscriberCount ?? 0;
@@ -320,7 +320,9 @@ public class DictionaryRecord : Dictionary<VTuberId, VTuberRecord>
             (x, y) => (x - targetDateTime).Duration() < (y - targetDateTime).Duration() ? x : y
         );
 
-        VTuberRecord.TwitchData.BasicData? targetBasicData = twitchData.GetBasicData(foundDateTime);
+        VTuberRecord.TwitchData.BasicData? targetBasicData = twitchData.GetBasicDataOrLatest(
+            foundDateTime
+        );
         ulong targetFollowerCount = targetBasicData?.FollowerCount ?? 0;
         // previously 0 follower count doesn't count as growth
         if (targetFollowerCount == 0)
@@ -328,7 +330,7 @@ public class DictionaryRecord : Dictionary<VTuberId, VTuberRecord>
             return new GrowthResult();
         }
 
-        VTuberRecord.TwitchData.BasicData? currentBasicData = twitchData.GetBasicData(
+        VTuberRecord.TwitchData.BasicData? currentBasicData = twitchData.GetBasicDataOrLatest(
             latestDateTime
         );
         ulong currentFollowerCount = currentBasicData?.FollowerCount ?? 0;
@@ -391,14 +393,14 @@ public class DictionaryRecord : Dictionary<VTuberId, VTuberRecord>
             (x, y) => (x - targetDateTime).Duration() < (y - targetDateTime).Duration() ? x : y
         );
 
-        VTuberRecord.YouTubeData.BasicData? targetBasicData = youTubeData.GetBasicData(
+        VTuberRecord.YouTubeData.BasicData? targetBasicData = youTubeData.GetBasicDataOrLatest(
             foundDateTime
         );
         decimal targetTotalViewCount = targetBasicData?.TotalViewCount ?? 0;
         if (targetTotalViewCount == 0)
             return new GrowthResult();
 
-        VTuberRecord.YouTubeData.BasicData? currentBasicData = youTubeData.GetBasicData(
+        VTuberRecord.YouTubeData.BasicData? currentBasicData = youTubeData.GetBasicDataOrLatest(
             latestDateTime
         );
         decimal currentTotalViewCount = currentBasicData?.TotalViewCount ?? 0;

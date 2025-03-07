@@ -17,7 +17,9 @@ public class DataTransform(DateTimeOffset latestRecordTime, DateTimeOffset lates
         if (input == null)
             return new NoCountType();
 
-        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicDataOrLatest(
+            LatestBasicDataTime
+        );
         ulong? sub = basicData?.SubscriberCount ?? null;
 
         return ToYouTubeCountType(input.hasValidRecord, sub);
@@ -28,7 +30,9 @@ public class DataTransform(DateTimeOffset latestRecordTime, DateTimeOffset lates
         if (input == null)
             return null;
 
-        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicDataOrLatest(
+            LatestBasicDataTime
+        );
         ulong? sub = basicData?.SubscriberCount;
 
         return new YouTubeData(
@@ -42,7 +46,9 @@ public class DataTransform(DateTimeOffset latestRecordTime, DateTimeOffset lates
         if (input == null)
             return new NoCountType();
 
-        VTuberRecord.TwitchData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        VTuberRecord.TwitchData.BasicData? basicData = input.GetBasicDataOrLatest(
+            LatestBasicDataTime
+        );
         ulong? follower = basicData?.FollowerCount ?? null;
 
         return ToTwitchCountType(input.hasValidRecord, follower);
@@ -53,7 +59,9 @@ public class DataTransform(DateTimeOffset latestRecordTime, DateTimeOffset lates
         if (input == null)
             return null;
 
-        VTuberRecord.TwitchData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        VTuberRecord.TwitchData.BasicData? basicData = input.GetBasicDataOrLatest(
+            LatestBasicDataTime
+        );
         ulong? follower = basicData?.FollowerCount;
 
         return new TwitchData(
@@ -67,7 +75,9 @@ public class DataTransform(DateTimeOffset latestRecordTime, DateTimeOffset lates
         if (input == null)
             return 0;
 
-        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicData(LatestBasicDataTime);
+        VTuberRecord.YouTubeData.BasicData? basicData = input.GetBasicDataOrLatest(
+            LatestBasicDataTime
+        );
 
         return basicData?.TotalViewCount ?? 0;
     }

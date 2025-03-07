@@ -15,10 +15,10 @@ public class VTuberRecordComparator
             KeyValuePair<string, VTuberRecord> rhs
         )
         {
-            VTuberRecord.YouTubeData.BasicData? lhsData = lhs.Value.YouTube?.GetBasicData(
+            VTuberRecord.YouTubeData.BasicData? lhsData = lhs.Value.YouTube?.GetBasicDataOrLatest(
                 TargetDateTime
             );
-            VTuberRecord.YouTubeData.BasicData? rhsData = rhs.Value.YouTube?.GetBasicData(
+            VTuberRecord.YouTubeData.BasicData? rhsData = rhs.Value.YouTube?.GetBasicDataOrLatest(
                 TargetDateTime
             );
 
@@ -39,10 +39,10 @@ public class VTuberRecordComparator
             KeyValuePair<string, VTuberRecord> rhs
         )
         {
-            VTuberRecord.TwitchData.BasicData? lhsData = lhs.Value.Twitch?.GetBasicData(
+            VTuberRecord.TwitchData.BasicData? lhsData = lhs.Value.Twitch?.GetBasicDataOrLatest(
                 TargetDateTime
             );
-            VTuberRecord.TwitchData.BasicData? rhsData = rhs.Value.Twitch?.GetBasicData(
+            VTuberRecord.TwitchData.BasicData? rhsData = rhs.Value.Twitch?.GetBasicDataOrLatest(
                 TargetDateTime
             );
 
@@ -63,22 +63,18 @@ public class VTuberRecordComparator
             KeyValuePair<VTuberId, VTuberRecord> rhs
         )
         {
-            VTuberRecord.YouTubeData.BasicData? lhsYouTubeRecord = lhs.Value.YouTube?.GetBasicData(
-                TargetDateTime
-            );
-            VTuberRecord.YouTubeData.BasicData? rhsYouTubeRecord = rhs.Value.YouTube?.GetBasicData(
-                TargetDateTime
-            );
+            VTuberRecord.YouTubeData.BasicData? lhsYouTubeRecord =
+                lhs.Value.YouTube?.GetBasicDataOrLatest(TargetDateTime);
+            VTuberRecord.YouTubeData.BasicData? rhsYouTubeRecord =
+                rhs.Value.YouTube?.GetBasicDataOrLatest(TargetDateTime);
 
             ulong lhsYouTubeSub = lhsYouTubeRecord?.SubscriberCount ?? 0;
             ulong rhsYouTubeSub = rhsYouTubeRecord?.SubscriberCount ?? 0;
 
-            VTuberRecord.TwitchData.BasicData? lhsTwitchRecord = lhs.Value.Twitch?.GetBasicData(
-                TargetDateTime
-            );
-            VTuberRecord.TwitchData.BasicData? rhsTwitchRecord = rhs.Value.Twitch?.GetBasicData(
-                TargetDateTime
-            );
+            VTuberRecord.TwitchData.BasicData? lhsTwitchRecord =
+                lhs.Value.Twitch?.GetBasicDataOrLatest(TargetDateTime);
+            VTuberRecord.TwitchData.BasicData? rhsTwitchRecord =
+                rhs.Value.Twitch?.GetBasicDataOrLatest(TargetDateTime);
 
             ulong lhsTwitchFollower = lhsTwitchRecord?.FollowerCount ?? 0;
             ulong rhsTwitchFollower = rhsTwitchRecord?.FollowerCount ?? 0;
@@ -100,20 +96,18 @@ public class VTuberRecordComparator
             KeyValuePair<VTuberId, VTuberRecord> rhs
         )
         {
-            VTuberRecord.YouTubeData.Record? lhsYouTubeRecord = lhs.Value.YouTube?.GetRecord(
-                TargetDateTime
-            );
-            VTuberRecord.YouTubeData.Record? rhsYouTubeRecord = rhs.Value.YouTube?.GetRecord(
-                TargetDateTime
-            );
+            VTuberRecord.YouTubeData.Record? lhsYouTubeRecord =
+                lhs.Value.YouTube?.GetRecordOrLatest(TargetDateTime);
+            VTuberRecord.YouTubeData.Record? rhsYouTubeRecord =
+                rhs.Value.YouTube?.GetRecordOrLatest(TargetDateTime);
 
             ulong lhsYouTubeView = lhsYouTubeRecord?.RecentTotalMedianViewCount ?? 0;
             ulong rhsYouTubeView = rhsYouTubeRecord?.RecentTotalMedianViewCount ?? 0;
 
-            VTuberRecord.TwitchData.Record? lhsTwitchRecord = lhs.Value.Twitch?.GetRecord(
+            VTuberRecord.TwitchData.Record? lhsTwitchRecord = lhs.Value.Twitch?.GetRecordOrLatest(
                 TargetDateTime
             );
-            VTuberRecord.TwitchData.Record? rhsTwitchRecord = rhs.Value.Twitch?.GetRecord(
+            VTuberRecord.TwitchData.Record? rhsTwitchRecord = rhs.Value.Twitch?.GetRecordOrLatest(
                 TargetDateTime
             );
 

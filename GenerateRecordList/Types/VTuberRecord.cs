@@ -46,7 +46,7 @@ public class VTuberRecord
             DictBasicData.Add(recordTime, basicData);
         }
 
-        public Record? GetRecord(DateTimeOffset TargetDateTime)
+        public Record? GetRecordOrLatest(DateTimeOffset TargetDateTime)
         {
             if (DictRecord.TryGetValue(TargetDateTime, out Record? value))
             {
@@ -54,7 +54,14 @@ public class VTuberRecord
             }
             else
             {
-                return null;
+                if (DictRecord.Length() > 0)
+                {
+                    return DictRecord[DictRecord.Keys.Max()];
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
@@ -63,7 +70,7 @@ public class VTuberRecord
             return DictBasicData.Keys;
         }
 
-        public BasicData? GetBasicData(DateTimeOffset TargetDateTime)
+        public BasicData? GetBasicDataOrLatest(DateTimeOffset TargetDateTime)
         {
             if (DictBasicData.TryGetValue(TargetDateTime, out BasicData? value))
             {
@@ -71,7 +78,14 @@ public class VTuberRecord
             }
             else
             {
-                return null;
+                if (DictBasicData.Length() > 0)
+                {
+                    return DictBasicData[DictBasicData.Keys.Max()];
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
     }
@@ -108,7 +122,7 @@ public class VTuberRecord
             DictBasicData.Add(recordTime, basicData);
         }
 
-        public Record? GetRecord(DateTimeOffset TargetDateTime)
+        public Record? GetRecordOrLatest(DateTimeOffset TargetDateTime)
         {
             if (DictRecord.TryGetValue(TargetDateTime, out Record? value))
             {
@@ -116,11 +130,18 @@ public class VTuberRecord
             }
             else
             {
-                return null;
+                if (DictRecord.Length() > 0)
+                {
+                    return DictRecord[DictRecord.Keys.Max()];
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
-        public BasicData? GetBasicData(DateTimeOffset TargetDateTime)
+        public BasicData? GetBasicDataOrLatest(DateTimeOffset TargetDateTime)
         {
             if (DictBasicData.TryGetValue(TargetDateTime, out BasicData? value))
             {
@@ -128,7 +149,14 @@ public class VTuberRecord
             }
             else
             {
-                return null;
+                if (DictBasicData.Length() > 0)
+                {
+                    return DictBasicData[DictBasicData.Keys.Max()];
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 

@@ -566,7 +566,8 @@ public class DictionaryRecordToRecordList
             KeyValuePair<VTuberId, VTuberRecord> vtuberStatPair in DictRecord
                 .Where(p => p.Value.Nationality.Contains(NationalityFilter))
                 .Where(p =>
-                    p.Value?.YouTube?.GetBasicData(LatestBasicDataTime)?.SubscriberCount >= 2000
+                    p.Value?.YouTube?.GetBasicDataOrLatest(LatestBasicDataTime)?.SubscriberCount
+                    >= 2000
                 )
         )
         {
