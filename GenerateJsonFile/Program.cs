@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
@@ -34,7 +35,7 @@ class Program
         Console.WriteLine($"DATA_REPO_PATH: {DATA_REPO_PATH}");
 
         string? OUTPUT_PATH_TEMP = Environment.GetEnvironmentVariable("OUTPUT_PATH");
-        Console.WriteLine($"OUTPUT_PATH: {OUTPUT_PATH}");
+        Console.WriteLine($"OUTPUT_PATH: {OUTPUT_PATH_TEMP}");
 
         if (DATA_REPO_PATH == null || OUTPUT_PATH_TEMP == null)
         {
@@ -272,6 +273,7 @@ class Program
             )
             {
                 string outputDir = $"groups/{entry.Key}";
+                outputDir = outputDir.Replace(":", "");
                 WriteJson(entry.Value, nationality.Item2, $"{outputDir}/vtubers.json");
             }
 
@@ -490,19 +492,32 @@ class Program
         string outputFilePath
     )
     {
+        bool shouldWrite = true;
+
         string? outputFolder = Path.GetDirectoryName(
             Path.Combine(OUTPUT_PATH, nationality, outputFilePath)
         );
         if (outputFolder is not null && !Directory.Exists(outputFolder))
         {
-            Directory.CreateDirectory(outputFolder);
+            try
+            {
+                Directory.CreateDirectory(outputFolder);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e);
+                shouldWrite = false;
+            }
         }
 
-        StreamWriter writer =
-            new(Path.Combine(OUTPUT_PATH, nationality, outputFilePath)) { NewLine = "\n" };
+        if (shouldWrite)
+        {
+            StreamWriter writer =
+                new(Path.Combine(OUTPUT_PATH, nationality, outputFilePath)) { NewLine = "\n" };
 
-        writer.Write(jsonString);
-        writer.Close();
+            writer.Write(jsonString);
+            writer.Close();
+        }
     }
 
     private static LiveVideosList ClearTwitchLiveVideos(LiveVideosList liveVideosList)
