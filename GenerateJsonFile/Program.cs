@@ -273,7 +273,6 @@ class Program
             )
             {
                 string outputDir = $"groups/{entry.Key}";
-                outputDir = outputDir.Replace(":", "");
                 WriteJson(entry.Value, nationality.Item2, $"{outputDir}/vtubers.json");
             }
 
@@ -492,32 +491,19 @@ class Program
         string outputFilePath
     )
     {
-        bool shouldWrite = true;
-
         string? outputFolder = Path.GetDirectoryName(
             Path.Combine(OUTPUT_PATH, nationality, outputFilePath)
         );
         if (outputFolder is not null && !Directory.Exists(outputFolder))
         {
-            try
-            {
-                Directory.CreateDirectory(outputFolder);
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine(e);
-                shouldWrite = false;
-            }
+            Directory.CreateDirectory(outputFolder);
         }
 
-        if (shouldWrite)
-        {
-            StreamWriter writer =
-                new(Path.Combine(OUTPUT_PATH, nationality, outputFilePath)) { NewLine = "\n" };
+        StreamWriter writer =
+            new(Path.Combine(OUTPUT_PATH, nationality, outputFilePath)) { NewLine = "\n" };
 
-            writer.Write(jsonString);
-            writer.Close();
-        }
+        writer.Write(jsonString);
+        writer.Close();
     }
 
     private static LiveVideosList ClearTwitchLiveVideos(LiveVideosList liveVideosList)
