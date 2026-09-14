@@ -158,12 +158,12 @@ class Program
                 videoTransformer.Get(
                     topVideoList: topVideoList,
                     dictRecord: dictRecord,
-                    count: 10,
+                    count: 100,
                     allowDuplicate: false
                 ),
                 outputDirectory: OUTPUT_DIRECTORY,
                 nationality.Item2,
-                "trending-videos/youtube/10.json"
+                "trending-videos/youtube/100.json"
             );
         }
     }
