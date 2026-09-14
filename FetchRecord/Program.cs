@@ -3,6 +3,7 @@ using Common.Types;
 using Common.Types.Basic;
 using Common.Utils;
 using FetchRecord;
+using FetchYouTubeRecord;
 using log4net;
 
 ILog log = LogManager.GetLogger("");
@@ -41,7 +42,7 @@ void mainProcess()
     DateTimeOffset CURRENT_TIME = DateTimeOffset.Now;
 
     // create record fetcher
-    FetchYouTubeStatistics.Fetcher youtubeDataFetcher = new(CONFIG.YouTubeApiKey, CURRENT_TIME);
+    Fetcher youtubeDataFetcher = new(CONFIG.YouTubeApiKey, CURRENT_TIME);
     FetchTwitchStatistics.Fetcher twitchDataFetcher = new(CONFIG.TwitchCredential, CURRENT_TIME);
 
     TrackList trackList = createTrackList(
@@ -92,7 +93,7 @@ TrackList createTrackList(string excludeListPath, string trackListPath, IgnoreTy
 }
 
 void fetchAllAndWrite(
-    FetchYouTubeStatistics.Fetcher youtubeDataFetcher,
+    Fetcher youtubeDataFetcher,
     FetchTwitchStatistics.Fetcher twitchDataFetcher,
     TrackList trackList,
     string savePath,
@@ -153,7 +154,7 @@ void fetchTwitchLivestreamsAndWrite(
 }
 
 (ImmutableDictionary<VTuberId, YouTubeRecord>, TopVideosList, LiveVideosList) fetchYouTubeRecord(
-    FetchYouTubeStatistics.Fetcher youtubeDataFetcher,
+    Fetcher youtubeDataFetcher,
     TrackList trackList
 )
 {
@@ -167,11 +168,17 @@ void fetchTwitchLivestreamsAndWrite(
     TopVideosList rVideosList;
     LiveVideosList rLiveVideosList;
 
+    int GET_DAYS_LIMIT = 90;
+    int FILTER_DAYS_LIMIT = 30;
     (
         ImmutableDictionary<YouTubeChannelId, YouTubeRecord> dictYouTubeRecord,
         rVideosList,
         rLiveVideosList
-    ) = youtubeDataFetcher.GetAll(lstYouTubeChannelId);
+    ) = youtubeDataFetcher.GetAll(
+        lstYouTubeChannelId,
+        getDaysLimit: GET_DAYS_LIMIT,
+        filterDaysLimit: FILTER_DAYS_LIMIT
+    );
 
     foreach (KeyValuePair<YouTubeChannelId, YouTubeRecord> keyValue in dictYouTubeRecord)
     {

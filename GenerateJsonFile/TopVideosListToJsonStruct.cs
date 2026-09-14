@@ -6,11 +6,14 @@ using GenerateRecordList.Utils;
 
 namespace GenerateJsonFile;
 
-class TopVideosListToJsonStruct(string nationalityFilter) {
+public class TopVideosListToJsonStruct(string nationalityFilter)
+{
     public readonly string NationalityFilter = nationalityFilter;
 
-    class OwnerComparer : IEqualityComparer<VideoInformation> {
-        public bool Equals(VideoInformation? x, VideoInformation? y) {
+    class OwnerComparer : IEqualityComparer<VideoInformation>
+    {
+        public bool Equals(VideoInformation? x, VideoInformation? y)
+        {
             if (x is null && y is null)
                 return false;
 
@@ -23,39 +26,58 @@ class TopVideosListToJsonStruct(string nationalityFilter) {
             return x.Id == y.Id;
         }
 
-        int IEqualityComparer<VideoInformation>.GetHashCode(VideoInformation obj) {
+        int IEqualityComparer<VideoInformation>.GetHashCode(VideoInformation obj)
+        {
             return obj.GetHashCode();
         }
     }
-    public List<VideoPopularityData> Get(TopVideosList topVideoList, DictionaryRecord dictRecord, int count, bool allowDuplicate) {
+
+    public List<VideoPopularityData> Get(
+        TopVideosList topVideoList,
+        DictionaryRecord dictRecord,
+        int count,
+        bool allowDuplicate
+    )
+    {
         List<VideoPopularityData> rLst = [];
 
         IEnumerable<VideoInformation> lstVideoInformation;
-        if (allowDuplicate) {
+        if (allowDuplicate)
+        {
             lstVideoInformation = topVideoList.GetSortedList();
-        } else {
+        }
+        else
+        {
             lstVideoInformation = topVideoList.GetNoDuplicateList();
         }
 
-        List<VTuberId> lstValidVTubers = dictRecord.Keys.ToList();
+        List<VTuberId> lstValidVTubers = [.. dictRecord.Keys];
 
-        foreach (VideoInformation videoInfo in lstVideoInformation
-            .Where(p => lstValidVTubers.Contains(p.Id))
-            .Where(p => dictRecord[p.Id].Nationality.Contains(NationalityFilter))
-            .OrderByDescending(e => e.ViewCount)
-            .Take(count)) {
+        foreach (
+            VideoInformation videoInfo in lstVideoInformation
+                .Where(p => lstValidVTubers.Contains(p.Id))
+                .Where(p => dictRecord[p.Id].Nationality.Contains(NationalityFilter))
+                .OrderByDescending(e => e.ViewCount)
+                .Take(count)
+        )
+        {
             VTuberRecord record = dictRecord[videoInfo.Id];
 
-            VideoPopularityData videoData = new(
-                id: record.Id,
-                name: record.DisplayName,
-                imgUrl: record.ImageUrl,
-                title: videoInfo.Title,
-                videoUrl: videoInfo.Url,
-                thumbnailUrl: MiscUtils.SetTwitchThumbnailUrlSize(videoInfo.ThumbnailUrl, width: 320, height: 180),
-                viewCount: videoInfo.ViewCount,
-                uploadTime: MiscUtils.ToIso8601UtcString(videoInfo.PublishDateTime)
-            );
+            VideoPopularityData videoData =
+                new(
+                    id: record.Id,
+                    name: record.DisplayName,
+                    imgUrl: record.ImageUrl,
+                    title: videoInfo.Title,
+                    videoUrl: videoInfo.Url,
+                    thumbnailUrl: MiscUtils.SetTwitchThumbnailUrlSize(
+                        videoInfo.ThumbnailUrl,
+                        width: 320,
+                        height: 180
+                    ),
+                    viewCount: videoInfo.ViewCount,
+                    uploadTime: MiscUtils.ToIso8601UtcString(videoInfo.PublishDateTime)
+                );
 
             rLst.Add(videoData);
         }

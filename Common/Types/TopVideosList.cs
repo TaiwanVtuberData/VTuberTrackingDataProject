@@ -1,29 +1,35 @@
-﻿using Common.Types.Basic;
-using System.Xml;
+﻿using System.Xml;
+using Common.Types.Basic;
 
 namespace Common.Types;
-public class TopVideosList(int videoCount = 1000) {
 
+public class TopVideosList(int videoCount = 1000)
+{
     readonly List<VideoInformation> InternalList = [];
     readonly int MaxListCount = Math.Max(1, videoCount);
 
-    public IEnumerator<VideoInformation> GetEnumerator() {
+    public IEnumerator<VideoInformation> GetEnumerator()
+    {
         return InternalList.GetEnumerator();
     }
 
-    public List<VideoInformation> GetSortedList() {
-        List<VideoInformation> rLst = new(InternalList);
+    public List<VideoInformation> GetSortedList()
+    {
+        List<VideoInformation> rLst = [.. InternalList];
         rLst.Reverse();
 
         return rLst;
     }
 
-    public List<VideoInformation> GetNoDuplicateList() {
+    public List<VideoInformation> GetNoDuplicateList()
+    {
         List<VideoInformation> rLst = new(capacity: InternalList.Count);
 
-        foreach (VideoInformation videoInfo in GetSortedList().OrderByDescending(e => e.ViewCount)) {
+        foreach (VideoInformation videoInfo in GetSortedList().OrderByDescending(e => e.ViewCount))
+        {
             // if list already contains videoInfo.Owner
-            if (rLst.Any(e => e.Id == videoInfo.Id)) {
+            if (rLst.Any(e => e.Id == videoInfo.Id))
+            {
                 continue;
             }
 
@@ -33,51 +39,65 @@ public class TopVideosList(int videoCount = 1000) {
         return rLst;
     }
 
-    public void Insert(string[] entryBlock) {
-        Insert(new VideoInformation() {
-            Id = new VTuberId(entryBlock[0]),
-            ViewCount = ulong.Parse(entryBlock[1]),
-            Title = entryBlock[2].ReplaceLineEndings(" "),
-            PublishDateTime = XmlConvert.ToDateTime(entryBlock[3], XmlDateTimeSerializationMode.Utc),
-            Url = entryBlock[4],
-            ThumbnailUrl = entryBlock[5],
-        }
+    public void Insert(string[] entryBlock)
+    {
+        Insert(
+            new VideoInformation()
+            {
+                Id = new VTuberId(entryBlock[0]),
+                ViewCount = ulong.Parse(entryBlock[1]),
+                Title = entryBlock[2].ReplaceLineEndings(" "),
+                PublishDateTime = XmlConvert.ToDateTime(
+                    entryBlock[3],
+                    XmlDateTimeSerializationMode.Utc
+                ),
+                Url = entryBlock[4],
+                ThumbnailUrl = entryBlock[5],
+            }
         );
     }
 
     // https://stackoverflow.com/a/22801345/11947017
-    public void Insert(VideoInformation videoInformation) {
-        if (InternalList.Count == 0) {
+    public void Insert(VideoInformation videoInformation)
+    {
+        if (InternalList.Count == 0)
+        {
             InternalList.Add(videoInformation);
             goto REMOVE_EXTRA;
         }
 
-        if (InternalList.Last().CompareTo(videoInformation) <= 0) {
+        if (InternalList.Last().CompareTo(videoInformation) <= 0)
+        {
             InternalList.Add(videoInformation);
             goto REMOVE_EXTRA;
         }
 
-        if (InternalList.First().CompareTo(videoInformation) >= 0) {
+        if (InternalList.First().CompareTo(videoInformation) >= 0)
+        {
             InternalList.Insert(0, videoInformation);
             goto REMOVE_EXTRA;
         }
 
         int index = InternalList.BinarySearch(videoInformation);
-        if (index < 0) {
+        if (index < 0)
+        {
             index = ~index;
         }
 
         InternalList.Insert(index, videoInformation);
 
-    REMOVE_EXTRA:
+        REMOVE_EXTRA:
         // InternalList should only contain at most (MaxListCount + 1) element
-        if (InternalList.Count > MaxListCount) {
+        if (InternalList.Count > MaxListCount)
+        {
             InternalList.RemoveRange(0, (InternalList.Count - MaxListCount));
         }
     }
 
-    public TopVideosList Insert(IEnumerable<VideoInformation> list) {
-        foreach (VideoInformation videoInformation in list) {
+    public TopVideosList Insert(IEnumerable<VideoInformation> list)
+    {
+        foreach (VideoInformation videoInformation in list)
+        {
             Insert(videoInformation);
         }
 

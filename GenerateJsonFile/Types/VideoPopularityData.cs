@@ -1,10 +1,10 @@
-﻿using Common.Types.Basic;
+﻿using System.Text.Json.Serialization;
+using Common.Types.Basic;
 using Common.Utils;
-using System.Text.Json.Serialization;
 
 namespace GenerateJsonFile.Types;
 
-internal record VideoPopularityData(
+public record VideoPopularityData(
     [property: JsonConverter(typeof(VTuberIdJsonConverter))] VTuberId id,
     string name,
     string? imgUrl,
@@ -12,7 +12,7 @@ internal record VideoPopularityData(
     string videoUrl,
     string thumbnailUrl,
     ulong viewCount,
-    string uploadTime);
+    string uploadTime
+);
 
-internal record VideoPopularityDataResponse(
-    List<VideoPopularityData> videos);
+public record VideoPopularityDataResponse(List<VideoPopularityData> videos);

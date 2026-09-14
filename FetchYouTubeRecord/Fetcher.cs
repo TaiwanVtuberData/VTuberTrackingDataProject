@@ -7,7 +7,7 @@ using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using log4net;
 
-namespace FetchYouTubeStatistics;
+namespace FetchYouTubeRecord;
 
 public class Fetcher
 {
@@ -30,7 +30,7 @@ public class Fetcher
         ImmutableDictionary<YouTubeChannelId, YouTubeRecord>,
         TopVideosList,
         LiveVideosList
-    ) GetAll(IImmutableList<YouTubeChannelId> lstChannelId)
+    ) GetAll(IImmutableList<YouTubeChannelId> lstChannelId, int getDaysLimit, int filterDaysLimit)
     {
         ImmutableDictionary<YouTubeChannelId, Google.Apis.YouTube.v3.Data.Channel> dictChannelInfo =
             GetChannelInfoList(lstChannelId);
@@ -38,10 +38,10 @@ public class Fetcher
         ImmutableDictionary<YouTubeChannelId, YouTubeRecord.BasicRecord> dictBasicRecord =
             GetChannelBasicRecord(dictChannelInfo);
 
-        int DAYS_LIMIT = 90;
         ChannelRecentViewRecord channelRecentViewRecord = GetChannelRecentViewRecord(
             dictChannelInfo,
-            DAYS_LIMIT
+            getDaysLimit: getDaysLimit,
+            filterDaysLimit: filterDaysLimit
         );
 
         ImmutableDictionary<YouTubeChannelId, YouTubeRecord> rDict = CreateYouTubeRecord(
@@ -54,6 +54,23 @@ public class Fetcher
             channelRecentViewRecord.TopVideosList,
             channelRecentViewRecord.LiveVideosList
         );
+    }
+
+    public TopVideosList GetTopVidoesList(
+        IImmutableList<YouTubeChannelId> lstChannelId,
+        int daysLimit
+    )
+    {
+        ImmutableDictionary<YouTubeChannelId, Google.Apis.YouTube.v3.Data.Channel> dictChannelInfo =
+            GetChannelInfoList(lstChannelId);
+
+        ChannelRecentViewRecord channelRecentViewRecord = GetChannelRecentViewRecord(
+            dictChannelInfo,
+            getDaysLimit: daysLimit,
+            filterDaysLimit: daysLimit
+        );
+
+        return channelRecentViewRecord.TopVideosList;
     }
 
     private static ImmutableDictionary<YouTubeChannelId, YouTubeRecord> CreateYouTubeRecord(
@@ -206,7 +223,8 @@ public class Fetcher
 
     private ChannelRecentViewRecord GetChannelRecentViewRecord(
         ImmutableDictionary<YouTubeChannelId, Google.Apis.YouTube.v3.Data.Channel> dictChannelInfo,
-        int daysLimit
+        int getDaysLimit,
+        int filterDaysLimit
     )
     {
         Dictionary<YouTubeChannelId, YouTubeRecord.RecentRecordTuple> rDict = [];
@@ -224,7 +242,9 @@ public class Fetcher
             Google.Apis.YouTube.v3.Data.Channel channelInfo = keyValuePair.Value;
 
             ImmutableDictionary<YouTubeVideoId, DateTimeOffset> dictVideoIdAndTime =
-                GetChannelRecentVideoList(channelInfo, daysLimit);
+                GetChannelRecentVideoList(channelInfo, getDaysLimit);
+
+            Console.WriteLine($"dictVideoIdAndTime: {dictVideoIdAndTime.Count}");
 
             // When querying multiple video statistics, only 50 videos at a time is allowed
             ImmutableList<IdRequstString> lstIdRequest = Generate50IdsStringList(
@@ -259,7 +279,7 @@ public class Fetcher
                     if (
                         viewCount is not null
                         && publishTime is not null
-                        && (CurrentTime - publishTime) < TimeSpan.FromDays(30)
+                        && (CurrentTime - publishTime) < TimeSpan.FromDays(filterDaysLimit)
                         && !LiveVideoTypeConvert.IsLiveVideoType(video.Snippet.LiveBroadcastContent)
                     )
                     {
