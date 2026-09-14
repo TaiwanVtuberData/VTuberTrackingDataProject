@@ -38,8 +38,10 @@ public class Fetcher
         ImmutableDictionary<YouTubeChannelId, YouTubeRecord.BasicRecord> dictBasicRecord =
             GetChannelBasicRecord(dictChannelInfo);
 
+        int DAYS_LIMIT = 90;
         ChannelRecentViewRecord channelRecentViewRecord = GetChannelRecentViewRecord(
-            dictChannelInfo
+            dictChannelInfo,
+            DAYS_LIMIT
         );
 
         ImmutableDictionary<YouTubeChannelId, YouTubeRecord> rDict = CreateYouTubeRecord(
@@ -153,11 +155,11 @@ public class Fetcher
         );
 
     private ImmutableDictionary<YouTubeVideoId, DateTimeOffset> GetChannelRecentVideoList(
-        Google.Apis.YouTube.v3.Data.Channel channelInfo
+        Google.Apis.YouTube.v3.Data.Channel channelInfo,
+        int daysLimit
     )
     {
         Dictionary<YouTubeVideoId, DateTimeOffset> rDict = [];
-        int DAYS_LIMIT = 90;
 
         string uploadsListId = channelInfo.ContentDetails.RelatedPlaylists.Uploads;
         string nextPageToken = "";
@@ -189,7 +191,7 @@ public class Fetcher
                 // only add video id if its publish time is within DAYS_LIMIT days
                 if (videoPublishTime is not null)
                 {
-                    if ((CurrentTime - videoPublishTime.Value) < TimeSpan.FromDays(DAYS_LIMIT))
+                    if ((CurrentTime - videoPublishTime.Value) < TimeSpan.FromDays(daysLimit))
                     {
                         rDict.Add(new YouTubeVideoId(videoId), videoPublishTime.Value);
                     }
@@ -203,7 +205,8 @@ public class Fetcher
     }
 
     private ChannelRecentViewRecord GetChannelRecentViewRecord(
-        ImmutableDictionary<YouTubeChannelId, Google.Apis.YouTube.v3.Data.Channel> dictChannelInfo
+        ImmutableDictionary<YouTubeChannelId, Google.Apis.YouTube.v3.Data.Channel> dictChannelInfo,
+        int daysLimit
     )
     {
         Dictionary<YouTubeChannelId, YouTubeRecord.RecentRecordTuple> rDict = [];
@@ -221,7 +224,7 @@ public class Fetcher
             Google.Apis.YouTube.v3.Data.Channel channelInfo = keyValuePair.Value;
 
             ImmutableDictionary<YouTubeVideoId, DateTimeOffset> dictVideoIdAndTime =
-                GetChannelRecentVideoList(channelInfo);
+                GetChannelRecentVideoList(channelInfo, daysLimit);
 
             // When querying multiple video statistics, only 50 videos at a time is allowed
             ImmutableList<IdRequstString> lstIdRequest = Generate50IdsStringList(
