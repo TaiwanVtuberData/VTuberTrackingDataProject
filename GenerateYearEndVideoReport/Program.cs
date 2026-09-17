@@ -7,6 +7,7 @@ using Common.Types;
 using Common.Types.Basic;
 using Common.Utils;
 using FetchYouTubeRecord;
+using GenerateJsonFile;
 using GenerateJsonFile.Types;
 using GenerateRecordList.Types;
 
@@ -32,6 +33,9 @@ class Program
         string? END_TIME = Environment.GetEnvironmentVariable("END_TIME");
         Console.WriteLine($"END_TIME: {END_TIME}");
 
+        string? DEBUT_DATE_THRESHOLD = Environment.GetEnvironmentVariable("DEBUT_DATE_THRESHOLD");
+        Console.WriteLine($"DEBUT_DATE_THRESHOLD: {DEBUT_DATE_THRESHOLD}");
+
         string? DATA_REPO_DIRECTORY = Environment.GetEnvironmentVariable("DATA_REPO_DIRECTORY");
         Console.WriteLine($"DATA_REPO_DIRECTORY: {DATA_REPO_DIRECTORY}");
 
@@ -41,12 +45,13 @@ class Program
         if (
             YOUTUBE_API_KEY == null
             || END_TIME == null
+            || DEBUT_DATE_THRESHOLD == null
             || DATA_REPO_DIRECTORY == null
             || OUTPUT_DIRECTORY == null
         )
         {
             Console.WriteLine(
-                "Environment variables [YOUTUBE_API_KEY], [END_TIME], [DATA_REPO_DIRECTORY] and/or [OUTPUT_DIRECTORY] missing. Abort program."
+                "Environment variables [YOUTUBE_API_KEY], [END_TIME], [DEBUT_DATE_THRESHOLD], [DATA_REPO_DIRECTORY] and/or [OUTPUT_DIRECTORY] missing. Abort program."
             );
             return;
         }
@@ -75,6 +80,21 @@ class Program
             return;
         }
         Console.WriteLine($"End Time is [{END_TIME}].");
+
+        if (
+            !DateOnly.TryParseExact(
+                s: DEBUT_DATE_THRESHOLD,
+                format: @"yyyy-MM-dd",
+                result: out DateOnly debutDateThreshold
+            )
+        )
+        {
+            Console.WriteLine(
+                $"DEBUT_DATE_THRESHOLD [{DEBUT_DATE_THRESHOLD}] format invalid. Expected: [yyyy-MM-dd]. Abort program."
+            );
+            return;
+        }
+        Console.WriteLine($"Debut Date Threshold is [{debutDateThreshold}].");
 
         // load data
         List<VTuberId> excludeList = FileUtility.GetListFromCsv(
@@ -152,19 +172,44 @@ class Program
             }
         )
         {
-            GenerateJsonFile.TopVideosListToJsonStruct videoTransformer = new(nationality.Item1);
+            TopVideosListToJsonStruct videoTransformer = new(nationality.Item1);
 
-            WriteJson(
-                videoTransformer.Get(
-                    topVideoList: topVideoList,
-                    dictRecord: dictRecord,
-                    count: 100,
-                    allowDuplicate: false
-                ),
-                outputDirectory: OUTPUT_DIRECTORY,
-                nationality.Item2,
-                "trending-videos/youtube/100.json"
-            );
+            foreach (
+                var tuple in new List<(int, string)> { (10, "10"), (100, "100"), (1000, "1000") }
+            )
+            {
+                WriteJson(
+                    videoTransformer.Get(
+                        topVideoList: topVideoList,
+                        dictRecord: dictRecord,
+                        count: tuple.Item1,
+                        allowDuplicate: false,
+                        vTuberFilterOption: new TopVideosListToJsonStruct.VTuberFilterOption(
+                            TopVideosListToJsonStruct.FilterOption.Before,
+                            debutDateThreshold
+                        )
+                    ),
+                    outputDirectory: OUTPUT_DIRECTORY,
+                    nationality.Item2,
+                    $"trending-videos/youtube/established/{tuple.Item2}.json"
+                );
+
+                WriteJson(
+                    videoTransformer.Get(
+                        topVideoList: topVideoList,
+                        dictRecord: dictRecord,
+                        count: tuple.Item1,
+                        allowDuplicate: false,
+                        vTuberFilterOption: new TopVideosListToJsonStruct.VTuberFilterOption(
+                            TopVideosListToJsonStruct.FilterOption.AfterOrEqual,
+                            debutDateThreshold
+                        )
+                    ),
+                    outputDirectory: OUTPUT_DIRECTORY,
+                    nationality.Item2,
+                    $"trending-videos/youtube/new/{tuple.Item2}.json"
+                );
+            }
         }
     }
 

@@ -3,12 +3,21 @@ using Common.Types.Basic;
 using GenerateJsonFile.Types;
 using GenerateRecordList.Types;
 using GenerateRecordList.Utils;
+using LanguageExt;
 
 namespace GenerateJsonFile;
 
 public class TopVideosListToJsonStruct(string nationalityFilter)
 {
     public readonly string NationalityFilter = nationalityFilter;
+
+    public enum FilterOption
+    {
+        Before,
+        AfterOrEqual,
+    }
+
+    public record VTuberFilterOption(FilterOption FilterOption, DateOnly DebutDate) { }
 
     class OwnerComparer : IEqualityComparer<VideoInformation>
     {
@@ -36,19 +45,45 @@ public class TopVideosListToJsonStruct(string nationalityFilter)
         TopVideosList topVideoList,
         DictionaryRecord dictRecord,
         int count,
-        bool allowDuplicate
+        bool allowDuplicate,
+        VTuberFilterOption? vTuberFilterOption
     )
     {
         List<VideoPopularityData> rLst = [];
 
+        List<VideoInformation> lstFilteredVideoInformation = [];
+
+        foreach (VideoInformation videoInfo in topVideoList)
+        {
+            dictRecord.TryGetValue(videoInfo.Id, out VTuberRecord? vTuberRecord);
+
+            if (vTuberFilterOption != null)
+            {
+                if (vTuberRecord == null)
+                {
+                    continue;
+                }
+
+                if (!MatchFilter(vTuberRecord.DebutDate, vTuberFilterOption))
+                {
+                    continue;
+                }
+            }
+
+            lstFilteredVideoInformation.Add(videoInfo);
+        }
+
+        TopVideosList filteredTopVideosList = new();
+        filteredTopVideosList.Insert(lstFilteredVideoInformation);
+
         IEnumerable<VideoInformation> lstVideoInformation;
         if (allowDuplicate)
         {
-            lstVideoInformation = topVideoList.GetSortedList();
+            lstVideoInformation = filteredTopVideosList.GetSortedList();
         }
         else
         {
-            lstVideoInformation = topVideoList.GetNoDuplicateList();
+            lstVideoInformation = filteredTopVideosList.GetNoDuplicateList();
         }
 
         List<VTuberId> lstValidVTubers = [.. dictRecord.Keys];
@@ -83,5 +118,27 @@ public class TopVideosListToJsonStruct(string nationalityFilter)
         }
 
         return rLst;
+    }
+
+    private static bool MatchFilter(DateOnly? debutDate, VTuberFilterOption vTuberFilterOption)
+    {
+        // consider VTubers without debut date to be before any date
+        if (debutDate == null)
+        {
+            switch (vTuberFilterOption.FilterOption)
+            {
+                case FilterOption.Before:
+                    return true;
+                case FilterOption.AfterOrEqual:
+                    return false;
+            }
+        }
+
+        return vTuberFilterOption.FilterOption switch
+        {
+            FilterOption.Before => debutDate < vTuberFilterOption.DebutDate,
+            FilterOption.AfterOrEqual => debutDate >= vTuberFilterOption.DebutDate,
+            _ => false,
+        };
     }
 }

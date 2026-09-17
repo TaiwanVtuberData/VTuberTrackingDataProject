@@ -282,13 +282,25 @@ class Program
             TopVideosListToJsonStruct videoTransformer = new(nationality.Item1);
 
             WriteJson(
-                videoTransformer.Get(topVideoList, dictRecord, 100, allowDuplicate: true),
+                videoTransformer.Get(
+                    topVideoList,
+                    dictRecord,
+                    100,
+                    allowDuplicate: true,
+                    vTuberFilterOption: null
+                ),
                 nationality.Item2,
                 "trending-videos/all.json"
             );
 
             WriteJson(
-                videoTransformer.Get(topVideoList, dictRecord, 100, allowDuplicate: false),
+                videoTransformer.Get(
+                    topVideoList,
+                    dictRecord,
+                    100,
+                    allowDuplicate: false,
+                    vTuberFilterOption: null
+                ),
                 nationality.Item2,
                 "trending-videos/no-duplicate.json"
             );

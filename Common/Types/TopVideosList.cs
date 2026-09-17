@@ -3,7 +3,7 @@ using Common.Types.Basic;
 
 namespace Common.Types;
 
-public class TopVideosList(int videoCount = 1000)
+public class TopVideosList(int videoCount = 10000)
 {
     readonly List<VideoInformation> InternalList = [];
     readonly int MaxListCount = Math.Max(1, videoCount);

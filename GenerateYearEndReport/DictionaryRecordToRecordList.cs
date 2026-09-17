@@ -54,8 +54,11 @@ public class DictionaryRecordToRecordList(
                 continue;
             }
 
-            DictionaryRecord.GrowthResult _1YearResult =
-                DictRecord.GetYouTubeSubscriberCountGrowth(id, days: recentDays, daysLimit: 1);
+            DictionaryRecord.GrowthResult _1YearResult = DictRecord.GetYouTubeSubscriberCountGrowth(
+                id,
+                days: recentDays,
+                daysLimit: 1
+            );
 
             YearEndYouTubeGrowthData growthData =
                 new(
